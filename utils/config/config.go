@@ -20,7 +20,7 @@ func LoadConfiguration[T any](filePath string, logger utils.Logger) T {
 	jsonParser := json.NewDecoder(configFile)
 	jsonParser.Decode(&config)
 
-	logger.Log("Config created", utils.INFO)
+	logger.Log("Config created", utils.DEBUG)
 
 	return config
 }
