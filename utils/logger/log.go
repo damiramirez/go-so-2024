@@ -16,8 +16,8 @@ const (
 )
 
 type Logger struct {
-	Logger  *log.Logger
-	LogFile *os.File
+	Logger      *log.Logger
+	LogFile     *os.File
 	environment string
 }
 
