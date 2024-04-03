@@ -1,22 +1,42 @@
 package utils
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
 )
 
-// Sets up a logger writing to stdout and a file.
-func ConfigureLogger(filename string) *log.Logger {
+type LogLevel string
+
+const (
+	DEBUG LogLevel = "DEBUG"
+	INFO  LogLevel = "INFO"
+	ERROR LogLevel = "ERROR"
+)
+
+type Logger struct {
+	Logger  *log.Logger
+	LogFile *os.File
+}
+
+// Log formats and logs a message at the given severity level.
+func (l *Logger) Log(message string, level LogLevel) {
+	format := fmt.Sprintf("[%s]: %s", level, message)
+	l.Logger.Println(format)
+}
+
+func (l *Logger) CloseLogger() {
+	l.LogFile.Close()
+}
+
+// Initializes a Logger to write to both stdout and a specified file.
+func ConfigureLogger(filename string) Logger {
 	logFile, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
 	if err != nil {
 		panic(err)
 	}
 	mw := io.MultiWriter(os.Stdout, logFile)
-	return log.New(mw, "", log.LstdFlags)
-}
-
-// Closes the log file.
-func CloseLogger(logFile *os.File) {
-	logFile.Close()
+	logger := Logger{Logger: log.New(mw, "", log.LstdFlags), LogFile: logFile}
+	return logger
 }
