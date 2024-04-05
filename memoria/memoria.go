@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/sisoputnfrba/tp-golang/memoria/global"
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
@@ -20,9 +21,9 @@ func main() {
 	env := args[0]
 
 	logger := log.ConfigureLogger(MEMORYLOG, env)
-	memoryConfig := config.LoadConfiguration[global.Config]("./config/config.json", logger)
+	memoryConfig := config.LoadConfiguration[global.MemoryConfig]("./config/config.json", logger)
 
-	logger.Log(fmt.Sprintf("Port: %d", memoryConfig.Port), log.INFO)
+	logger.Log(strconv.Itoa(memoryConfig.Port), log.INFO)
 	logger.Log(fmt.Sprintf("MemorySize: %d", memoryConfig.MemorySize), log.INFO)
 	logger.Log(fmt.Sprintf("PageSize: %d", memoryConfig.PageSize), log.INFO)
 	logger.Log(fmt.Sprintf("InstructionsPath: %s", memoryConfig.InstructionsPath), log.INFO)

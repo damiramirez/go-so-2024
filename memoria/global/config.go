@@ -1,6 +1,6 @@
 package global
 
-type Config struct {
+type MemoryConfig struct {
 	Port             int    `json:"port"`
 	MemorySize       int    `json:"memory_size"`
 	PageSize         int    `json:"page_size"`
