@@ -1,6 +1,6 @@
 package global
 
-type Config struct {
+type CpuConfig struct {
 	Port             int    `json:"port"`
 	IPMemory         string `json:"ip_memory"`
 	PortMemory       int    `json:"port_memory"`

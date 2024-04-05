@@ -21,7 +21,7 @@ func main() {
 	env := args[0]
 
 	logger := log.ConfigureLogger(CPULOG, env)
-	cpuConfig := config.LoadConfiguration[global.Config]("./config/config.json", logger)
+	cpuConfig := config.LoadConfiguration[global.CpuConfig]("./config/config.json", logger)
 
 	logger.Log("Port: "+strconv.Itoa(cpuConfig.Port), log.INFO)
 	logger.Log("IpMemory: "+cpuConfig.IPMemory, log.INFO)
