@@ -24,8 +24,23 @@ func NewServer(logger log.Logger) *Server {
 
 // Configura las rutas de la API
 func (s *Server) ConfigureRoutes() {
-	s.router.HandleFunc("/process/{pid}", func(w http.ResponseWriter, r *http.Request) {
-		handler.ProcessHandler(w,r, s.logger)
+	s.router.HandleFunc("GET /process", func(w http.ResponseWriter, r *http.Request) {
+		handler.ListProcessHandler(w, r, s.logger)
+	})
+	s.router.HandleFunc("GET /process/{pid}", func(w http.ResponseWriter, r *http.Request) {
+		handler.ProcessStateHandler(w, r, s.logger)
+	})
+	s.router.HandleFunc("PUT /process", func(w http.ResponseWriter, r *http.Request) {
+		handler.InitProcessHandler(w, r, s.logger)
+	})
+	s.router.HandleFunc("DELETE /process/{pid}", func(w http.ResponseWriter, r *http.Request) {
+		handler.EndProcessHandler(w, r, s.logger)
+	})
+	s.router.HandleFunc("PUT /plani", func(w http.ResponseWriter, r *http.Request) {
+		handler.InitPlanningHandler(w, r, s.logger)
+	})
+	s.router.HandleFunc("DELETE /plani", func(w http.ResponseWriter, r *http.Request) {
+		handler.StopPlanningHandler(w, r, s.logger)
 	})
 }
 
