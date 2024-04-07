@@ -20,7 +20,7 @@ func main() {
 	env := args[0]
 
 	logger := log.ConfigureLogger(MEMORYLOG, env)
-	memoryConfig := config.LoadConfiguration[global.Config]("./config/config.json", logger)
+	memoryConfig := config.LoadConfiguration[global.MemoryConfig]("./config/config.json", logger)
 
 	logger.Log(fmt.Sprintf("Port: %d", memoryConfig.Port), log.INFO)
 	logger.Log(fmt.Sprintf("MemorySize: %d", memoryConfig.MemorySize), log.INFO)

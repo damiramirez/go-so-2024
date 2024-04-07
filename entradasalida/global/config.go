@@ -1,6 +1,6 @@
 package global
 
-type Config struct {
+type IOConfig struct {
 	Port             int    `json:"port"`
 	Type             string `json:"type"`
 	UnitWorkTime     int    `json:"unit_work_time"`

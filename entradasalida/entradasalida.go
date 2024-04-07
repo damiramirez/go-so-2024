@@ -21,7 +21,7 @@ func main() {
 	env := args[0]
 
 	logger := log.ConfigureLogger(IOLOG, env)
-	ioConfig := config.LoadConfiguration[global.Config]("./config/config.json", logger)
+	ioConfig := config.LoadConfiguration[global.IOConfig]("./config/config.json", logger)
 
 	logger.Log("Port: "+strconv.Itoa(ioConfig.Port), log.INFO)
 	logger.Log("Type: "+ioConfig.Type, log.INFO)
