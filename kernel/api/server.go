@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/sisoputnfrba/tp-golang/kernel/api/handler"
+	handler "github.com/sisoputnfrba/tp-golang/kernel/api/handler"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 )
 
