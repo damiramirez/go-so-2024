@@ -13,3 +13,7 @@ entradasalida:
 
 kernel:
 	cd kernel && mkdir -p bin && go build -o bin/kernel && ./bin/kernel $(ENV)
+
+clean:
+	rm -rf cpu/bin memoria/bin entradasalida/bin kernel/bin
+
