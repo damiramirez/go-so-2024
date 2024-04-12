@@ -30,8 +30,8 @@ func GetHTTP[T any](ip string, port int, endpoint string, logger *log.Logger) (*
 	return &data, nil
 }
 
-func PutHTTPwithBody[T any, R any](ip string, port int, endpoint string, data T, logger *log.Logger) (R, error) {
-	var RespData R
+func PutHTTPwithBody[T any, R any](ip string, port int, endpoint string, data T, logger *log.Logger) (*R, error) {
+	var RespData *R
 
 	url := fmt.Sprintf("http://%s:%d/%s", ip, port, endpoint)
 

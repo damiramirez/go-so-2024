@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 	"github.com/sisoputnfrba/tp-golang/utils/serialization"
@@ -17,15 +18,15 @@ type Process struct {
 
 // Handler para devolver a memoria el estado del proceso
 func ProcessStateHandler(w http.ResponseWriter, r *http.Request, logger log.Logger) {
-	pid := r.PathValue("pid")
-	logger.Log("State - PID: "+pid, log.DEBUG)
+	pid, _ := strconv.Atoi(r.PathValue("pid"))
+	logger.Log(fmt.Sprintf("State - PID: %d", pid), log.DEBUG)
 
 	// TODO: Buscar PID en slice de procesos
 	// Ver que pasa si no existe
 
 	state := "READY"
 	processState := struct {
-		PID   string `json:"pid"`
+		PID   int    `json:"pid"`
 		State string `json:"state"`
 	}{
 		PID:   pid,
@@ -38,7 +39,7 @@ func ProcessStateHandler(w http.ResponseWriter, r *http.Request, logger log.Logg
 		return
 	}
 
-	logger.Log(fmt.Sprintf("Process %s - State: %s", pid, state), log.DEBUG)
+	logger.Log(fmt.Sprintf("Process %d - State: %s", pid, state), log.DEBUG)
 }
 
 // Se encargará de ejecutar un nuevo proceso en base a un archivo
@@ -51,7 +52,7 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request, logger log.Logge
 
 	var pPath ProcessPath
 
-	err := serialization.DecodeHTTPBody[ProcessPath](r, pPath)
+	err := serialization.DecodeHTTPBody(r, &pPath)
 
 	if err != nil {
 		logger.Log("Error al decodear el body: "+err.Error(), log.ERROR)
@@ -65,7 +66,7 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request, logger log.Logge
 	processPID := struct {
 		PID int `json:"pid"`
 	}{
-		PID: 1,
+		PID: 321,
 	}
 
 	err = serialization.EncodeHTTPResponse(w, processPID, http.StatusCreated)
