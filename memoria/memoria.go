@@ -3,14 +3,22 @@ package main
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/sisoputnfrba/tp-golang/memoria/global"
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
+	"github.com/sisoputnfrba/tp-golang/utils/requests"
 )
 
 const MEMORYLOG = "./memoria.log"
+
+type ProcessPath struct {
+	Path string `json:"path"`
+}
+
+type ProcessPID struct {
+	PID int `json:"pid"`
+}
 
 func main() {
 	args := os.Args[1:]
@@ -23,11 +31,17 @@ func main() {
 	logger := log.ConfigureLogger(MEMORYLOG, env)
 	memoryConfig := config.LoadConfiguration[global.MemoryConfig]("./config/config.json", logger)
 
-	logger.Log(strconv.Itoa(memoryConfig.Port), log.INFO)
-	logger.Log(fmt.Sprintf("MemorySize: %d", memoryConfig.MemorySize), log.INFO)
-	logger.Log(fmt.Sprintf("PageSize: %d", memoryConfig.PageSize), log.INFO)
-	logger.Log(fmt.Sprintf("InstructionsPath: %s", memoryConfig.InstructionsPath), log.INFO)
-	logger.Log(fmt.Sprintf("DelayResponse: %d", memoryConfig.DelayResponse), log.INFO)
+	processPath := ProcessPath{
+		Path: "sisop/tp-go/path",
+	}
+
+	processPID, err := requests.PutHTTPwithBody[ProcessPath, ProcessPID](memoryConfig.IPKernel, memoryConfig.PortKernel, "process", processPath, &logger)
+
+	if err != nil {
+		logger.Log("Error con el put: "+err.Error(), log.ERROR)
+	}
+
+	logger.Log(fmt.Sprintf("Struct: %+v", processPID), log.INFO)
 
 	logger.CloseLogger()
 }

@@ -28,7 +28,7 @@ func main() {
 	logger := log.ConfigureLogger(CPULOG, env)
 	cpuConfig := config.LoadConfiguration[global.CpuConfig]("./config/config.json", logger)
 
-	processSlice, _ := requests.GetHTTP[[]ProcessState](cpuConfig.IPKernel, cpuConfig.PortKernel, "/process", &logger)
+	processSlice, _ := requests.GetHTTP[[]ProcessState](cpuConfig.IPKernel, cpuConfig.PortKernel, "process", &logger)
 
 	logger.Log(fmt.Sprintf("%+v", processSlice), log.INFO)
 
