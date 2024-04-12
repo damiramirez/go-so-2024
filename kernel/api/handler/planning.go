@@ -14,7 +14,6 @@ func InitPlanningHandler(w http.ResponseWriter, r *http.Request, logger log.Logg
 
 	// TODO: Manejar planificacion
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -27,6 +26,5 @@ func StopPlanningHandler(w http.ResponseWriter, r *http.Request, logger log.Logg
 
 	// TODO: Frenar planificacion
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNoContent)
 }

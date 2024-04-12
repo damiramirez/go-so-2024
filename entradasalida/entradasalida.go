@@ -28,10 +28,9 @@ func main() {
 	logger := log.ConfigureLogger(IOLOG, env)
 	ioConfig := config.LoadConfiguration[global.IOConfig]("./config/config.json", logger)
 
-	processSlice, _ := requests.GetHTTP[[]ProcessState](ioConfig.IPKernel, ioConfig.PortKernel, "process", &logger)
+	processSlice, _ := requests.GetHTTP[ProcessState](ioConfig.IPKernel, ioConfig.PortKernel, "process/12", &logger)
 
 	logger.Log(fmt.Sprintf("%+v", processSlice), log.INFO)
-	
 
 	logger.CloseLogger()
 }
