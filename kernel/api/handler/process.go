@@ -10,11 +10,6 @@ import (
 
 // Donde crear structs que solo me sirven para enviar body o recibir json???
 
-type ProcessState struct {
-	PID   string `json:"pid"`
-	State string `json:"state"`
-}
-
 type Process struct {
 	PID   int    `json:"pid"`
 	State string `json:"state"`
@@ -27,11 +22,21 @@ func ProcessStateHandler(w http.ResponseWriter, r *http.Request, logger log.Logg
 
 	// TODO: Buscar PID en slice de procesos
 	// Ver que pasa si no existe
+
 	state := "READY"
+	processState := struct {
+		PID   string `json:"pid"`
+		State string `json:"state"`
+	}{
+		PID:   pid,
+		State: state,
+	}
 
-	processState := ProcessState{PID: pid, State: state}
-
-	serialization.EncodeHTTPResponse(w, processState, http.StatusOK)
+	err := serialization.EncodeHTTPResponse(w, processState, http.StatusOK)
+	if err != nil {
+		http.Error(w, "Error encoding response", http.StatusInternalServerError)
+		return
+	}
 
 	logger.Log(fmt.Sprintf("Process %s - State: %s", pid, state), log.DEBUG)
 }
@@ -44,10 +49,18 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request, logger log.Logge
 		Path string `json:"path"`
 	}
 
-	processPath, _ := serialization.DecodeHTTPBody[ProcessPath](w, r)
+	var pPath ProcessPath
+
+	err := serialization.DecodeHTTPBody[ProcessPath](r, pPath)
+
+	if err != nil {
+		logger.Log("Error al decodear el body: "+err.Error(), log.ERROR)
+		http.Error(w, "Error al decodear el body", http.StatusBadRequest)
+		return
+	}
 
 	// TODO: Crear proceso - PCB y dejarlo en NEW
-	logger.Log("Init process - Path: "+processPath.Path, log.DEBUG)
+	logger.Log("Init process - Path: "+pPath.Path, log.DEBUG)
 
 	processPID := struct {
 		PID int `json:"pid"`
@@ -55,7 +68,12 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request, logger log.Logge
 		PID: 1,
 	}
 
-	serialization.EncodeHTTPResponse(w, processPID, http.StatusCreated)
+	err = serialization.EncodeHTTPResponse(w, processPID, http.StatusCreated)
+	if err != nil {
+		logger.Log("Error al encodear la respuesta: "+err.Error(), log.ERROR)
+		http.Error(w, "Error encodeando respuesta", http.StatusInternalServerError)
+		return
+	}
 }
 
 // Se encargará de finalizar un proceso que se encuentre dentro del sistema.
@@ -67,7 +85,6 @@ func EndProcessHandler(w http.ResponseWriter, r *http.Request, logger log.Logger
 
 	// TODO: Delete process
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -76,10 +93,17 @@ func ListProcessHandler(w http.ResponseWriter, r *http.Request, logger log.Logge
 
 	// TODO: Buscar procesos y listarlos
 
-	processes := []Process{
+	processes := []struct {
+		PID   int    `json:"pid"`
+		State string `json:"state"`
+	}{
 		{PID: 1, State: "READY"},
 		{PID: 2, State: "EXEC"},
 	}
 
-	serialization.EncodeHTTPResponse(w, processes, http.StatusOK)
+	err := serialization.EncodeHTTPResponse(w, processes, http.StatusOK)
+	if err != nil {
+		http.Error(w, "Error encoding response", http.StatusInternalServerError)
+		return
+	}
 }

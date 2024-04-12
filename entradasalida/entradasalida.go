@@ -31,7 +31,6 @@ func main() {
 	processSlice, _ := requests.GetHTTP[[]ProcessState](ioConfig.IPKernel, ioConfig.PortKernel, "process", &logger)
 
 	logger.Log(fmt.Sprintf("%+v", processSlice), log.INFO)
-	
 
 	logger.CloseLogger()
 }
