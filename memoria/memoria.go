@@ -35,8 +35,8 @@ func main() {
 		Path: "sisop/tp-go/path",
 	}
 
-	processPID, err := requests.PutHTTPwithBody[ProcessPath, ProcessPID](global.MemoryConfig.IPKernel, global.MemoryConfig.PortKernel, "process", processPath, &logger)
 
+	processPID, err := requests.PutHTTPwithBody[ProcessPath, ProcessPID](global.MemoryConfig.IPKernel, global.MemoryConfig.PortKernel, "process", processPath, &logger)
 	if err != nil {
 		logger.Log("Error con el put: "+err.Error(), log.ERROR)
 	}

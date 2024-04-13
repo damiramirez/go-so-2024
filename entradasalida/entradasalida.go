@@ -18,17 +18,19 @@ type ProcessState struct {
 }
 
 func main() {
+	endpoint := "plani/"
 	args := os.Args[1:]
 	if len(args) != 1 {
 		fmt.Println("Uso: programa <go run `modulo`.go dev|prod>")
 		return
 	}
 	env := args[0]
-
 	logger := log.ConfigureLogger(IOLOG, env)
 	global.IOConfig = config.LoadConfiguration[global.Config]("./config/config.json", logger)
 
 	processSlice, _ := requests.GetHTTP[ProcessState](global.IOConfig.IPKernel, global.IOConfig.PortKernel, "process/12", &logger)
+
+	requests.DeleteHTTP[interface{}](endpoint, logger, global.IOConfig.PortKernel, nil, global.IOConfig.IPKernel)
 
 	logger.Log(fmt.Sprintf("%+v", processSlice), log.INFO)
 
