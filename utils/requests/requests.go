@@ -70,6 +70,7 @@ func PutHTTPwithBody[T any, R any](ip string, port int, endpoint string, data T,
 
 	return RespData, nil
 }
+
 //desarolle una funcion q permite hacer los deletes con plani y process con PID aplicable a la funcion de arriba
 //para q funcione deberiamos pasarles como parametro en donde dice endpointwithpid en el caso de un proccess/pid
 // en el caso de plani/  

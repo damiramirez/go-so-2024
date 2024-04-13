@@ -7,7 +7,6 @@ import (
 	"os"
 )
 
-
 type LogLevel string
 
 const (
