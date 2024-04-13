@@ -58,6 +58,10 @@ func PutHTTPwithBody[T any, R any](ip string, port int, endpoint string, data T,
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusNoContent{
+		return nil, nil
+	}
+
 	err = json.NewDecoder(resp.Body).Decode(&RespData)
 	if err != nil {
 		logger.Log(fmt.Sprintf("Error al decodificar la respuesta: %s", err), log.ERROR)

@@ -7,8 +7,8 @@ import (
 	utils "github.com/sisoputnfrba/tp-golang/utils/logger"
 )
 
-func LoadConfiguration[T any](filePath string, logger utils.Logger) T {
-	var config T
+func LoadConfiguration[T any](filePath string, logger utils.Logger) *T {
+	var config *T
 
 	configFile, err := os.Open(filePath)
 	if err != nil {

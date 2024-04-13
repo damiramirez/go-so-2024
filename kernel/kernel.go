@@ -21,10 +21,10 @@ func main() {
 	env := args[0]
 
 	logger := log.ConfigureLogger(KERNELLOG, env)
-	kernelConfig := config.LoadConfiguration[global.KernelConfig]("./config/config.json", logger)
+	global.KernelConfig = config.LoadConfiguration[global.Config]("./config/config.json", logger)
 
 	server := api.NewServer(logger)
-	server.Start(kernelConfig.Port)
+	server.Start()
 
 	logger.CloseLogger()
 }

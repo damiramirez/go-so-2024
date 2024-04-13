@@ -29,19 +29,21 @@ func main() {
 	env := args[0]
 
 	logger := log.ConfigureLogger(MEMORYLOG, env)
-	memoryConfig := config.LoadConfiguration[global.MemoryConfig]("./config/config.json", logger)
+	global.MemoryConfig = config.LoadConfiguration[global.Config]("./config/config.json", logger)
 
 	processPath := ProcessPath{
 		Path: "sisop/tp-go/path",
 	}
 
-	processPID, err := requests.PutHTTPwithBody[ProcessPath, ProcessPID](memoryConfig.IPKernel, memoryConfig.PortKernel, "process", processPath, &logger)
+	processPID, err := requests.PutHTTPwithBody[ProcessPath, ProcessPID](global.MemoryConfig.IPKernel, global.MemoryConfig.PortKernel, "process", processPath, &logger)
 
 	if err != nil {
 		logger.Log("Error con el put: "+err.Error(), log.ERROR)
 	}
-
 	logger.Log(fmt.Sprintf("Struct: %+v", processPID), log.INFO)
+
+	requests.PutHTTPwithBody[interface{}, interface{}](global.MemoryConfig.IPKernel, global.MemoryConfig.PortKernel, "plani", nil, &logger)
+
 
 	logger.CloseLogger()
 }

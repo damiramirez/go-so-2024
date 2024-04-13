@@ -1,6 +1,6 @@
 package global
 
-type KernelConfig struct {
+type Config struct {
 	Port              int      `json:"port"`
 	IPMemory          string   `json:"ip_memory"`
 	PortMemory        int      `json:"port_memory"`
@@ -12,3 +12,5 @@ type KernelConfig struct {
 	ResourceInstances []int    `json:"resource_instances"`
 	Multiprogramming  int      `json:"multiprogramming"`
 }
+
+var KernelConfig *Config

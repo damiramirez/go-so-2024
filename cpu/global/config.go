@@ -1,6 +1,6 @@
 package global
 
-type CpuConfig struct {
+type Config struct {
 	Port             int    `json:"port"`
 	IPKernel         string `json:"ip_kernel"`
 	PortKernel       int    `json:"port_kernel"`
@@ -9,3 +9,5 @@ type CpuConfig struct {
 	NumberFellingTLB int    `json:"number_felling_tlb"`
 	AlgorithmTLB     string `json:"algorithm_tlb"`
 }
+
+var CPUConfig *Config

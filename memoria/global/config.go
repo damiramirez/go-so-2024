@@ -1,6 +1,6 @@
 package global
 
-type MemoryConfig struct {
+type Config struct {
 	Port             int    `json:"port"`
 	IPKernel         string `json:"ip_kernel"`
 	PortKernel       int    `json:"port_kernel"`
@@ -9,3 +9,5 @@ type MemoryConfig struct {
 	InstructionsPath string `json:"instructions_path"`
 	DelayResponse    int    `json:"delay_response"`
 }
+
+var MemoryConfig *Config

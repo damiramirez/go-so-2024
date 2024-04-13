@@ -26,9 +26,9 @@ func main() {
 	env := args[0]
 
 	logger := log.ConfigureLogger(IOLOG, env)
-	ioConfig := config.LoadConfiguration[global.IOConfig]("./config/config.json", logger)
+	global.IOConfig = config.LoadConfiguration[global.Config]("./config/config.json", logger)
 
-	processSlice, _ := requests.GetHTTP[ProcessState](ioConfig.IPKernel, ioConfig.PortKernel, "process/12", &logger)
+	processSlice, _ := requests.GetHTTP[ProcessState](global.IOConfig.IPKernel, global.IOConfig.PortKernel, "process/12", &logger)
 
 	logger.Log(fmt.Sprintf("%+v", processSlice), log.INFO)
 

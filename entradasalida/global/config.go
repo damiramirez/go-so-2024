@@ -1,6 +1,6 @@
 package global
 
-type IOConfig struct {
+type Config struct {
 	Port             int    `json:"port"`
 	Type             string `json:"type"`
 	UnitWorkTime     int    `json:"unit_work_time"`
@@ -12,3 +12,5 @@ type IOConfig struct {
 	DialFSBlockSize  int    `json:"dialfs_block_size"`
 	DialFSBlockCount int    `json:"dialfs_block_count"`
 }
+
+var IOConfig *Config

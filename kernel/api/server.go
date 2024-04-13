@@ -6,6 +6,7 @@ import (
 	"os"
 
 	handler "github.com/sisoputnfrba/tp-golang/kernel/api/handler"
+	"github.com/sisoputnfrba/tp-golang/kernel/global"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 )
 
@@ -45,8 +46,10 @@ func (s *Server) ConfigureRoutes() {
 }
 
 // Inicia el servidor HTTP
-func (s *Server) Start(port int) {
+func (s *Server) Start() {
 	s.ConfigureRoutes()
+
+	port := global.KernelConfig.Port
 
 	s.logger.Log(fmt.Sprintf("Starting kernel API server on port %d", port), log.INFO)
 
