@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/sisoputnfrba/tp-golang/kernel/global"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 	"github.com/sisoputnfrba/tp-golang/utils/serialization"
 )
@@ -17,9 +18,9 @@ type Process struct {
 }
 
 // Handler para devolver a memoria el estado del proceso
-func ProcessStateHandler(w http.ResponseWriter, r *http.Request, logger log.Logger) {
+func ProcessStateHandler(w http.ResponseWriter, r *http.Request) {
 	pid, _ := strconv.Atoi(r.PathValue("pid"))
-	logger.Log(fmt.Sprintf("State - PID: %d", pid), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("State - PID: %d", pid), log.DEBUG)
 
 	// TODO: Buscar PID en slice de procesos
 	// Ver que pasa si no existe
@@ -39,13 +40,13 @@ func ProcessStateHandler(w http.ResponseWriter, r *http.Request, logger log.Logg
 		return
 	}
 
-	logger.Log(fmt.Sprintf("Process %d - State: %s", pid, state), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Process %d - State: %s", pid, state), log.DEBUG)
 }
 
 // Se encargará de ejecutar un nuevo proceso en base a un archivo
 // dentro del file system de Linux. Dicho mensaje se encargará de
 // la creación del proceso (PCB) y dejará el mismo en el estado NEW.
-func InitProcessHandler(w http.ResponseWriter, r *http.Request, logger log.Logger) {
+func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 	type ProcessPath struct {
 		Path string `json:"path"`
 	}
@@ -55,13 +56,13 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request, logger log.Logge
 	err := serialization.DecodeHTTPBody(r, &pPath)
 
 	if err != nil {
-		logger.Log("Error al decodear el body: "+err.Error(), log.ERROR)
+		global.Logger.Log("Error al decodear el body: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear el body", http.StatusBadRequest)
 		return
 	}
 
 	// TODO: Crear proceso - PCB y dejarlo en NEW
-	logger.Log("Init process - Path: "+pPath.Path, log.DEBUG)
+	global.Logger.Log("Init process - Path: "+pPath.Path, log.DEBUG)
 
 	processPID := struct {
 		PID int `json:"pid"`
@@ -71,7 +72,6 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request, logger log.Logge
 
 	err = serialization.EncodeHTTPResponse(w, processPID, http.StatusCreated)
 	if err != nil {
-		logger.Log("Error al encodear la respuesta: "+err.Error(), log.ERROR)
 		http.Error(w, "Error encodeando respuesta", http.StatusInternalServerError)
 		return
 	}
@@ -80,17 +80,17 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request, logger log.Logge
 // Se encargará de finalizar un proceso que se encuentre dentro del sistema.
 // Este mensaje se encargará de realizar las mismas operaciones como si el proceso
 // llegara a EXIT por sus caminos habituales (deberá liberar recursos, archivos y memoria).
-func EndProcessHandler(w http.ResponseWriter, r *http.Request, logger log.Logger) {
+func EndProcessHandler(w http.ResponseWriter, r *http.Request) {
 	pid := r.PathValue("pid")
-	logger.Log("End process - PID: "+pid, log.DEBUG)
+	global.Logger.Log("End process - PID: "+pid, log.DEBUG)
 
 	// TODO: Delete process
 
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func ListProcessHandler(w http.ResponseWriter, r *http.Request, logger log.Logger) {
-	logger.Log("List process", log.DEBUG)
+func ListProcessHandler(w http.ResponseWriter, r *http.Request) {
+	global.Logger.Log("List process", log.DEBUG)
 
 	// TODO: Buscar procesos y listarlos
 

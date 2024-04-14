@@ -2,10 +2,8 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/sisoputnfrba/tp-golang/memoria/global"
-	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 	"github.com/sisoputnfrba/tp-golang/utils/requests"
 )
@@ -21,27 +19,19 @@ type ProcessPID struct {
 }
 
 func main() {
-	args := os.Args[1:]
-	if len(args) != 1 {
-		fmt.Println("Uso: programa <go run `modulo`.go dev|prod>")
-		return
-	}
-	env := args[0]
-
-	logger := log.ConfigureLogger(MEMORYLOG, env)
-	memoryConfig := config.LoadConfiguration[global.MemoryConfig]("./config/config.json", logger)
+	global.InitGlobal()
 
 	processPath := ProcessPath{
 		Path: "sisop/tp-go/path",
 	}
 
-	processPID, err := requests.PutHTTPwithBody[ProcessPath, ProcessPID](memoryConfig.IPKernel, memoryConfig.PortKernel, "process", processPath, &logger)
-
+	processPID, err := requests.PutHTTPwithBody[ProcessPath, ProcessPID](global.MemoryConfig.IPKernel, global.MemoryConfig.PortKernel, "process", processPath)
 	if err != nil {
-		logger.Log("Error con el put: "+err.Error(), log.ERROR)
+		global.Logger.Log("Error con el put: "+err.Error(), log.ERROR)
 	}
+	global.Logger.Log(fmt.Sprintf("Struct: %+v", processPID), log.INFO)
 
-	logger.Log(fmt.Sprintf("Struct: %+v", processPID), log.INFO)
+	requests.PutHTTPwithBody[interface{}, interface{}](global.MemoryConfig.IPKernel, global.MemoryConfig.PortKernel, "plani", nil)
 
-	logger.CloseLogger()
+	global.Logger.CloseLogger()
 }

@@ -15,14 +15,14 @@ const (
 	ERROR LogLevel = "ERROR"
 )
 
-type Logger struct {
+type LoggerStruct struct {
 	Logger      *log.Logger
 	LogFile     *os.File
 	environment string
 }
 
 // Log formats and logs a message at the given severity level.
-func (l *Logger) Log(message string, level LogLevel) {
+func (l *LoggerStruct) Log(message string, level LogLevel) {
 	if l.environment == "prod" && level == "DEBUG" {
 		return
 	}
@@ -31,17 +31,18 @@ func (l *Logger) Log(message string, level LogLevel) {
 	l.Logger.Println(format)
 }
 
-func (l *Logger) CloseLogger() {
+func (l *LoggerStruct) CloseLogger() {
 	l.LogFile.Close()
 }
 
 // Initializes a Logger to write to both stdout and a specified file.
-func ConfigureLogger(filename, env string) Logger {
+func ConfigureLogger(filename, env string) *LoggerStruct {
 	logFile, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
 	if err != nil {
-		panic(err)
+		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 	mw := io.MultiWriter(os.Stdout, logFile)
-	logger := Logger{Logger: log.New(mw, "", log.LstdFlags), LogFile: logFile, environment: env}
-	return logger
+	logger := LoggerStruct{Logger: log.New(mw, "", log.LstdFlags), LogFile: logFile, environment: env}
+	return &logger
 }
