@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	handlers "github.com/sisoputnfrba/tp-golang/kernel/api/handlers"
-	"github.com/sisoputnfrba/tp-golang/kernel/global"
+	global "github.com/sisoputnfrba/tp-golang/kernel/global"
 	server "github.com/sisoputnfrba/tp-golang/utils/server"
 )
 
