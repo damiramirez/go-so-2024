@@ -20,7 +20,7 @@ func main() {
 	processSlice, _ := requests.GetHTTP[ProcessState](global.IOConfig.IPKernel, global.IOConfig.PortKernel, "process/12")
 	global.Logger.Log(fmt.Sprintf("%+v", processSlice), log.INFO)
 
-	requests.DeleteHTTP[interface{}]("plani", global.IOConfig.PortKernel, nil, global.IOConfig.IPKernel)
+	// requests.DeleteHTTP[interface{}]("plani", global.IOConfig.PortKernel, nil, global.IOConfig.IPKernel)
 
 	global.Logger.CloseLogger()
 }

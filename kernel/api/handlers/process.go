@@ -1,11 +1,11 @@
-package handler
+package handlers
 
 import (
 	"fmt"
 	"net/http"
 	"strconv"
 
-	"github.com/sisoputnfrba/tp-golang/kernel/global"
+	global "github.com/sisoputnfrba/tp-golang/kernel/global"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 	"github.com/sisoputnfrba/tp-golang/utils/serialization"
 )
@@ -18,7 +18,7 @@ type Process struct {
 }
 
 // Handler para devolver a memoria el estado del proceso
-func ProcessStateHandler(w http.ResponseWriter, r *http.Request) {
+func ProcessByIdHandler(w http.ResponseWriter, r *http.Request) {
 	pid, _ := strconv.Atoi(r.PathValue("pid"))
 	global.Logger.Log(fmt.Sprintf("State - PID: %d", pid), log.DEBUG)
 
