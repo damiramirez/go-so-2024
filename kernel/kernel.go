@@ -2,29 +2,20 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/api"
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
-	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 )
 
-const KERNELLOG = "./kernel.log"
-
 func main() {
-	args := os.Args[1:]
-	if len(args) != 1 {
-		fmt.Println("Uso: programa <go run `modulo`.go dev|prod>")
+	global.InitGlobal()
+	defer global.Logger.CloseLogger()
+
+	server := api.NewServer()
+	err := server.Start()
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Failed to start kernel API server: %v", err), log.ERROR)
 		return
 	}
-	env := args[0]
-
-	logger := log.ConfigureLogger(KERNELLOG, env)
-	global.KernelConfig = config.LoadConfiguration[global.Config]("./config/config.json", logger)
-
-	server := api.NewServer(logger)
-	server.Start()
-
-	logger.CloseLogger()
 }

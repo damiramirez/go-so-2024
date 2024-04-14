@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"os"
 
 	handler "github.com/sisoputnfrba/tp-golang/kernel/api/handler"
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
@@ -12,41 +11,29 @@ import (
 
 type Server struct {
 	router *http.ServeMux
-	logger log.Logger
+	logger *log.LoggerStruct
 }
 
 // Crea una nueva instancia de Server
-func NewServer(logger log.Logger) *Server {
+func NewServer() *Server {
 	return &Server{
 		router: http.NewServeMux(),
-		logger: logger,
+		logger: global.Logger,
 	}
 }
 
 // Configura las rutas de la API
 func (s *Server) ConfigureRoutes() {
-	s.router.HandleFunc("GET /process", func(w http.ResponseWriter, r *http.Request) {
-		handler.ListProcessHandler(w, r, s.logger)
-	})
-	s.router.HandleFunc("GET /process/{pid}", func(w http.ResponseWriter, r *http.Request) {
-		handler.ProcessStateHandler(w, r, s.logger)
-	})
-	s.router.HandleFunc("PUT /process", func(w http.ResponseWriter, r *http.Request) {
-		handler.InitProcessHandler(w, r, s.logger)
-	})
-	s.router.HandleFunc("DELETE /process/{pid}", func(w http.ResponseWriter, r *http.Request) {
-		handler.EndProcessHandler(w, r, s.logger)
-	})
-	s.router.HandleFunc("PUT /plani", func(w http.ResponseWriter, r *http.Request) {
-		handler.InitPlanningHandler(w, r, s.logger)
-	})
-	s.router.HandleFunc("DELETE /plani", func(w http.ResponseWriter, r *http.Request) {
-		handler.StopPlanningHandler(w, r, s.logger)
-	})
+	s.router.HandleFunc("GET /process", handler.ListProcessHandler)
+	s.router.HandleFunc("GET /process/{pid}", handler.ProcessStateHandler)
+	s.router.HandleFunc("PUT /process", handler.InitProcessHandler)
+	s.router.HandleFunc("DELETE /process/{pid}", handler.EndProcessHandler)
+	s.router.HandleFunc("PUT /plani", handler.InitPlanningHandler)
+	s.router.HandleFunc("DELETE /plani", handler.StopPlanningHandler)
 }
 
 // Inicia el servidor HTTP
-func (s *Server) Start() {
+func (s *Server) Start() error {
 	s.ConfigureRoutes()
 
 	port := global.KernelConfig.Port
@@ -55,7 +42,8 @@ func (s *Server) Start() {
 
 	err := http.ListenAndServe(fmt.Sprintf(":%d", port), s.router)
 	if err != nil {
-		s.logger.Log(fmt.Sprintf("Failed to start kernel API server: %v", err), log.ERROR)
-		os.Exit(1)
+		return err
 	}
+
+	return nil
 }
