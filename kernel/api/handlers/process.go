@@ -1,11 +1,11 @@
-package handler
+package handlers
 
 import (
 	"fmt"
 	"net/http"
 	"strconv"
 
-	"github.com/sisoputnfrba/tp-golang/kernel/global"
+	global "github.com/sisoputnfrba/tp-golang/kernel/global"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 	"github.com/sisoputnfrba/tp-golang/utils/serialization"
 )
@@ -18,7 +18,7 @@ type Process struct {
 }
 
 // Handler para devolver a memoria el estado del proceso
-func ProcessStateHandler(w http.ResponseWriter, r *http.Request) {
+func ProcessByIdHandler(w http.ResponseWriter, r *http.Request) {
 	pid, _ := strconv.Atoi(r.PathValue("pid"))
 	global.Logger.Log(fmt.Sprintf("State - PID: %d", pid), log.DEBUG)
 
@@ -60,6 +60,9 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error al decodear el body", http.StatusBadRequest)
 		return
 	}
+
+	resp, _ := http.Get("http://127.0.0.1:8002/ping")
+	global.Logger.Log("Resp de memoria: "+resp.Status, log.INFO)
 
 	// TODO: Crear proceso - PCB y dejarlo en NEW
 	global.Logger.Log("Init process - Path: "+pPath.Path, log.DEBUG)

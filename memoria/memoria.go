@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	"os"
 
-	"github.com/sisoputnfrba/tp-golang/memoria/global"
+	api "github.com/sisoputnfrba/tp-golang/memoria/api"
+	global "github.com/sisoputnfrba/tp-golang/memoria/global"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
-	"github.com/sisoputnfrba/tp-golang/utils/requests"
 )
 
 const MEMORYLOG = "./memoria.log"
@@ -21,17 +22,13 @@ type ProcessPID struct {
 func main() {
 	global.InitGlobal()
 
-	processPath := ProcessPath{
-		Path: "sisop/tp-go/path",
-	}
+	s := api.CreateServer()
 
-	processPID, err := requests.PutHTTPwithBody[ProcessPath, ProcessPID](global.MemoryConfig.IPKernel, global.MemoryConfig.PortKernel, "process", processPath)
-	if err != nil {
-		global.Logger.Log("Error con el put: "+err.Error(), log.ERROR)
+	global.Logger.Log(fmt.Sprintf("Starting kernel server on port: %d", global.MemoryConfig.Port), log.INFO)
+	if err := s.Start(); err != nil {
+		global.Logger.Log(fmt.Sprintf("Failed to start kernel server: %v", err), log.ERROR)
+		os.Exit(1)
 	}
-	global.Logger.Log(fmt.Sprintf("Struct: %+v", processPID), log.INFO)
-
-	requests.PutHTTPwithBody[interface{}, interface{}](global.MemoryConfig.IPKernel, global.MemoryConfig.PortKernel, "plani", nil)
 
 	global.Logger.CloseLogger()
 }
