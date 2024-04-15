@@ -14,6 +14,11 @@ func InitPlanningHandler(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log("Init plani", log.DEBUG)
 
+	// Testeando
+	resp, _ := http.Get("http://127.0.0.1:8003/ping")
+
+	global.Logger.Log("Resp de CPU: "+resp.Status, log.INFO)
+
 	// TODO: Manejar planificacion
 
 	w.WriteHeader(http.StatusNoContent)

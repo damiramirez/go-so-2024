@@ -24,4 +24,6 @@ func main() {
 		global.Logger.Log(fmt.Sprintf("Failed to start kernel server: %v", err), log.ERROR)
 		os.Exit(1)
 	}
+
+	global.Logger.CloseLogger()
 }

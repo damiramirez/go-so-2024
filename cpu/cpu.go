@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/sisoputnfrba/tp-golang/cpu/api"
 	"github.com/sisoputnfrba/tp-golang/cpu/global"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
-	requests "github.com/sisoputnfrba/tp-golang/utils/requests"
 )
 
 type ProcessState struct {
@@ -16,13 +17,14 @@ type ProcessState struct {
 func main() {
 	global.InitGlobal()
 
-	processSlice, err := requests.GetHTTP[[]ProcessState](global.CPUConfig.IPKernel, global.CPUConfig.PortKernel, "process")
-	if err != nil {
-		global.Logger.Log(err.Error(), log.ERROR)
-		return
-	}
+	s := api.CreateServer()
 
-	global.Logger.Log(fmt.Sprintf("%+v", processSlice), log.INFO)
+	// Levanto server
+	global.Logger.Log(fmt.Sprintf("Starting cpu server on port: %d", global.CPUConfig.Port), log.INFO)
+	if err := s.Start(); err != nil {
+		global.Logger.Log(fmt.Sprintf("Failed to start cpu server: %v", err), log.ERROR)
+		os.Exit(1)
+	}
 
 	global.Logger.CloseLogger()
 }

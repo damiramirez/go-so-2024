@@ -61,6 +61,9 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	resp, _ := http.Get("http://127.0.0.1:8002/ping")
+	global.Logger.Log("Resp de memoria: "+resp.Status, log.INFO)
+
 	// TODO: Crear proceso - PCB y dejarlo en NEW
 	global.Logger.Log("Init process - Path: "+pPath.Path, log.DEBUG)
 
