@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 )
 
 func GetHTTP[T any](ip string, port int, endpoint string) (*T, error) {
@@ -63,21 +62,10 @@ func PutHTTPwithBody[T any, R any](ip string, port int, endpoint string, data T)
 // desarolle una funcion q permite hacer los deletes con plani y process con PID aplicable a la funcion de arriba
 // para q funcione deberiamos pasarles como parametro en donde dice endpointwithpid en el caso de un proccess/pid
 // en el caso de plani/
-func DeleteHTTP[T any](endpointwithPID string, port int, data T, ip string) (*T, error) {
+func DeleteHTTP[T any](endpoint string, port int, data T, ip string) (*T, error) {
 	var RespData T
-	Delimitador := "/"
-	SplitString := strings.Split(endpointwithPID, Delimitador)
-	endpoint := SplitString[0]
-	var url string
-	Pid := SplitString[1]
-	if len(Pid) == 0 {
-		url = fmt.Sprintf("http://%s:%d/%s", ip, port, endpoint)
-	}
-	if len(Pid) != 0 {
-		url = fmt.Sprintf("http://%s:%d/%s/%s", ip, port, endpoint, Pid)
-	}
+	url := fmt.Sprintf("http://%s:%d/%s", ip, port, endpoint)
 	body, err := json.Marshal(data)
-
 	if err != nil {
 		return &RespData, err
 	}
@@ -97,12 +85,10 @@ func DeleteHTTP[T any](endpointwithPID string, port int, data T, ip string) (*T,
 		return nil, nil
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&RespData)
-	//no devuelve nada por ahora por lo que despues se deberia modificar
-	/*if err != nil {
-		logger.Log(fmt.Sprintf("Error al decodificar la respuesta: %s", err), log.ERROR)
+	err = json.NewDecoder(resp.Body).Decode(&RespData)
+	if err != nil {
 		return &RespData, err
-	}*/ //comento para despues implementarlo en el caso de que no se pueda decodificar la respuesta
+	}
 
 	return &RespData, nil
 }
