@@ -7,7 +7,6 @@ import (
 	api "github.com/sisoputnfrba/tp-golang/kernel/api"
 	global "github.com/sisoputnfrba/tp-golang/kernel/global"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
-	server "github.com/sisoputnfrba/tp-golang/utils/server"
 )
 
 func main() {
@@ -16,9 +15,8 @@ func main() {
 	global.InitGlobal()
 
 	// Creo la config con su puerto y respectivas rutas
-	serverConfig := api.NewServerConfig()
 	// Uso el modulo utils/server para crear el servidor con la configuracion anterior
-	s := server.NewServer(serverConfig)
+	s := api.CreateServer()
 
 	// Levanto server
 	global.Logger.Log(fmt.Sprintf("Starting kernel server on port: %d", global.KernelConfig.Port), log.INFO)

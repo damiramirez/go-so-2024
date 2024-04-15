@@ -5,11 +5,12 @@ import (
 
 	handlers "github.com/sisoputnfrba/tp-golang/kernel/api/handlers"
 	global "github.com/sisoputnfrba/tp-golang/kernel/global"
-	server "github.com/sisoputnfrba/tp-golang/utils/server"
+	"github.com/sisoputnfrba/tp-golang/utils/server"
 )
 
-func NewServerConfig() server.Config {
-	return server.Config{
+func CreateServer() *server.Server {
+
+	configServer := server.Config{
 		Port: global.KernelConfig.Port,
 		Handlers: map[string]http.HandlerFunc{
 			"GET /process":          handlers.ListProcessHandler,
@@ -20,4 +21,5 @@ func NewServerConfig() server.Config {
 			"DELETE /plani":         handlers.StopPlanningHandler,
 		},
 	}
+	return server.NewServer(configServer)
 }
