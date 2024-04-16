@@ -9,14 +9,12 @@ import (
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 )
 
-type ProcessState struct {
-	PID   int    `json:"pid"`
-	State string `json:"state"`
-}
-
 func main() {
+	// Me crea el loger y la configuracion - Lo puedo usar en cualquier parte del modulo ahora
 	global.InitGlobal()
 
+	// Creo la config con su puerto y respectivas rutas
+	// Uso el modulo utils/server para crear el servidor con la configuracion anterior
 	s := api.CreateServer()
 
 	// Levanto server
