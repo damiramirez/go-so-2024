@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	handlers "github.com/sisoputnfrba/tp-golang/kernel/api/handlers"
+	"github.com/sisoputnfrba/tp-golang/kernel/api/handlers"
 	global "github.com/sisoputnfrba/tp-golang/kernel/global"
 	"github.com/sisoputnfrba/tp-golang/utils/server"
 )
