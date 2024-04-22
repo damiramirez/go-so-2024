@@ -27,6 +27,8 @@ var KernelConfig *Config
 
 var Logger *log.LoggerStruct
 
+var nextPID int = 1
+
 func InitGlobal() {
 	args := os.Args[1:]
 	if len(args) != 1 {
@@ -37,4 +39,10 @@ func InitGlobal() {
 
 	Logger = log.ConfigureLogger(KERNELLOG, env)
 	KernelConfig = config.LoadConfiguration[Config]("./config/config.json")
+}
+
+func GetNextPID() int {
+	actualPID := nextPID
+	nextPID++
+	return actualPID
 }
