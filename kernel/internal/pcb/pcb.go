@@ -2,10 +2,18 @@ package pcb
 
 import "github.com/sisoputnfrba/tp-golang/kernel/global"
 
+const (
+	NEW = 1
+	READY = 2
+	EXEC = 3
+	BLOCKED = 4
+	EXIT = 5
+)
+
 type PCB struct {
 	PID              int
-	State            string
-	EndState         string
+	State            int
+	EndState         int
 	PC               int
 	CPUTime          int
 	Quatum           int
@@ -23,7 +31,7 @@ type CpuRegisters struct {
 func CreateNewProcess() *PCB {
 	return &PCB{
 		PID:     global.GetNextPID(),
-		State:   "NEW",
+		State:   NEW,
 		PC:      0,
 		CPUTime: 0,
 		Quatum:  global.KernelConfig.Quantum,
@@ -34,6 +42,6 @@ func CreateNewProcess() *PCB {
 			DX: 0,
 		},
 		RemainingQuantum: global.KernelConfig.Quantum,
-		EndState:         "",
+		// EndState:         ,
 	}
 }
