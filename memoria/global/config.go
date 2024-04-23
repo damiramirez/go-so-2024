@@ -22,37 +22,21 @@ type Config struct {
 
 var MemoryConfig *Config
 var Logger *log.LoggerStruct
-var ConfigPag Config 
-var numPages = ConfigPag.MemorySize/ConfigPag.PageSize
 
-var ByteArray = make([]byte,ConfigPag.PageSize)
-type Page struct {
-    data []byte
+var NumPages int
+
+type MemoryST struct {
+    pages []byte
 }
-type PageTable []*Page
-type Memory struct {
-    pages PageTable
-}
+var Memory *MemoryST
 // Se inicializa cada página de la memoria con datos vacíos
-func NewMemory() *Memory {
-    mem := Memory{}
-    for i := 0; i < numPages; i++ {
-        mem.pages[i] = &Page{}
-    }
+func NewMemory() *MemoryST {
+	NumPages = MemoryConfig.MemorySize/MemoryConfig.PageSize
+	var ByteArray = make([]byte,MemoryConfig.PageSize)
+    mem := MemoryST{pages: ByteArray}
     return &mem
 }
-//escribe en memoria 
-// falta desarollar la funcion 
-func WriteinMemory(data []byte,mem *Memory) {
-    /*pageIndex := address / ConfigPag.PageSize
-    offset := address % ConfigPag.PageSize
-    if pageIndex < numPages && offset+len(data) <= ConfigPag.PageSize {
-        copy(mem.pages[pageIndex].data[offset:], data)
-    } else {
-        fmt.Println("Error: Dirección de memoria fuera de rango")
-    }*/
-    Logger.Log("Se escribio en memoria ", log.DEBUG)
-}
+	
 
 func InitGlobal() {
 	args := os.Args[1:]
@@ -64,4 +48,5 @@ func InitGlobal() {
 
 	Logger = log.ConfigureLogger(MEMORYLOG, env)
 	MemoryConfig = config.LoadConfiguration[Config]("./config/config.json")
+	Memory=NewMemory()
 }
