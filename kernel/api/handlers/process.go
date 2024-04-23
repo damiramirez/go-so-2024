@@ -6,6 +6,8 @@ import (
 	"strconv"
 
 	global "github.com/sisoputnfrba/tp-golang/kernel/global"
+	"github.com/sisoputnfrba/tp-golang/kernel/internal/pcb"
+	"github.com/sisoputnfrba/tp-golang/kernel/utils"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 	"github.com/sisoputnfrba/tp-golang/utils/serialization"
 )
@@ -43,16 +45,11 @@ func ProcessByIdHandler(w http.ResponseWriter, r *http.Request) {
 	global.Logger.Log(fmt.Sprintf("Process %d - State: %s", pid, state), log.DEBUG)
 }
 
-// Se encargará de ejecutar un nuevo proceso en base a un archivo
-// dentro del file system de Linux. Dicho mensaje se encargará de
-// la creación del proceso (PCB) y dejará el mismo en el estado NEW.
 func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 	type ProcessPath struct {
 		Path string `json:"path"`
 	}
-
 	var pPath ProcessPath
-
 	err := serialization.DecodeHTTPBody(r, &pPath)
 
 	if err != nil {
@@ -60,18 +57,16 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error al decodear el body", http.StatusBadRequest)
 		return
 	}
-
-	resp, _ := http.Get("http://127.0.0.1:8002/ping")
-	global.Logger.Log("Resp de memoria: "+resp.Status, log.INFO)
-
-	// TODO: Crear proceso - PCB y dejarlo en NEW
 	global.Logger.Log("Init process - Path: "+pPath.Path, log.DEBUG)
 
-	processPID := struct {
-		PID int `json:"pid"`
-	}{
-		PID: 321,
-	}
+	// TODO: Request a memoria - enviar instrucciones
+
+	pcb := pcb.CreateNewProcess()
+	global.Logger.Log(fmt.Sprintf("PCB: %+v", pcb), log.DEBUG)
+
+	// TODO: Agregar a una cola de NEW
+
+	processPID := utils.ProcessPID{PID: pcb.PID}
 
 	err = serialization.EncodeHTTPResponse(w, processPID, http.StatusCreated)
 	if err != nil {
