@@ -14,6 +14,7 @@ func CreateServer() *server.Server {
 		Handlers: map[string]http.HandlerFunc{
 			"GET  /ping": func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("msg: Se conecto a Memoria")) },
 			"PUT /process": handlers.CodeReciever,
+			"PUT /process/{pid}":handlers.SendInstruction,
 		},
 	}
 	return server.NewServer(configServer)

@@ -49,4 +49,5 @@ func InitGlobal() {
 	Logger = log.ConfigureLogger(MEMORYLOG, env)
 	MemoryConfig = config.LoadConfiguration[Config]("./config/config.json")
 	Memory=NewMemory()
+	
 }
