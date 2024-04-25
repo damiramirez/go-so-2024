@@ -65,7 +65,10 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 	global.Logger.Log(fmt.Sprintf("PCB: %+v", pcb), log.DEBUG)
 
 	// TODO: Agregar a una cola de NEW
+	global.NewState.PushBack(pcb)
+	global.Logger.Log(fmt.Sprintf("Longitud cola de new: %d", global.NewState.Len()), log.DEBUG)
 
+	
 	processPID := utils.ProcessPID{PID: pcb.PID}
 
 	err = serialization.EncodeHTTPResponse(w, processPID, http.StatusCreated)
@@ -99,6 +102,8 @@ func ListProcessHandler(w http.ResponseWriter, r *http.Request) {
 		{PID: 1, State: "READY"},
 		{PID: 2, State: "EXEC"},
 	}
+
+	global.Logger.Log(fmt.Sprintf("Longitud cola de new: %d", global.NewState.Len()), log.DEBUG)
 
 	err := serialization.EncodeHTTPResponse(w, processes, http.StatusOK)
 	if err != nil {

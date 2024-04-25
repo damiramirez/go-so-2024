@@ -1,6 +1,7 @@
 package global
 
 import (
+	"container/list"
 	"fmt"
 	"os"
 
@@ -24,10 +25,9 @@ type Config struct {
 }
 
 var KernelConfig *Config
-
 var Logger *log.LoggerStruct
-
 var nextPID int = 1
+var NewState *list.List
 
 func InitGlobal() {
 	args := os.Args[1:]
@@ -39,6 +39,7 @@ func InitGlobal() {
 
 	Logger = log.ConfigureLogger(KERNELLOG, env)
 	KernelConfig = config.LoadConfiguration[Config]("./config/config.json")
+	NewState = list.New()
 }
 
 func GetNextPID() int {

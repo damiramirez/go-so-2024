@@ -16,9 +16,9 @@ type PCB struct {
 	EndState         int
 	PC               int
 	CPUTime          int
-	Quatum           int
+	Quantum           int
 	RemainingQuantum int
-	Registers        *CpuRegisters
+	Registers        CpuRegisters
 }
 
 type CpuRegisters struct {
@@ -26,22 +26,17 @@ type CpuRegisters struct {
 	BX int
 	CX int
 	DX int
+	EAX int
+	EBX int
+	ECX int
+	EDX int
 }
 
 func CreateNewProcess() *PCB {
 	return &PCB{
 		PID:     global.GetNextPID(),
 		State:   NEW,
-		PC:      0,
-		CPUTime: 0,
-		Quatum:  global.KernelConfig.Quantum,
-		Registers: &CpuRegisters{
-			AX: 0,
-			BX: 0,
-			CX: 0,
-			DX: 0,
-		},
+		Quantum:  global.KernelConfig.Quantum,
 		RemainingQuantum: global.KernelConfig.Quantum,
-		// EndState:         ,
 	}
 }
