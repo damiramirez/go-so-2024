@@ -26,18 +26,26 @@ var Logger *log.LoggerStruct
 var NumPages int
 
 type MemoryST struct {
-    pages []byte
+    spaces []byte
+}
+type PageTable struct{
+	pages []byte
 }
 var Memory *MemoryST
 // Se inicializa cada página de la memoria con datos vacíos
 func NewMemory() *MemoryST {
-	NumPages = MemoryConfig.MemorySize/MemoryConfig.PageSize
-	var ByteArray = make([]byte,MemoryConfig.PageSize)
-    mem := MemoryST{pages: ByteArray}
+	
+	ByteArray := make([]byte,MemoryConfig.MemorySize)
+    mem := MemoryST{spaces: ByteArray}
+
     return &mem
 }
-	
+func NewPageTable()*PageTable{
+	ByteArray := make([]byte,MemoryConfig.PageSize)
+	pagetable:=PageTable{pages: ByteArray}
 
+	return &pagetable
+}
 func InitGlobal() {
 	args := os.Args[1:]
 	if len(args) != 1 {
@@ -49,5 +57,4 @@ func InitGlobal() {
 	Logger = log.ConfigureLogger(MEMORYLOG, env)
 	MemoryConfig = config.LoadConfiguration[Config]("./config/config.json")
 	Memory=NewMemory()
-	
 }

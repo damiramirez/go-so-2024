@@ -14,9 +14,8 @@ type PCB struct {
 	Pid string `json:"pid"`
 	Pc  int    `json:"pc"`
 }
-
+var pcb PCB
 func PCBreciever(w http.ResponseWriter, r *http.Request) {
-	var pcb PCB
 	err := serialization.DecodeHTTPBody(r, &pcb)
 	if err != nil {
 		http.Error(w, "Error al decodear el PCB", http.StatusBadRequest)
