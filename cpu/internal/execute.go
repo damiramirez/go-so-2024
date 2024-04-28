@@ -6,11 +6,9 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/model"
 )
 
-// JNZ IO_GEN_SLEEP
+// TODO: IO_GEN_SLEEP
 
-// func Execute(instruction ) error {
-
-// }
+// TODO: func Execute
 
 func set(pcb *model.PCB, instruction model.Instruction) {
 	value, _ := strconv.Atoi(instruction.Parameters[1])
@@ -31,6 +29,14 @@ func sub(pcb *model.PCB, instruction model.Instruction) {
 	sourceValue := getRegister(instruction.Parameters[1], pcb)
 	destinationValue = destinationValue - sourceValue
 	setRegister(instruction.Parameters[0], destinationValue, pcb)
+}
+
+func jnz(pcb *model.PCB, instruction model.Instruction) {
+	value := getRegister(instruction.Parameters[0], pcb)
+	if value != 0 {
+		newPC, _ := strconv.Atoi(instruction.Parameters[1])
+		pcb.PC = newPC
+	}
 }
 
 func getRegister(register string, pcb *model.PCB) int {

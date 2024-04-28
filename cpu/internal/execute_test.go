@@ -62,3 +62,38 @@ func TestSub(t *testing.T) {
 		t.Errorf("Sub failed: expected AX = %d, got %d", expected, pcb.Registers.AX)
 	}
 }
+
+func TestJnz(t *testing.T) {
+	pcb := &model.PCB{
+		Registers: model.CPURegister{
+			AX: 5, // AX es distinto de cero inicialmente
+		},
+		PC: 0,
+	}
+	instruction := model.Instruction{
+		Operation:  "JNZ",
+		Parameters: []string{"AX", "10"},
+	}
+
+	t.Run("JNZ sin 0", func(t *testing.T) {
+		jnz(pcb, instruction)
+
+		expected := 10
+		if pcb.PC != expected {
+			t.Errorf("Jnz failed: expected PC = %d, got %d", expected, pcb.PC)
+		}
+	})
+
+	// Reestablecer PCB para el siguiente test
+	pcb.Registers.AX = 0
+	pcb.PC = 0
+
+	// Test con AX cero
+	t.Run("JNZ con 0", func(t *testing.T) {
+		jnz(pcb, instruction)
+		expected := 0
+		if pcb.PC != expected {
+			t.Errorf("Jnz failed on zero condition: expected PC to remain %d, got %d", expected, pcb.PC)
+		}
+	})
+}
