@@ -1,14 +1,37 @@
 package internal
 
 import (
+	"fmt"
 	"strconv"
 
+	"github.com/sisoputnfrba/tp-golang/cpu/global"
+	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 	"github.com/sisoputnfrba/tp-golang/utils/model"
 )
 
 // TODO: IO_GEN_SLEEP
 
-// TODO: func Execute
+func Execute(pcb *model.PCB, instruction model.Instruction) {
+	switch instruction.Operation {
+	case "SET":
+		set(pcb, instruction)
+	case "SUM":
+		sum(pcb, instruction)
+	case "SUB":
+		sub(pcb, instruction)
+	case "JNZ":
+		jnz(pcb, instruction)
+		// TODO: case "IO_GEN_SLEEP"
+	}
+
+	global.Logger.Log(
+		fmt.Sprintf("PID: %d - Ejecutando: %s - %+v",
+			pcb.PID,
+			instruction.Operation,
+			instruction.Parameters,
+		),
+		log.INFO)
+}
 
 func set(pcb *model.PCB, instruction model.Instruction) {
 	value, _ := strconv.Atoi(instruction.Parameters[1])
