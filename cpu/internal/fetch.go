@@ -17,7 +17,6 @@ func Fetch(pcb *model.PCB) (*model.Instruction, error) {
 		return nil, err
 	}
 
-	// TODO: No siempre es  +1 - JNZ
 	pcb.PC++
 
 	global.Logger.Log(fmt.Sprintf("Actualizo PCB: %+v", pcb), log.DEBUG)
