@@ -6,16 +6,16 @@ type PCB struct {
 	EndState         int
 	PC               int
 	CPUTime          int
-	Quantum           int
+	Quantum          int
 	RemainingQuantum int
-	Registers        cpuRegister
+	Registers        CPURegister
 }
 
-type cpuRegister struct {
-	AX int
-	BX int
-	CX int
-	DX int
+type CPURegister struct {
+	AX  int
+	BX  int
+	CX  int
+	DX  int
 	EAX int
 	EBX int
 	ECX int
@@ -23,7 +23,6 @@ type cpuRegister struct {
 }
 
 type Instruction struct {
-	Operation string
-	Param1    string
-	Param2    string
+	Operation  string
+	Parameters []string
 }

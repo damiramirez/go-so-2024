@@ -1,7 +1,7 @@
 package internal
 
 import (
-//handlers "github.com/sisoputnfrba/tp-golang/cpu/api/handlers"
+// handlers "github.com/sisoputnfrba/tp-golang/cpu/api/handlers"
 )
 
 func AdressConverter(Page_size int, LogAdress int) (int, int) {
