@@ -18,6 +18,7 @@ type Config struct {
 	PortMemory       int    `json:"port_memory"`
 	NumberFellingTLB int    `json:"number_felling_tlb"`
 	AlgorithmTLB     string `json:"algorithm_tlb"`
+	Page_size 		 int	`json:"page_size"`	
 }
 
 var CPUConfig *Config

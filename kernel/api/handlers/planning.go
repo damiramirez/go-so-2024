@@ -16,7 +16,10 @@ func InitPlanningHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Testeando
 	resp, _ := http.Get("http://127.0.0.1:8003/ping")
-
+	/*if err!=nil{
+		http.Error(w,"error al conectarse al cpu ",500)
+		return
+	}*/
 	global.Logger.Log("Resp de CPU: "+resp.Status, log.INFO)
 
 	// TODO: Manejar planificacion

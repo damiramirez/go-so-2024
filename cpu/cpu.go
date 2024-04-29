@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-
 	"github.com/sisoputnfrba/tp-golang/cpu/api"
 	"github.com/sisoputnfrba/tp-golang/cpu/global"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
@@ -23,6 +22,6 @@ func main() {
 		global.Logger.Log(fmt.Sprintf("Failed to start cpu server: %v", err), log.ERROR)
 		os.Exit(1)
 	}
-
+	
 	global.Logger.CloseLogger()
 }

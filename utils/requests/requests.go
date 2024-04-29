@@ -11,6 +11,7 @@ func GetHTTP[T any](ip string, port int, endpoint string) (*T, error) {
 	url := fmt.Sprintf("http://%s:%d/%s", ip, port, endpoint)
 
 	resp, err := http.Get(url)
+
 	if err != nil {
 		return nil, err
 	}
