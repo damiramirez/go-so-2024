@@ -6,6 +6,7 @@ import (
 
 	"github.com/sisoputnfrba/tp-golang/cpu/global"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
+	"github.com/sisoputnfrba/tp-golang/utils/model"
 	"github.com/sisoputnfrba/tp-golang/utils/requests"
 	"github.com/sisoputnfrba/tp-golang/utils/serialization"
 )
@@ -24,6 +25,7 @@ func PCBreciever(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for {
+
 		instruction, err := requests.PutHTTPwithBody[PCB, string]("127.0.0.1", 8002, "process/1", pcb)
 		if err != nil {
 			global.Logger.Log(fmt.Sprintf("Failed to send PC: %v", err), log.ERROR)
@@ -36,4 +38,16 @@ func PCBreciever(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+}
+
+func Dispatch(w http.ResponseWriter, r *http.Request) {
+	pcb := &model.PCB{}
+	err := serialization.DecodeHTTPBody(r, pcb)
+	if err != nil {
+		http.Error(w, "Error al decodear PCB", http.StatusBadRequest)
+		global.Logger.Log(fmt.Sprintf("Error al decodear PCB: %v", err), log.ERROR)
+		return
+	}
+
+	global.Logger.Log(fmt.Sprintf("Recibi PCB %+v", pcb), log.DEBUG)
 }
