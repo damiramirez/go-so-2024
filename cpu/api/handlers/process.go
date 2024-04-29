@@ -12,8 +12,8 @@ import (
 )
 
 type PCB struct {
-	Pid string `json:"pid"`
-	Pc  int    `json:"pc"`
+	Pid int `json:"pid"`
+	Pc  int `json:"pc"`
 }
 
 var pcb PCB
@@ -25,7 +25,8 @@ func PCBreciever(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for {
-		instruction, err := requests.PutHTTPwithBody[int, string]("127.0.0.1", 8002, "process/1", pcb.Pc)
+
+		instruction, err := requests.PutHTTPwithBody[PCB, string]("127.0.0.1", 8002, "process/1", pcb)
 		if err != nil {
 			global.Logger.Log(fmt.Sprintf("Failed to send PC: %v", err), log.ERROR)
 			return
