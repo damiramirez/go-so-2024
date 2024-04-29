@@ -8,39 +8,30 @@ import (
 	"strings"
 	"time"
 
-	
-	internal "github.com/sisoputnfrba/tp-golang/memoria/internal"
 	global "github.com/sisoputnfrba/tp-golang/memoria/global"
+	internal "github.com/sisoputnfrba/tp-golang/memoria/internal"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 	"github.com/sisoputnfrba/tp-golang/utils/serialization"
 )
 
-type ProcessPath struct {
-	Path string `json:"path"`
-}
-type PCB struct {
-	Pc  int    `json:"pc"`
-	Pid string `json:"pid"`
-}
-
-// recibe el codigo q manda kernel y lo guarda en memoria
+// recibe el codigo q manda kernel y lo guarda en slice de strings
 func CodeReciever(w http.ResponseWriter, r *http.Request) {
-
-	var pPath ProcessPath
+	var pPath internal.ProcessPath
 	err := serialization.DecodeHTTPBody(r, &pPath)
 	if err != nil {
 		global.Logger.Log("Error al decodear el body: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear el body", http.StatusBadRequest)
 		return
 	}
-	//escribe en memoria
+	
 	ListInstructions, err := ReadTxt(pPath.Path)
 	if err != nil {
 		global.Logger.Log("error al leer el archivo "+err.Error(), log.ERROR)
 		http.Error(w, "Error al leer archivo", http.StatusBadRequest)
 		return
 	}
-	internal.WriteinMemory(ListInstructions)
+	internal.InstructionStorage(ListInstructions,pPath.Pid)
+	global.Logger.Log(fmt.Sprintf("%+v\n",global.DictProcess),log.INFO)
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -56,20 +47,15 @@ func ReadTxt(Path string) ([]string, error) {
 }
 
 func SendInstruction(w http.ResponseWriter, r *http.Request) {
-	var PC PCB
-	err := serialization.DecodeHTTPBody(r, &(PC.Pc))
+	var PC internal.PCB
+	err := serialization.DecodeHTTPBody(r, &PC)
 	Instruction := PC.Pc
 	if err != nil {
 		http.Error(w, "Error al decodear el PC", http.StatusBadRequest)
 		return
 	}
 	//en este paso deberia tomar la info de memoria y no del archivo
-	FilePath := fmt.Sprintf("/home/utnso/tp-2024-1c-sudoers/proceso%s.txt", r.PathValue("pid"))
-	ListInstructions, err := ReadTxt(FilePath)
-	if err != nil {
-		http.Error(w, "Error al leer el archivo", http.StatusBadRequest)
-		return
-	}
+	ListInstructions:=(global.DictProcess)[PC.Pid].Instructions
 	//de aca en adelante la logica es la misma
 	if Instruction > len(ListInstructions) { //esto chequea si la intruccion esta dentro del rango
 		global.Logger.Log("out of memory: ", log.ERROR)

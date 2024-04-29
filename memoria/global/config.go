@@ -3,7 +3,6 @@ package global
 import (
 	"fmt"
 	"os"
-
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 )
@@ -22,30 +21,11 @@ type Config struct {
 
 var MemoryConfig *Config
 var Logger *log.LoggerStruct
-
-var NumPages int
-
-type MemoryST struct {
-    spaces []byte
+type ProcessInstructions struct {
+	Instructions []string
 }
-type PageTable struct{
-	pages []byte
-}
-var Memory *MemoryST
-// Se inicializa cada página de la memoria con datos vacíos
-func NewMemory() *MemoryST {
-	
-	ByteArray := make([]byte,MemoryConfig.MemorySize)
-    mem := MemoryST{spaces: ByteArray}
-
-    return &mem
-}
-func NewPageTable()*PageTable{
-	ByteArray := make([]byte,MemoryConfig.PageSize)
-	pagetable:=PageTable{pages: ByteArray}
-
-	return &pagetable
-}
+type ListInstructions ProcessInstructions
+var DictProcess map[int]ListInstructions
 func InitGlobal() {
 	args := os.Args[1:]
 	if len(args) != 1 {
@@ -56,5 +36,5 @@ func InitGlobal() {
 
 	Logger = log.ConfigureLogger(MEMORYLOG, env)
 	MemoryConfig = config.LoadConfiguration[Config]("./config/config.json")
-	Memory=NewMemory()
+	DictProcess=map[int]ListInstructions{}
 }
