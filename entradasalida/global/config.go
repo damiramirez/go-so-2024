@@ -27,6 +27,10 @@ var IOConfig *Config
 
 var Logger *log.LoggerStruct
 
+var Esperador GenericIODevice
+
+var ListaIOGenericsActivos []GenericIODevice
+
 func InitGlobal() {
 	args := os.Args[1:]
 	if len(args) != 1 {
@@ -37,4 +41,10 @@ func InitGlobal() {
 
 	Logger = log.ConfigureLogger(IOLOG, env)
 	IOConfig = config.LoadConfiguration[Config]("./config/config.json")
+	Esperador = GenericIODevice{Name: "esperador", Type: "GENERIC"}
+}
+
+type GenericIODevice struct {
+	Name string
+	Type string
 }

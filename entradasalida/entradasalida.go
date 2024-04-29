@@ -2,49 +2,27 @@ package main
 
 import (
 	"fmt"
+	"os"
+
+	"github.com/sisoputnfrba/tp-golang/entradasalida/api"
 	"github.com/sisoputnfrba/tp-golang/entradasalida/global"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
-	"github.com/sisoputnfrba/tp-golang/utils/requests"
 )
 
-type IODevice struct {
-	Name  int    `json:"name"`
-	State string `json:"state"`
-}
-
 func main() {
-	
+
 	// Me crea el loger y la configuracion
 	global.InitGlobal()
 
-	// Funcion para iniciar una interfaz IO
+	s := api.CreateServer()
 
-	func init_IO (string name, config) {
+	global.Logger.Log(fmt.Sprintf("Starting IO server on port: %d", global.IOConfig.Port), log.INFO)
 
-
-
-
-
+	err := s.Start()
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Failed to start IO server: %v", err), log.ERROR)
+		os.Exit(1)
 	}
-
-
-
-	// Conecto el modulo IO a Kernel como cliente
-
-	for (state == waiting) {
-
-		// Estoy constantemente esperando a que Kernel me mande un mensaje (operación a realizar)
-		// Me llega el mensaje, paso a operating 
-		state = operating
-		
-		//Realizo la operacion
-
-		state = waiting
-	}
-	//processSlice, _ := requests.GetHTTP[ProcessState](global.IOConfig.IPKernel, global.IOConfig.PortKernel, "process/12")
-	//global.Logger.Log(fmt.Sprintf("%+v", processSlice), log.DEBUG)
-
-	// requests.DeleteHTTP[interface{}]("plani", global.IOConfig.PortKernel, nil, global.IOConfig.IPKernel)
 
 	global.Logger.CloseLogger()
 }
