@@ -49,6 +49,4 @@ func Dispatch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	global.Logger.Log(fmt.Sprintf("Recibi PCB %+v", pcb), log.DEBUG)
-
-	
 }

@@ -1,4 +1,4 @@
-package internal
+package execute
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ func TestSet(t *testing.T) {
 	pcb := &model.PCB{
 		Registers: model.CPURegister{},
 	}
-	instruction := model.Instruction{
+	instruction := &model.Instruction{
 		Operation:  "SET",
 		Parameters: []string{"AX", "100"},
 	}
@@ -30,7 +30,7 @@ func TestSum(t *testing.T) {
 			BX: 5,
 		},
 	}
-	instruction := model.Instruction{
+	instruction := &model.Instruction{
 		Operation:  "SUM",
 		Parameters: []string{"AX", "BX"},
 	}
@@ -50,7 +50,7 @@ func TestSub(t *testing.T) {
 			BX: 5,
 		},
 	}
-	instruction := model.Instruction{
+	instruction := &model.Instruction{
 		Operation:  "SUB",
 		Parameters: []string{"AX", "BX"},
 	}
@@ -70,7 +70,7 @@ func TestJnz(t *testing.T) {
 		},
 		PC: 0,
 	}
-	instruction := model.Instruction{
+	instruction := &model.Instruction{
 		Operation:  "JNZ",
 		Parameters: []string{"AX", "10"},
 	}

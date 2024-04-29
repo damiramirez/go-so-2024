@@ -1,4 +1,4 @@
-package internal
+package execute
 
 import (
 	"fmt"
@@ -11,7 +11,8 @@ import (
 
 // TODO: IO_GEN_SLEEP
 
-func Execute(pcb *model.PCB, instruction model.Instruction) {
+// Ejecuto -> sumo PC en dispatch?
+func Execute(pcb *model.PCB, instruction *model.Instruction) {
 	switch instruction.Operation {
 	case "SET":
 		set(pcb, instruction)
@@ -21,7 +22,7 @@ func Execute(pcb *model.PCB, instruction model.Instruction) {
 		sub(pcb, instruction)
 	case "JNZ":
 		jnz(pcb, instruction)
-		// TODO: case "IO_GEN_SLEEP"
+	// case "IO_GEN_SLEEP":
 	}
 
 	global.Logger.Log(
@@ -33,12 +34,12 @@ func Execute(pcb *model.PCB, instruction model.Instruction) {
 		log.INFO)
 }
 
-func set(pcb *model.PCB, instruction model.Instruction) {
+func set(pcb *model.PCB, instruction *model.Instruction) {
 	value, _ := strconv.Atoi(instruction.Parameters[1])
 	setRegister(instruction.Parameters[0], value, pcb)
 }
 
-func sum(pcb *model.PCB, instruction model.Instruction) {
+func sum(pcb *model.PCB, instruction *model.Instruction) {
 
 	destinationValue := getRegister(instruction.Parameters[0], pcb)
 	sourceValue := getRegister(instruction.Parameters[1], pcb)
@@ -46,7 +47,7 @@ func sum(pcb *model.PCB, instruction model.Instruction) {
 	setRegister(instruction.Parameters[0], destinationValue, pcb)
 }
 
-func sub(pcb *model.PCB, instruction model.Instruction) {
+func sub(pcb *model.PCB, instruction *model.Instruction) {
 
 	destinationValue := getRegister(instruction.Parameters[0], pcb)
 	sourceValue := getRegister(instruction.Parameters[1], pcb)
@@ -54,7 +55,7 @@ func sub(pcb *model.PCB, instruction model.Instruction) {
 	setRegister(instruction.Parameters[0], destinationValue, pcb)
 }
 
-func jnz(pcb *model.PCB, instruction model.Instruction) {
+func jnz(pcb *model.PCB, instruction *model.Instruction) {
 	value := getRegister(instruction.Parameters[0], pcb)
 	if value != 0 {
 		newPC, _ := strconv.Atoi(instruction.Parameters[1])
