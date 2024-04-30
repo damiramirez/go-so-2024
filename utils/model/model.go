@@ -27,3 +27,8 @@ type Instruction struct {
 	Operation  string
 	Parameters []string
 }
+
+type ProcessInstruction struct {
+	Pc  int `json:"pc"`
+	Pid int `json:"pid"`
+}

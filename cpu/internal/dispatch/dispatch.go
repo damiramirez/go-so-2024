@@ -21,12 +21,13 @@ func Dispatch(pcb *model.PCB) (*model.PCB, error) {
 			return nil, err
 		}
 		exec_result := execute.Execute(pcb, instruction)
+		global.Logger.Log(fmt.Sprintf("PCB Actualizada %+v", pcb), log.DEBUG)
 		if exec_result == execute.RETURN_CONTEXT{
 			executing = false
 		}
 	}
 
-	global.Logger.Log(fmt.Sprintf("Se termino el dispatch: %+v", pcb), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("PCB Actualizada %+v", pcb), log.INFO)
 	
 	return pcb, nil
 }

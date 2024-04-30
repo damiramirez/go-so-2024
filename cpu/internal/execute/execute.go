@@ -34,7 +34,7 @@ func Execute(pcb *model.PCB, instruction *model.Instruction) int {
 		result = CONTINUE
 	case "IO_GEN_SLEEP":
 		// TODO: Terminar con este
-			return RETURN_CONTEXT
+		result = RETURN_CONTEXT
 	}
 
 	global.Logger.Log(
