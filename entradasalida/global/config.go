@@ -27,9 +27,7 @@ var IOConfig *Config
 
 var Logger *log.LoggerStruct
 
-var Esperador GenericIODevice
-
-var ListaIOGenericsActivos []GenericIODevice
+var MapIOGenericsActivos map[string]GenericIODevice
 
 func InitGlobal() {
 	args := os.Args[1:]
@@ -41,10 +39,17 @@ func InitGlobal() {
 
 	Logger = log.ConfigureLogger(IOLOG, env)
 	IOConfig = config.LoadConfiguration[Config]("./config/config.json")
-	Esperador = GenericIODevice{Name: "esperador", Type: "GENERIC"}
+	Esperador := GenericIODevice{Name: "esperador", Type: "GENERIC"}
+	Teclado := GenericIODevice{Name: "teclado", Type: "STDIN"}
+	Pantalla := GenericIODevice{Name: "pantalla", Type: "STDOUT"}
+	MapIOGenericsActivos = map[string]GenericIODevice{}
+	MapIOGenericsActivos[Esperador.Name] = Esperador
+	MapIOGenericsActivos[Teclado.Name] = Teclado
+	MapIOGenericsActivos[Pantalla.Name] = Pantalla
 }
 
 type GenericIODevice struct {
 	Name string
 	Type string
+	EstaEnUso bool 
 }
