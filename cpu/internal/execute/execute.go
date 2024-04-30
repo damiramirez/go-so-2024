@@ -11,18 +11,30 @@ import (
 
 // TODO: IO_GEN_SLEEP
 
+const (
+	CONTINUE       = 0
+	RETURN_CONTEXT = 1
+)
+
 // Ejecuto -> sumo PC en dispatch?
-func Execute(pcb *model.PCB, instruction *model.Instruction) {
+func Execute(pcb *model.PCB, instruction *model.Instruction) int {
+	result := 0
 	switch instruction.Operation {
 	case "SET":
 		set(pcb, instruction)
+		result = CONTINUE
 	case "SUM":
 		sum(pcb, instruction)
+		result = CONTINUE
 	case "SUB":
 		sub(pcb, instruction)
+		result = CONTINUE
 	case "JNZ":
 		jnz(pcb, instruction)
-	// case "IO_GEN_SLEEP":
+		result = CONTINUE
+	case "IO_GEN_SLEEP":
+		// TODO: Terminar con este
+			return RETURN_CONTEXT
 	}
 
 	global.Logger.Log(
@@ -32,6 +44,8 @@ func Execute(pcb *model.PCB, instruction *model.Instruction) {
 			instruction.Parameters,
 		),
 		log.INFO)
+
+	return result
 }
 
 func set(pcb *model.PCB, instruction *model.Instruction) {

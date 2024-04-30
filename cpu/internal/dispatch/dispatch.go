@@ -20,9 +20,13 @@ func Dispatch(pcb *model.PCB) (*model.PCB, error) {
 		if err != nil {
 			return nil, err
 		}
-
-		execute.Execute(pcb, instruction)
+		exec_result := execute.Execute(pcb, instruction)
+		if exec_result == execute.RETURN_CONTEXT{
+			executing = false
+		}
 	}
+
+	global.Logger.Log(fmt.Sprintf("Se termino el dispatch: %+v", pcb), log.DEBUG)
 	
 	return pcb, nil
 }
