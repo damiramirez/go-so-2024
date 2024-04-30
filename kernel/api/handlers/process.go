@@ -9,6 +9,7 @@ import (
 	"github.com/sisoputnfrba/tp-golang/kernel/internal/pcb"
 	"github.com/sisoputnfrba/tp-golang/kernel/utils"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
+	"github.com/sisoputnfrba/tp-golang/utils/requests"
 	"github.com/sisoputnfrba/tp-golang/utils/serialization"
 )
 
@@ -60,6 +61,15 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 	global.Logger.Log("Init process - Path: "+pPath.Path, log.DEBUG)
 
 	// TODO: Request a memoria - enviar instrucciones
+	_ ,err = requests.PutHTTPwithBody[ProcessPath,interface{}](global.KernelConfig.IPMemory,global.KernelConfig.PortMemory,"process",pPath)
+	
+	if err!=nil{
+		global.Logger.Log("Error al enviar instruccion "+err.Error(), log.ERROR)
+		http.Error(w, "Error al enviar instruccion", http.StatusBadRequest)
+		return
+	}
+
+
 
 	pcb := pcb.CreateNewProcess()
 	global.Logger.Log(fmt.Sprintf("PCB: %+v", pcb), log.DEBUG)

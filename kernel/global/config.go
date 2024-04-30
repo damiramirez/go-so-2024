@@ -27,7 +27,16 @@ type Config struct {
 var KernelConfig *Config
 var Logger *log.LoggerStruct
 var nextPID int = 1
+
+
+//States
+var ReadyState *list.List
 var NewState *list.List
+var BlockedState *list.List
+var RunningState *list.List
+var Exit *list.List
+
+
 
 func InitGlobal() {
 	args := os.Args[1:]
@@ -40,6 +49,13 @@ func InitGlobal() {
 	Logger = log.ConfigureLogger(KERNELLOG, env)
 	KernelConfig = config.LoadConfiguration[Config]("./config/config.json")
 	NewState = list.New()
+	ReadyState= list.New()
+	BlockedState= list.New()
+	RunningState= list.New()
+	Exit= list.New()
+
+
+
 }
 
 func GetNextPID() int {
