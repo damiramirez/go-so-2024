@@ -26,6 +26,28 @@ type ProcessInstructions struct {
 }
 type ListInstructions ProcessInstructions
 var DictProcess map[int]ListInstructions
+type MemoryST struct {
+	spaces []byte
+}
+type PageTable struct {
+	pages []byte
+}
+var Memory *MemoryST
+func NewMemory() *MemoryST {
+	
+	ByteArray := make([]byte,MemoryConfig.MemorySize)
+    mem := MemoryST{spaces: ByteArray}
+
+    return &mem
+}
+var PTable *PageTable
+func NewPageTable()*PageTable{
+    
+	ByteArray := make([]byte,MemoryConfig.PageSize)
+	pagetable:=PageTable{pages: ByteArray}
+
+	return &pagetable
+}
 func InitGlobal() {
 	args := os.Args[1:]
 	if len(args) != 1 {
@@ -37,4 +59,6 @@ func InitGlobal() {
 	Logger = log.ConfigureLogger(MEMORYLOG, env)
 	MemoryConfig = config.LoadConfiguration[Config]("./config/config.json")
 	DictProcess=map[int]ListInstructions{}
+	Memory=NewMemory()
+	PTable=NewPageTable()
 }

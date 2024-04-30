@@ -16,15 +16,17 @@ type PCB struct {
 }
 
 var pcb PCB
-
+var EndPoint string
 func PCBreciever(w http.ResponseWriter, r *http.Request) {
 	err := serialization.DecodeHTTPBody(r, &pcb)
 	if err != nil {
 		http.Error(w, "Error al decodear el PCB", http.StatusBadRequest)
 		return
 	}
+	EndPoint=fmt.Sprintf("process/%d",pcb.Pid)
 	for {
-		instruction, err := requests.PutHTTPwithBody[PCB, string]("127.0.0.1", 8002, "process/1", pcb)
+		instruction, err := requests.PutHTTPwithBody[PCB, string](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory,
+			EndPoint, pcb)
 		if err != nil {
 			global.Logger.Log(fmt.Sprintf("Failed to send PC: %v", err), log.ERROR)
 			return
