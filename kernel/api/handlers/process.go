@@ -47,9 +47,12 @@ func ProcessByIdHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
+
 	type ProcessPath struct {
 		Path string `json:"path"`
+		
 	}
+	
 	var pPath ProcessPath
 	err := serialization.DecodeHTTPBody(r, &pPath)
 
@@ -60,25 +63,32 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	global.Logger.Log("Init process - Path: "+pPath.Path, log.DEBUG)
 
-	// TODO: Request a memoria - enviar instrucciones
-	_ ,err = requests.PutHTTPwithBody[ProcessPath,interface{}](global.KernelConfig.IPMemory,global.KernelConfig.PortMemory,"process",pPath)
-	
-	if err!=nil{
-		global.Logger.Log("Error al enviar instruccion "+err.Error(), log.ERROR)
-		http.Error(w, "Error al enviar instruccion", http.StatusBadRequest)
-		return
+	pcb := pcb.CreateNewProcess()
+
+	type ProcessMemory struct {
+		Path string `json:"path"`
+		PID  int    `json:"pid"`
+	}
+	processMemory:=ProcessMemory{
+		Path:pPath.Path, 
+		PID: pcb.PID,
 	}
 
-
-
-	pcb := pcb.CreateNewProcess()
 	global.Logger.Log(fmt.Sprintf("PCB: %+v", pcb), log.DEBUG)
 
 	// TODO: Agregar a una cola de NEW
 	global.NewState.PushBack(pcb)
 	global.Logger.Log(fmt.Sprintf("Longitud cola de new: %d", global.NewState.Len()), log.DEBUG)
 
-	
+	// TODO: Request a memoria - enviar instrucciones
+	_, err = requests.PutHTTPwithBody[ProcessMemory, interface{}](global.KernelConfig.IPMemory, global.KernelConfig.PortMemory, "process", processMemory)
+
+	if err != nil {
+		global.Logger.Log("Error al enviar instruccion "+err.Error(), log.ERROR)
+		http.Error(w, "Error al enviar instruccion", http.StatusBadRequest)
+		return
+	}
+
 	processPID := utils.ProcessPID{PID: pcb.PID}
 
 	err = serialization.EncodeHTTPResponse(w, processPID, http.StatusCreated)

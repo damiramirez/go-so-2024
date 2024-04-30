@@ -2,7 +2,7 @@ package model
 
 type PCB struct {
 	PID              int
-	State            int
+	State            string
 	EndState         int
 	PC               int
 	CPUTime          int
