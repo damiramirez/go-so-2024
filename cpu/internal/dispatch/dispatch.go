@@ -5,7 +5,7 @@ import (
 
 	"github.com/sisoputnfrba/tp-golang/cpu/global"
 	"github.com/sisoputnfrba/tp-golang/cpu/internal/execute"
-	"github.com/sisoputnfrba/tp-golang/cpu/internal/fetch"
+	internal "github.com/sisoputnfrba/tp-golang/cpu/internal/fetch"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 	"github.com/sisoputnfrba/tp-golang/utils/model"
 )
@@ -16,7 +16,7 @@ func Dispatch(pcb *model.PCB) (*model.PCB, error) {
 	executing := true
 
 	for executing {
-		instruction, err := fetch.Fetch(pcb)
+		instruction, err := internal.Fetch(pcb)
 		if err != nil {
 			return nil, err
 		}
