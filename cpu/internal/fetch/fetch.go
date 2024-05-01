@@ -12,35 +12,35 @@ import (
 
 func Fetch(pcb *model.PCB) (*model.Instruction, error) {
 	// instruction, err := getInstruction(pcb.PID, pcb.PC)
-	instruction, err := getInstruction2(pcb.PID, pcb.PC)
+	instruction, err := getInstruction(pcb.PID, pcb.PC)
 	if err != nil {
 		global.Logger.Log("Error al obtener la instruccion: "+err.Error(), log.ERROR)
 		return nil, err
 	}
 
+	global.Logger.Log(fmt.Sprintf("PID: %d - FETCH - Program Counter: %d", pcb.PID, pcb.PC), log.INFO)
 	pcb.PC++
-	global.Logger.Log(fmt.Sprintf("PC %d => Instruccion recibida: %+v", pcb.PC, instruction), log.DEBUG)
 	return instruction, err
 }
 
-func getInstruction(id, address int) (*model.Instruction, error) {
-	path := fmt.Sprintf("process/%d/instructions/%d", id, address)
-	instruction, err := requests.GetHTTP[model.Instruction](
-		global.CPUConfig.IPMemory,
-		global.CPUConfig.PortMemory,
-		path,
-	)
+// func getInstruction(id, address int) (*model.Instruction, error) {
+// 	path := fmt.Sprintf("process/%d/instructions/%d", id, address)
+// 	instruction, err := requests.GetHTTP[model.Instruction](
+// 		global.CPUConfig.IPMemory,
+// 		global.CPUConfig.PortMemory,
+// 		path,
+// 	)
 
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al solicitar instrucción desde memoria: %v", err), log.ERROR)
-		return nil, err
-	}
+// 	if err != nil {
+// 		global.Logger.Log(fmt.Sprintf("Error al solicitar instrucción desde memoria: %v", err), log.ERROR)
+// 		return nil, err
+// 	}
 
-	global.Logger.Log(fmt.Sprintf("Instruction: %+v", instruction), log.DEBUG)
-	return instruction, nil
-}
+// 	global.Logger.Log(fmt.Sprintf("Instruction: %+v", instruction), log.DEBUG)
+// 	return instruction, nil
+// }
 
-func getInstruction2(id, pc int) (*model.Instruction, error) {
+func getInstruction(id, pc int) (*model.Instruction, error) {
 	path := fmt.Sprintf("process/%d", id)
 	proccesInstruction := model.ProcessInstruction{
 		Pid: id,
