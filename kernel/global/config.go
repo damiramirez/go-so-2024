@@ -4,6 +4,7 @@ import (
 	"container/list"
 	"fmt"
 	"os"
+	"sync"
 
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
@@ -28,15 +29,19 @@ var KernelConfig *Config
 var Logger *log.LoggerStruct
 var nextPID int = 1
 
-
-//States
+// States
 var ReadyState *list.List
 var NewState *list.List
 var BlockedState *list.List
 var RunningState *list.List
 var Exit *list.List
 
+// Mutex
+var MutexReadyState sync.Mutex
+var MutexNewState sync.Mutex
 
+// Semaforos
+var SemMulti chan int
 
 func InitGlobal() {
 	args := os.Args[1:]
@@ -48,14 +53,14 @@ func InitGlobal() {
 
 	Logger = log.ConfigureLogger(KERNELLOG, env)
 	KernelConfig = config.LoadConfiguration[Config]("./config/config.json")
+
 	NewState = list.New()
-	ReadyState= list.New()
-	BlockedState= list.New()
-	RunningState= list.New()
-	Exit= list.New()
+	ReadyState = list.New()
+	BlockedState = list.New()
+	RunningState = list.New()
+	Exit = list.New()
 
-
-
+	SemMulti = make(chan int, KernelConfig.Multiprogramming)
 }
 
 func GetNextPID() int {

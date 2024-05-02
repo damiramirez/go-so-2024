@@ -9,6 +9,7 @@ type PCB struct {
 	Quantum          int
 	RemainingQuantum int
 	Registers        CPURegister
+	FinalState       string
 }
 
 type CPURegister struct {

@@ -50,9 +50,8 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 
 	type ProcessPath struct {
 		Path string `json:"path"`
-		
 	}
-	
+
 	var pPath ProcessPath
 	err := serialization.DecodeHTTPBody(r, &pPath)
 
@@ -69,9 +68,9 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 		Path string `json:"path"`
 		PID  int    `json:"pid"`
 	}
-	processMemory:=ProcessMemory{
-		Path:pPath.Path, 
-		PID: pcb.PID,
+	processMemory := ProcessMemory{
+		Path: pPath.Path,
+		PID:  pcb.PID,
 	}
 
 	global.Logger.Log(fmt.Sprintf("PCB: %+v", pcb), log.DEBUG)
@@ -81,14 +80,15 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 	global.Logger.Log(fmt.Sprintf("Longitud cola de new: %d", global.NewState.Len()), log.DEBUG)
 
 	// TODO: Request a memoria - enviar instrucciones
-	_, err = requests.PutHTTPwithBody[ProcessMemory, interface{}](global.KernelConfig.IPMemory, global.KernelConfig.PortMemory, "process", processMemory)
+	requests.PutHTTPwithBody[ProcessMemory, interface{}](global.KernelConfig.IPMemory, global.KernelConfig.PortMemory, "process", processMemory)
+	// _, err = requests.PutHTTPwithBody[ProcessMemory, interface{}](global.KernelConfig.IPMemory, global.KernelConfig.PortMemory, "process", processMemory)
+	// if err != nil {
+	// 	global.Logger.Log("Error al enviar instruccion "+err.Error(), log.ERROR)
+	// 	http.Error(w, "Error al enviar instruccion", http.StatusBadRequest)
+	// 	return
+	// }
 
-	if err != nil {
-		global.Logger.Log("Error al enviar instruccion "+err.Error(), log.ERROR)
-		http.Error(w, "Error al enviar instruccion", http.StatusBadRequest)
-		return
-	}
-
+	global.Logger.Log(fmt.Sprintf("Se crea el proceso %d en NEW", pcb.PID), log.INFO)
 	processPID := utils.ProcessPID{PID: pcb.PID}
 
 	err = serialization.EncodeHTTPResponse(w, processPID, http.StatusCreated)
@@ -106,7 +106,7 @@ func EndProcessHandler(w http.ResponseWriter, r *http.Request) {
 	global.Logger.Log("End process - PID: "+pid, log.DEBUG)
 
 	// TODO: Delete process
-
+	// global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: %s", pcb.PID, pcb.FinalState), log.INFO)
 	w.WriteHeader(http.StatusNoContent)
 }
 
