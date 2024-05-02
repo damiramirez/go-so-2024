@@ -41,31 +41,31 @@ func InitGlobal() {
 	IOConfig = config.LoadConfiguration[Config]("./config/config.json")
 
 	/*
-	Esperador := GenericIODevice{Name: "esperador", Type: "GENERIC"}
-	Teclado := GenericIODevice{Name: "teclado", Type: "STDIN"}
-	Pantalla := GenericIODevice{Name: "pantalla", Type: "STDOUT"}
+		Esperador := GenericIODevice{Name: "esperador", Type: "GENERIC"}
+		Teclado := GenericIODevice{Name: "teclado", Type: "STDIN"}
+		Pantalla := GenericIODevice{Name: "pantalla", Type: "STDOUT"}
 	*/
 	MapIOGenericsActivos = map[string]GenericIODevice{}
 
 	InitGenericIODevice("esperador", IOConfig)
 	InitGenericIODevice("teclado", IOConfig)
 	/*
-	MapIOGenericsActivos[Esperador.Name] = Esperador
-	MapIOGenericsActivos[Teclado.Name] = Teclado
-	MapIOGenericsActivos[Pantalla.Name] = Pantalla
+		MapIOGenericsActivos[Esperador.Name] = Esperador
+		MapIOGenericsActivos[Teclado.Name] = Teclado
+		MapIOGenericsActivos[Pantalla.Name] = Pantalla
 	*/
 }
 
 type GenericIODevice struct {
-	Name string
-	Type string
-	EstaEnUso bool 
+	Name      string
+	Type      string
+	EstaEnUso bool
 }
 
-func InitGenericIODevice (name string, IOconfig *Config){
+func InitGenericIODevice(name string, IOconfig *Config) {
 	IOConfig = config.LoadConfiguration[Config]("./config/config.json")
 	IODevice := GenericIODevice{Name: name, Type: IOConfig.Type}
 	MapIOGenericsActivos[IODevice.Name] = IODevice
-	Logger.Log (fmt.Sprintf("Nuevo IO genérico inicializado: %+v", IODevice), log.INFO)
-	Logger.Log (fmt.Sprintf("Lista de IOs inicializados: %+v", MapIOGenericsActivos), log.INFO)
+	Logger.Log(fmt.Sprintf("Nuevo IO genérico inicializado: %+v", IODevice), log.INFO)
+	Logger.Log(fmt.Sprintf("Lista de IOs inicializados: %+v", MapIOGenericsActivos), log.INFO)
 }
