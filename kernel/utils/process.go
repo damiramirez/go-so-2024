@@ -37,3 +37,26 @@ func findProcess(pid int, list *list.List) *model.PCB{
 	return nil
 }
 
+func GetAllProcess() []ProcessState {
+
+	var allProcesses []ProcessState
+	queues := []*list.List{
+		global.NewState,
+		global.ReadyState, 
+		global.RunningState, 
+		global.BlockedState,
+	}
+
+	for _, queue := range queues {
+			for e := queue.Front(); e != nil; e = e.Next() {
+				pcb := e.Value.(*model.PCB)
+				allProcesses = append(allProcesses, ProcessState{
+						PID:   pcb.PID,
+						State: pcb.State,
+					},
+				)
+			}
+	}
+
+	return allProcesses
+}
