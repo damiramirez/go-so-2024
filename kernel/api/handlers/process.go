@@ -23,18 +23,23 @@ type Process struct {
 // Handler para devolver a memoria el estado del proceso
 func ProcessByIdHandler(w http.ResponseWriter, r *http.Request) {
 	pid, _ := strconv.Atoi(r.PathValue("pid"))
-	global.Logger.Log(fmt.Sprintf("State - PID: %d", pid), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Buscando PID: %d", pid), log.DEBUG)
 
 	// TODO: Buscar PID en slice de procesos
-	// Ver que pasa si no existe
+	pcb := utils.FindProcessInList(pid)
 
-	state := "READY"
+	if pcb == nil {
+		global.Logger.Log(fmt.Sprintf("No existe el PID %d", pid), log.DEBUG)
+		http.Error(w, fmt.Sprintf("No existe el PID %d", pid), http.StatusNotFound)
+		return
+	}
+
 	processState := struct {
 		PID   int    `json:"pid"`
 		State string `json:"state"`
 	}{
-		PID:   pid,
-		State: state,
+		PID:   pcb.PID,
+		State: pcb.State,
 	}
 
 	err := serialization.EncodeHTTPResponse(w, processState, http.StatusOK)
@@ -43,15 +48,16 @@ func ProcessByIdHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	global.Logger.Log(fmt.Sprintf("Process %d - State: %s", pid, state), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Process %d - State: %s", pcb.PID, pcb.State), log.DEBUG)
 }
 
 func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 
 	type ProcessPath struct {
 		Path string `json:"path"`
+		
 	}
-
+	
 	var pPath ProcessPath
 	err := serialization.DecodeHTTPBody(r, &pPath)
 
@@ -68,9 +74,9 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 		Path string `json:"path"`
 		PID  int    `json:"pid"`
 	}
-	processMemory := ProcessMemory{
-		Path: pPath.Path,
-		PID:  pcb.PID,
+	processMemory:=ProcessMemory{
+		Path:pPath.Path, 
+		PID: pcb.PID,
 	}
 
 	global.Logger.Log(fmt.Sprintf("PCB: %+v", pcb), log.DEBUG)
@@ -98,14 +104,13 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Se encargará de finalizar un proceso que se encuentre dentro del sistema.
-// Este mensaje se encargará de realizar las mismas operaciones como si el proceso
-// llegara a EXIT por sus caminos habituales (deberá liberar recursos, archivos y memoria).
+
 func EndProcessHandler(w http.ResponseWriter, r *http.Request) {
 	pid := r.PathValue("pid")
 	global.Logger.Log("End process - PID: "+pid, log.DEBUG)
 
 	// TODO: Delete process
+
 	// global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: %s", pcb.PID, pcb.FinalState), log.INFO)
 	w.WriteHeader(http.StatusNoContent)
 }

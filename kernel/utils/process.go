@@ -8,15 +8,25 @@ import (
 )
 
 // Busca en todas las listas el PID
-func findProcessInList(pid int) {
-	queues := []*list.List{global.NewState, global.ReadyState, global.RunningState, global.BlockedState}
+func FindProcessInList(pid int) *model.PCB{
+	queues := []*list.List{
+		global.NewState,
+		global.ReadyState, 
+		global.RunningState, 
+		global.BlockedState,
+	}
 
 	for _, queue := range queues {
 		pcb := findProcess(pid, queue)
+		if pcb != nil {
+			return pcb
+		}
 	}
+
+	return nil
 }
 
-func findProcess(pid int, list *list.List) *model.PCB {
+func findProcess(pid int, list *list.List) *model.PCB{
 	for e := list.Front(); e != nil; e = e.Next() {
 		pcb := e.Value.(*model.PCB)
 		if pid == pcb.PID {
@@ -26,3 +36,4 @@ func findProcess(pid int, list *list.List) *model.PCB {
 
 	return nil
 }
+
