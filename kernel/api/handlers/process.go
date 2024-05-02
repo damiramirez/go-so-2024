@@ -23,7 +23,6 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error al decodear el body", http.StatusBadRequest)
 		return
 	}
-	global.Logger.Log("Init process - Path: "+pPath.Path, log.DEBUG)
 
 	pcb := pcb.CreateNewProcess()
 
@@ -39,7 +38,6 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 	global.Logger.Log(fmt.Sprintf("PCB: %+v", pcb), log.DEBUG)
 
 	global.NewState.PushBack(pcb)
-	global.Logger.Log(fmt.Sprintf("Longitud cola de new: %d", global.NewState.Len()), log.DEBUG)
 
 	requests.PutHTTPwithBody[ProcessMemory, interface{}](global.KernelConfig.IPMemory, global.KernelConfig.PortMemory, "process", processMemory)
 	// _, err = requests.PutHTTPwithBody[ProcessMemory, interface{}](global.KernelConfig.IPMemory, global.KernelConfig.PortMemory, "process", processMemory)
@@ -49,7 +47,6 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	global.Logger.Log(fmt.Sprintf("Se crea el proceso %d en NEW", pcb.PID), log.INFO)
 	processPID := utils.ProcessPID{PID: pcb.PID}
 
 	err = serialization.EncodeHTTPResponse(w, processPID, http.StatusCreated)
