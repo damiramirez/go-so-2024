@@ -35,8 +35,6 @@ func Sleep(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.INFO)
 
-	// if es un IO existente y Generic -> ejecuto el sleep, sino -> "IO intexistente / este tipo de IO no duerme" [este chequeo lo hace Kernel o Entradasalida?]
-
 	global.Logger.Log(fmt.Sprintf("a punto de dormir: %+v", dispositivo), log.INFO)
 
 	dispositivo.EstaEnUso = true

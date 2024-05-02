@@ -6,6 +6,7 @@ import (
 
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
+	"github.com/sisoputnfrba/tp-golang/utils/requests"
 )
 
 const IOLOG = "./entradasalida.log"
@@ -47,13 +48,15 @@ func InitGlobal() {
 	*/
 	MapIOGenericsActivos = map[string]GenericIODevice{}
 
-	InitGenericIODevice("esperador", IOConfig)
-	InitGenericIODevice("teclado", IOConfig)
+	InitGenericIODevice("esperador")
+	InitGenericIODevice("teclado")
 	/*
 		MapIOGenericsActivos[Esperador.Name] = Esperador
 		MapIOGenericsActivos[Teclado.Name] = Teclado
 		MapIOGenericsActivos[Pantalla.Name] = Pantalla
 	*/
+	AvisoKernelIOExistentes()
+
 }
 
 type GenericIODevice struct {
@@ -62,10 +65,31 @@ type GenericIODevice struct {
 	EstaEnUso bool
 }
 
-func InitGenericIODevice(name string, IOconfig *Config) {
-	IOConfig = config.LoadConfiguration[Config]("./config/config.json")
+func InitGenericIODevice(name string) {
+
 	IODevice := GenericIODevice{Name: name, Type: IOConfig.Type}
 	MapIOGenericsActivos[IODevice.Name] = IODevice
 	Logger.Log(fmt.Sprintf("Nuevo IO genérico inicializado: %+v", IODevice), log.INFO)
 	Logger.Log(fmt.Sprintf("Lista de IOs inicializados: %+v", MapIOGenericsActivos), log.INFO)
+}
+
+func AvisoKernelIOExistentes() {
+
+	listaIODeviceRegistrados := []GenericIODevice{}
+
+	for _, value := range MapIOGenericsActivos {
+
+		listaIODeviceRegistrados = append(listaIODeviceRegistrados, value)
+
+	}
+
+	Logger.Log(fmt.Sprintf("%+v", listaIODeviceRegistrados), log.INFO)
+
+	_, err := requests.PutHTTPwithBody[[]GenericIODevice, interface{}](IOConfig.IPKernel, IOConfig.PortKernel, "listIO", listaIODeviceRegistrados)
+	if err != nil {
+		Logger.Log(fmt.Sprintf("NO se pudo enviar al kernel los IODevices %s", err.Error()), log.INFO)
+		panic(1)
+		// TODO: kernel falta que entienda el mensaje y nos envíe la respuesta que está todo ok
+	}
+
 }
