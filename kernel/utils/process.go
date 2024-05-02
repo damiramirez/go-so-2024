@@ -5,6 +5,7 @@ import (
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
 	"github.com/sisoputnfrba/tp-golang/utils/model"
+	"github.com/sisoputnfrba/tp-golang/utils/requests"
 )
 
 // Busca en todas las listas el PID
@@ -12,7 +13,7 @@ func FindProcessInList(pid int) *model.PCB {
 	queues := []*list.List{
 		global.NewState,
 		global.ReadyState,
-		global.RunningState,
+		global.ExecuteState,
 		global.BlockedState,
 	}
 
@@ -43,7 +44,7 @@ func GetAllProcess() []ProcessState {
 	queues := []*list.List{
 		global.NewState,
 		global.ReadyState,
-		global.RunningState,
+		global.ExecuteState,
 		global.BlockedState,
 	}
 
@@ -66,7 +67,7 @@ func RemoveProcessByPID(pid int) bool {
 	queues := []*list.List{
 		global.NewState,
 		global.BlockedState,
-		global.RunningState,
+		global.ExecuteState,
 		global.ReadyState,
 	}
 
@@ -76,11 +77,26 @@ func RemoveProcessByPID(pid int) bool {
 
 			if pcb.PID == pid {
 				queue.Remove(e)
+				<- global.SemMulti
 				return true
 			}
 		}
 	}
 
+
 	return false
 }
 
+
+func PCBToCPU(pcb *model.PCB) (*model.PCB, error) {
+	resp, err := requests.PutHTTPwithBody[*model.PCB, model.PCB](
+		global.KernelConfig.IPCPU, global.KernelConfig.PortCPU, "dispatch", pcb)
+	
+	if err != nil {
+		return nil, err
+	}
+	
+	<- global.SemExecute
+
+	return resp, nil
+}

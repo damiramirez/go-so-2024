@@ -8,14 +8,12 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/model"
 )
 
-var working bool
-
 // Mover procesos a READY mientras sean < que la multiprogramacion
 // Tiene que estar corriendo todo el tiempo en un hilo?
 func InitLongTermPlani() {
-	working = true
+	global.WorkingPlani = true
 
-	for working {
+	for global.WorkingPlani {
 		global.SemMulti <- 0
 		sendPCBToReady()
 		global.Logger.Log(fmt.Sprintf("PCB to READY - Semaforo %d - Multi: %d", len(global.SemMulti), global.KernelConfig.Multiprogramming), log.DEBUG)

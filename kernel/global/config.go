@@ -33,8 +33,10 @@ var nextPID int = 1
 var ReadyState *list.List
 var NewState *list.List
 var BlockedState *list.List
-var RunningState *list.List
+var ExecuteState *list.List
 var Exit *list.List
+
+var WorkingPlani bool
 
 // Mutex
 var MutexReadyState sync.Mutex
@@ -42,6 +44,7 @@ var MutexNewState sync.Mutex
 
 // Semaforos
 var SemMulti chan int
+var SemExecute chan int
 
 func InitGlobal() {
 	args := os.Args[1:]
@@ -57,10 +60,11 @@ func InitGlobal() {
 	NewState = list.New()
 	ReadyState = list.New()
 	BlockedState = list.New()
-	RunningState = list.New()
+	ExecuteState = list.New()
 	Exit = list.New()
 
 	SemMulti = make(chan int, KernelConfig.Multiprogramming)
+	SemExecute = make(chan int)
 }
 
 func GetNextPID() int {
