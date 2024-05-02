@@ -30,15 +30,12 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 		Path string `json:"path"`
 		PID  int    `json:"pid"`
 	}
-	processMemory:=ProcessMemory{
-		Path:pPath.Path, 
-		PID: pcb.PID,
+	processMemory := ProcessMemory{
+		Path: pPath.Path,
+		PID:  pcb.PID,
 	}
 
-	global.Logger.Log(fmt.Sprintf("PCB: %+v", pcb), log.DEBUG)
-
-	global.NewState.PushBack(pcb)
-
+	
 	requests.PutHTTPwithBody[ProcessMemory, interface{}](global.KernelConfig.IPMemory, global.KernelConfig.PortMemory, "process", processMemory)
 	// _, err = requests.PutHTTPwithBody[ProcessMemory, interface{}](global.KernelConfig.IPMemory, global.KernelConfig.PortMemory, "process", processMemory)
 	// if err != nil {
@@ -46,8 +43,11 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 	// 	http.Error(w, "Error al enviar instruccion", http.StatusBadRequest)
 	// 	return
 	// }
-
+	
+	global.NewState.PushBack(pcb)
 	processPID := utils.ProcessPID{PID: pcb.PID}
+
+	global.Logger.Log(fmt.Sprintf("Se crea el proceso %d en NEW", pcb.PID), log.INFO)
 
 	err = serialization.EncodeHTTPResponse(w, processPID, http.StatusCreated)
 	if err != nil {
@@ -58,21 +58,24 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 
 func EndProcessHandler(w http.ResponseWriter, r *http.Request) {
 	pid, _ := strconv.Atoi(r.PathValue("pid"))
-	pcb := utils.FindProcessInList(pid)
 
-	if pcb == nil {
+	// TODO: Request a memoria
+	// VER LOGICA DE: Traerme la PCB - Ver estado actual
+	// 	- Si esta en CPU -> INTERRUPT
+	// AHORA SOLO LO BORRA DE LA LISTA
+
+	if !utils.RemoveProcessByPID(pid) {
 		global.Logger.Log(fmt.Sprintf("No existe el PID %d", pid), log.DEBUG)
 		http.Error(w, fmt.Sprintf("No existe el PID %d", pid), http.StatusNotFound)
 		return
 	}
 
-	// global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: %s", pcb.PID, pcb.FinalState), log.INFO)
+	global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: Eliminado desde la API", pid), log.INFO)
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func ListProcessHandler(w http.ResponseWriter, r *http.Request) {
 	allProcess := utils.GetAllProcess()
-	global.Logger.Log(fmt.Sprintf("%+v", allProcess), log.DEBUG)
 
 	err := serialization.EncodeHTTPResponse(w, allProcess, http.StatusOK)
 	if err != nil {

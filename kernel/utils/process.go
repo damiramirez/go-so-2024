@@ -8,11 +8,11 @@ import (
 )
 
 // Busca en todas las listas el PID
-func FindProcessInList(pid int) *model.PCB{
+func FindProcessInList(pid int) *model.PCB {
 	queues := []*list.List{
 		global.NewState,
-		global.ReadyState, 
-		global.RunningState, 
+		global.ReadyState,
+		global.RunningState,
 		global.BlockedState,
 	}
 
@@ -26,7 +26,7 @@ func FindProcessInList(pid int) *model.PCB{
 	return nil
 }
 
-func findProcess(pid int, list *list.List) *model.PCB{
+func findProcess(pid int, list *list.List) *model.PCB {
 	for e := list.Front(); e != nil; e = e.Next() {
 		pcb := e.Value.(*model.PCB)
 		if pid == pcb.PID {
@@ -42,21 +42,45 @@ func GetAllProcess() []ProcessState {
 	var allProcesses []ProcessState
 	queues := []*list.List{
 		global.NewState,
-		global.ReadyState, 
-		global.RunningState, 
+		global.ReadyState,
+		global.RunningState,
 		global.BlockedState,
 	}
 
 	for _, queue := range queues {
-			for e := queue.Front(); e != nil; e = e.Next() {
-				pcb := e.Value.(*model.PCB)
-				allProcesses = append(allProcesses, ProcessState{
-						PID:   pcb.PID,
-						State: pcb.State,
-					},
-				)
-			}
+		for e := queue.Front(); e != nil; e = e.Next() {
+			pcb := e.Value.(*model.PCB)
+			allProcesses = append(allProcesses, ProcessState{
+				PID:   pcb.PID,
+				State: pcb.State,
+			},
+			)
+		}
 	}
 
 	return allProcesses
 }
+
+func RemoveProcessByPID(pid int) bool {
+
+	queues := []*list.List{
+		global.NewState,
+		global.BlockedState,
+		global.RunningState,
+		global.ReadyState,
+	}
+
+	for _, queue := range queues {
+		for e := queue.Front(); e != nil; e = e.Next() {
+			pcb := e.Value.(*model.PCB)
+
+			if pcb.PID == pid {
+				queue.Remove(e)
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
