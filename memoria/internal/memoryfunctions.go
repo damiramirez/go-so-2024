@@ -1,8 +1,13 @@
 package internal
 
-import ("github.com/sisoputnfrba/tp-golang/memoria/global")
+import (
+	"os"
+	"strings"
+    log "github.com/sisoputnfrba/tp-golang/utils/logger"
+	"github.com/sisoputnfrba/tp-golang/memoria/global"
+)
 
-//log "github.com/sisoputnfrba/tp-golang/utils/logger"
+
 
 var NumPages int
 
@@ -11,7 +16,16 @@ var NumPages int
 func InstructionStorage(data []string, pid int) {
     global.DictProcess[pid]=global.ListInstructions{Instructions: data}
 }
+func ReadTxt(Path string) ([]string, error) {
+	Data, err := os.ReadFile(Path)
+	if err != nil {
+		global.Logger.Log("error al leer el archivo "+err.Error(), log.ERROR)
+		return nil, err
+	}
+	ListInstructions := strings.Split(string(Data), "\n")
 
+	return ListInstructions, nil
+}
 /*func stringsToBytes(strings []string) []byte {
     var bytesSlice []byte
     for _, str := range strings {

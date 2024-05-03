@@ -1,29 +1,28 @@
 package internal
 
-import (
-	
-	"os"
-	"strings"
-	log "github.com/sisoputnfrba/tp-golang/utils/logger"
-	"github.com/sisoputnfrba/tp-golang/cpu/global"
-)
-
 type ProcessPath struct {
 	Path string `json:"path"`
 	Pid  int    `json:"pid"`
 }
-type PCB struct {
+type ProcessAssets struct {
 	Pc  int `json:"pc"`
 	Pid int `json:"pid"`
 }
+type ProcessDelete struct {
+	Pid int `json:"pid"`
+}
+type Page struct {
+	PageNumber int `json:"page_number"`
+	Pid        int `json:"pid"`
+}
+type Resize struct {
+	Tipo   string `json:"type"`
+	Pid    int    `json:"pid"`
+	Frames int    `json:"frames"`
+}
 
-func ReadTxt(Path string) ([]string, error) {
-	Data, err := os.ReadFile(Path)
-	if err != nil {
-		global.Logger.Log("error al leer el archivo "+err.Error(), log.ERROR)
-		return nil, err
-	}
-	ListInstructions := strings.Split(string(Data), "\n")
-
-	return ListInstructions, nil
+type MemAccess struct {
+	Tipo          string `json:"type"`
+	Adress        int    `json:"adress"`
+	NumberOfPages int    `json:"numberofpages"`
 }

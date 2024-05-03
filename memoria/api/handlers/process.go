@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
+
 	global "github.com/sisoputnfrba/tp-golang/memoria/global"
 	internal "github.com/sisoputnfrba/tp-golang/memoria/internal"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
@@ -29,14 +31,14 @@ func CodeReciever(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 func SendInstruction(w http.ResponseWriter, r *http.Request) {
-	var PC internal.PCB
-	err := serialization.DecodeHTTPBody(r, &PC)
-	Instruction := PC.Pc
+	var ProcessAssets internal.ProcessAssets
+	err := serialization.DecodeHTTPBody(r, &ProcessAssets)
 	if err != nil {
 		http.Error(w, "Error al decodear el PC", http.StatusBadRequest)
 		return
 	}
-	ListInstructions:=(global.DictProcess)[PC.Pid].Instructions
+	Instruction := ProcessAssets.Pc
+	ListInstructions:=(global.DictProcess)[ProcessAssets.Pid].Instructions
 	//de aca en adelante la logica es la misma
 	if Instruction > len(ListInstructions) { //esto chequea si la intruccion esta dentro del rango
 		global.Logger.Log("out of memory: ", log.ERROR)
@@ -49,11 +51,22 @@ func SendInstruction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)
-	time.Sleep(DelayResponse * time.Second) //genera el delay response de la respuesta
+	time.Sleep(DelayResponse * time.Millisecond) //genera el delay response de la respuesta
 	err = serialization.EncodeHTTPResponse(w, ListInstructions[Instruction], http.StatusOK)
 	if err != nil {
 		global.Logger.Log("Error al encodear el body: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al encodear el body", http.StatusBadRequest)
 		return
 	}
+}
+func DeleteProcess(w http.ResponseWriter, r *http.Request){
+	var ProcessDelete internal.ProcessDelete
+	err := serialization.DecodeHTTPBody(r, &ProcessDelete)
+	if err != nil {
+		http.Error(w, "Error al decodear el PC", http.StatusBadRequest)
+		return
+	}
+	//elimino estructuras relacionadas al proceso, marco los frames como libres 
+	// y elimino las intrucciones de memoria 
+	global.Logger.Log(fmt.Sprintf("se elimino el proceso con el PID : %d ", ProcessDelete.Pid), log.DEBUG)
 }
