@@ -11,5 +11,4 @@ func InitShortTermPlani() {
 	case "FIFO":
 		algorithm.Fifo()
 	}
-
 }

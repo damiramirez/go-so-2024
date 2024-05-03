@@ -20,6 +20,12 @@ func Dispatch(pcb *model.PCB) (*model.PCB, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		if instruction == nil {
+			pcb.State = "EXIT"
+			return pcb, nil
+		}
+
 		exec_result := execute.Execute(pcb, instruction)
 		if exec_result == execute.RETURN_CONTEXT{
 			executing = false

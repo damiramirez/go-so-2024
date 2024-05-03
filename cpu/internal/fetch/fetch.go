@@ -18,6 +18,11 @@ func Fetch(pcb *model.PCB) (*model.Instruction, error) {
 		return nil, err
 	}
 
+	if instruction == nil {
+		global.Logger.Log("NO HAY MAS INSTRUCCIONES", log.DEBUG)
+		return nil, nil
+	}
+
 	global.Logger.Log(fmt.Sprintf("PID: %d - FETCH - Program Counter: %d", pcb.PID, pcb.PC), log.INFO)
 	pcb.PC++
 	return instruction, err
@@ -56,6 +61,10 @@ func getInstruction(id, pc int) (*model.Instruction, error) {
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al solicitar instrucción desde memoria: %v", err), log.ERROR)
 		return nil, err
+	}
+
+	if raw_instruction == nil {
+		return nil, nil
 	}
 
 	sliceInstruction := strings.Fields(*raw_instruction)

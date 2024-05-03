@@ -16,6 +16,8 @@ func InitPlanningHandler(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log("Init plani", log.DEBUG)
 
+	// MOVEr
+	
 	go longterm.InitLongTermPlani()
 	go shortterm.InitShortTermPlani()
 
