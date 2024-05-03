@@ -45,6 +45,8 @@ func Execute(pcb *model.PCB, instruction *model.Instruction) int {
 		),
 		log.INFO)
 
+	pcb.Instruction = *instruction
+
 	return result
 }
 

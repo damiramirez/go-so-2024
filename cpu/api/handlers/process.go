@@ -52,5 +52,5 @@ func Dispatch(w http.ResponseWriter, r *http.Request) {
 
 	pcb, _ = internal.Dispatch(pcb)
 
-	serialization.EncodeHTTPResponse(w, pcb, http.StatusAccepted)
+	serialization.EncodeHTTPResponse(w, pcb, http.StatusOK)
 }

@@ -27,6 +27,6 @@ func Dispatch(pcb *model.PCB) (*model.PCB, error) {
 	}
 
 	global.Logger.Log(fmt.Sprintf("PCB Actualizada %+v", pcb), log.DEBUG)
-	
+
 	return pcb, nil
 }
