@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -46,8 +45,7 @@ func SendInstruction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if Instruction == len(ListInstructions) { //esto chequea que no lea memoria q no le corresponde
-		mensaje := "out of memory"
-		json.NewEncoder(w).Encode(mensaje)
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)
@@ -66,7 +64,8 @@ func DeleteProcess(w http.ResponseWriter, r *http.Request){
 		http.Error(w, "Error al decodear el PC", http.StatusBadRequest)
 		return
 	}
-	//elimino estructuras relacionadas al proceso, marco los frames como libres 
 	// y elimino las intrucciones de memoria 
 	global.Logger.Log(fmt.Sprintf("se elimino el proceso con el PID : %d ", ProcessDelete.Pid), log.DEBUG)
+	global.DictProcess[ProcessDelete.Pid]=global.ListInstructions{}
+	//elimino frames relacionados al proceso, marco los frames como libres sin eliminarlos 
 }

@@ -18,7 +18,6 @@ type Config struct {
 	InstructionsPath string `json:"instructions_path"`
 	DelayResponse    int    `json:"delay_response"`
 }
-
 var MemoryConfig *Config
 var Logger *log.LoggerStruct
 type ProcessInstructions struct {
@@ -27,24 +26,23 @@ type ProcessInstructions struct {
 type ListInstructions ProcessInstructions
 var DictProcess map[int]ListInstructions
 type MemoryST struct {
-	spaces []byte
+	Spaces []byte
 }
 type PageTable struct {
-	pages []byte
+	Page []byte
 }
 var Memory *MemoryST
 func NewMemory() *MemoryST {
 	
 	ByteArray := make([]byte,MemoryConfig.MemorySize)
-    mem := MemoryST{spaces: ByteArray}
-
+    mem := MemoryST{Spaces: ByteArray}
     return &mem
 }
 var PTable *PageTable
 func NewPageTable()*PageTable{
     
 	ByteArray := make([]byte,MemoryConfig.PageSize)
-	pagetable:=PageTable{pages: ByteArray}
+	pagetable:=PageTable{Page: ByteArray}
 
 	return &pagetable
 }
