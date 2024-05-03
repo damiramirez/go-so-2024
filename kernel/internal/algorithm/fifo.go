@@ -18,7 +18,7 @@ func Fifo() (*model.PCB, error) {
 		}
 
 		if global.ReadyState.Len() != 0 {
-			global.Logger.Log(fmt.Sprintf("PCB a execute: %+v", global.ReadyState.Front().Value), log.DEBUG)
+			global.Logger.Log(fmt.Sprintf("PCB a execute:\n%+v", global.ReadyState.Front().Value), log.DEBUG)
 			global.MutexReadyState.Lock()
 			pcb := global.ReadyState.Front().Value.(*model.PCB)
 			global.ReadyState.Remove(global.ReadyState.Front())
@@ -27,6 +27,9 @@ func Fifo() (*model.PCB, error) {
 			if err != nil {
 				return nil, err
 			}
+
+			global.Logger.Log(fmt.Sprintf("Recibi de CPU:\n%+v", updatePCB), log.DEBUG)
+
 			return updatePCB, nil
 		}
 	}
