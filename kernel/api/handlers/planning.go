@@ -5,6 +5,7 @@ import (
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
 	"github.com/sisoputnfrba/tp-golang/kernel/internal/longterm"
+	"github.com/sisoputnfrba/tp-golang/kernel/internal/shortterm"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 )
 
@@ -15,7 +16,8 @@ func InitPlanningHandler(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log("Init plani", log.DEBUG)
 
-	longterm.InitLongTermPlani()
+	go longterm.InitLongTermPlani()
+	go shortterm.InitShortTermPlani()
 
 	w.WriteHeader(http.StatusNoContent)
 }

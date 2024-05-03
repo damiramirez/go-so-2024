@@ -64,7 +64,7 @@ func InitGlobal() {
 	Exit = list.New()
 
 	SemMulti = make(chan int, KernelConfig.Multiprogramming)
-	SemExecute = make(chan int)
+	SemExecute = make(chan int, 1)
 }
 
 func GetNextPID() int {

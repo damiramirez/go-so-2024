@@ -13,7 +13,7 @@ import (
 func InitLongTermPlani() {
 	global.WorkingPlani = true
 
-	for global.WorkingPlani {
+	for global.WorkingPlani && global.NewState.Len() != 0 {
 		global.SemMulti <- 0
 		sendPCBToReady()
 		global.Logger.Log(fmt.Sprintf("PCB to READY - Semaforo %d - Multi: %d", len(global.SemMulti), global.KernelConfig.Multiprogramming), log.DEBUG)
@@ -21,13 +21,17 @@ func InitLongTermPlani() {
 }
 
 func sendPCBToReady() {
+
 	global.MutexNewState.Lock()
-	pcbToReady := global.NewState.Remove(global.NewState.Front()).(*model.PCB)
+	pcbFront := global.NewState.Front()
+	if pcbFront != nil  {
+		pcbToReady := global.NewState.Remove(pcbFront).(*model.PCB)
+		pcbToReady.State = "READY"
+		global.MutexReadyState.Lock()
+		global.ReadyState.PushBack(pcbToReady)
+		global.MutexReadyState.Unlock()
+	} else {
+			global.Logger.Log("No PCB available to move to READY", log.DEBUG)
+	}
 	global.MutexNewState.Unlock()
-
-	pcbToReady.State = "READY"
-
-	global.MutexReadyState.Lock()
-	global.ReadyState.PushBack(pcbToReady)
-	global.MutexReadyState.Unlock()
 }

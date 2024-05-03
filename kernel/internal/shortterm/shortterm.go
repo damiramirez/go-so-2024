@@ -5,11 +5,11 @@ import (
 	"github.com/sisoputnfrba/tp-golang/kernel/internal/algorithm"
 )
 
-func initShortTermPlani() {
+func InitShortTermPlani() {
 
 	switch global.KernelConfig.PlanningAlgorithm {
 	case "FIFO":
-		go algorithm.Fifo()
+		algorithm.Fifo()
 	}
 
 }
