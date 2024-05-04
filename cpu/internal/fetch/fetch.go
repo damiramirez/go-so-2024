@@ -18,32 +18,15 @@ func Fetch(pcb *model.PCB) (*model.Instruction, error) {
 		return nil, err
 	}
 
-	if instruction == nil {
-		global.Logger.Log("NO HAY MAS INSTRUCCIONES", log.DEBUG)
-		return nil, nil
-	}
+	// if instruction == nil {
+	// 	global.Logger.Log("NO HAY MAS INSTRUCCIONES", log.DEBUG)
+	// 	return nil, nil
+	// }
 
 	global.Logger.Log(fmt.Sprintf("PID: %d - FETCH - Program Counter: %d", pcb.PID, pcb.PC), log.INFO)
 	pcb.PC++
 	return instruction, err
 }
-
-// func getInstruction(id, address int) (*model.Instruction, error) {
-// 	path := fmt.Sprintf("process/%d/instructions/%d", id, address)
-// 	instruction, err := requests.GetHTTP[model.Instruction](
-// 		global.CPUConfig.IPMemory,
-// 		global.CPUConfig.PortMemory,
-// 		path,
-// 	)
-
-// 	if err != nil {
-// 		global.Logger.Log(fmt.Sprintf("Error al solicitar instrucción desde memoria: %v", err), log.ERROR)
-// 		return nil, err
-// 	}
-
-// 	global.Logger.Log(fmt.Sprintf("Instruction: %+v", instruction), log.DEBUG)
-// 	return instruction, nil
-// }
 
 func getInstruction(id, pc int) (*model.Instruction, error) {
 	path := fmt.Sprintf("process/%d", id)

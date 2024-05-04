@@ -15,6 +15,7 @@ func FindProcessInList(pid int) *model.PCB {
 		global.ReadyState,
 		global.ExecuteState,
 		global.BlockedState,
+		global.ExitState,
 	}
 
 	for _, queue := range queues {
@@ -46,6 +47,7 @@ func GetAllProcess() []ProcessState {
 		global.ReadyState,
 		global.ExecuteState,
 		global.BlockedState,
+		global.ExitState,
 	}
 
 	for _, queue := range queues {
@@ -69,6 +71,7 @@ func RemoveProcessByPID(pid int) bool {
 		global.BlockedState,
 		global.ExecuteState,
 		global.ReadyState,
+		global.ExitState,
 	}
 
 	for _, queue := range queues {
@@ -89,6 +92,7 @@ func RemoveProcessByPID(pid int) bool {
 
 
 func PCBToCPU(pcb *model.PCB) (*model.PCB, error) {
+	pcb.State = "EXEC"
 	resp, err := requests.PutHTTPwithBody[*model.PCB, model.PCB](
 		global.KernelConfig.IPCPU, global.KernelConfig.PortCPU, "dispatch", pcb)
 	
@@ -96,7 +100,6 @@ func PCBToCPU(pcb *model.PCB) (*model.PCB, error) {
 		return nil, err
 	}
 	
-	<- global.SemExecute
 
 	return resp, nil
 }

@@ -33,7 +33,8 @@ func Execute(pcb *model.PCB, instruction *model.Instruction) int {
 		jnz(pcb, instruction)
 		result = CONTINUE
 	case "IO_GEN_SLEEP":
-		// TODO: Terminar con este
+		result = RETURN_CONTEXT
+	case "EXIT":
 		result = RETURN_CONTEXT
 	}
 

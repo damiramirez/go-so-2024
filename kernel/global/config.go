@@ -34,13 +34,16 @@ var ReadyState *list.List
 var NewState *list.List
 var BlockedState *list.List
 var ExecuteState *list.List
-var Exit *list.List
+var ExitState *list.List
 
 var WorkingPlani bool
 
 // Mutex
 var MutexReadyState sync.Mutex
 var MutexNewState sync.Mutex
+var MutexExitState sync.Mutex
+var MutexBlockState sync.Mutex
+var MutexExecuteState sync.Mutex
 
 // Semaforos
 var SemMulti chan int
@@ -61,7 +64,7 @@ func InitGlobal() {
 	ReadyState = list.New()
 	BlockedState = list.New()
 	ExecuteState = list.New()
-	Exit = list.New()
+	ExitState = list.New()
 
 	SemMulti = make(chan int, KernelConfig.Multiprogramming)
 	SemExecute = make(chan int, 1)

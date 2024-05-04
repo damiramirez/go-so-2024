@@ -15,11 +15,21 @@ import (
 func InitPlanningHandler(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log("Init plani", log.DEBUG)
-
-	// MOVEr
 	
-	go longterm.InitLongTermPlani()
-	go shortterm.InitShortTermPlani()
+	
+	startShortTerm := make(chan bool)  // Crear un canal para sincronizar el inicio de shortterm
+
+	// Lanzar la planificación a largo plazo en una goroutine
+	go func() {
+		longterm.InitLongTermPlani()
+		startShortTerm <- true  // Enviar señal para iniciar shortterm después de empezar longterm
+	}()
+	
+	// Lanzar la planificación a corto plazo en otra goroutine
+	go func() {
+		<-startShortTerm  // Esperar la señal para empezar
+		shortterm.InitShortTermPlani()
+	}()
 
 	w.WriteHeader(http.StatusNoContent)
 }
