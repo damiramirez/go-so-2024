@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"sync"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
 	"github.com/sisoputnfrba/tp-golang/kernel/internal/longterm"
@@ -16,20 +17,16 @@ func InitPlanningHandler(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log("Init plani", log.DEBUG)
 	
-	
-	startShortTerm := make(chan bool)  // Crear un canal para sincronizar el inicio de shortterm
+	// TODO: WaitGroup
+	var wg sync.WaitGroup
 
-	// Lanzar la planificación a largo plazo en una goroutine
-	go func() {
-		longterm.InitLongTermPlani()
-		startShortTerm <- true  // Enviar señal para iniciar shortterm después de empezar longterm
-	}()
+	wg.Add(1)
+	go longterm.InitLongTermPlani()
 	
-	// Lanzar la planificación a corto plazo en otra goroutine
-	go func() {
-		<-startShortTerm  // Esperar la señal para empezar
-		shortterm.InitShortTermPlani()
-	}()
+	wg.Add(1)
+	go shortterm.InitShortTermPlani()
+
+	wg.Wait()
 
 	w.WriteHeader(http.StatusNoContent)
 }

@@ -12,55 +12,62 @@ import (
 
 func Fifo(){
 	global.Logger.Log("Arranca FIFO", log.DEBUG)
+
+	// TODO: ESPERA ACTIVA? BUCLE INFINITO - VER SEMAFOROS
+	// TODO: Mover codigo
 	for {
-		global.Logger.Log(fmt.Sprintf("global.SemExecute: %d\n", len(global.SemExecute)), log.DEBUG)
 		global.SemExecute <- 0
-		
+
 		if !global.WorkingPlani {
 			global.Logger.Log("TERMINO CON FIFO", log.DEBUG)
 			break
 		}
 
-		global.Logger.Log(fmt.Sprintf("Cola READY: %d", global.ReadyState.Len()), log.DEBUG)
-
 		if global.ReadyState.Len() != 0 {
 			global.Logger.Log(fmt.Sprintf("PCB a execute: %+v", global.ReadyState.Front().Value), log.DEBUG)
 
+			// Sacar de ready
 			global.MutexReadyState.Lock()
 			pcb := global.ReadyState.Front().Value.(*model.PCB)
 			global.ReadyState.Remove(global.ReadyState.Front())
 			global.MutexReadyState.Unlock()
 
+			// Pasar a execute
 			global.MutexExecuteState.Lock()
 			global.ExecuteState.PushBack(pcb)
 			global.MutexExecuteState.Unlock()
 
+			// Enviar a execute
 			updatePCB, _ := utils.PCBToCPU(pcb)
-
+			global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: READY - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
 			global.Logger.Log(fmt.Sprintf("Recibi de CPU: %+v", updatePCB), log.DEBUG)
+			
 
+			// Sacar de execute
 			global.MutexExecuteState.Lock()
 			global.ExecuteState.Remove(global.ExecuteState.Front())
 			global.MutexExecuteState.Unlock()
 
-			// No hay mas instrucciones - EXIT
+			// EXIT - Agregar a exit
 			if updatePCB.Instruction.Operation == "EXIT" {
 				updatePCB.State = "EXIT"
 				global.MutexExitState.Lock()
 				global.ExitState.PushBack(updatePCB)
 				global.MutexExitState.Unlock()
+				global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
 			}
 
-			// Lo mando a BLOCK si instruccion tiene IO
+			// Agregar a block
 			if strings.Contains(updatePCB.Instruction.Operation, "IO") {
 				updatePCB.State = "BLOCK"
 				global.MutexBlockState.Lock()
 				global.BlockedState.PushBack(updatePCB)
 				global.MutexBlockState.Unlock()
+				global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
 			}
 
-			// VER ESTE SEMAFORO - DONDE VA?
-			<- global.SemExecute
 		}
+		// VER ESTE SEMAFORO - DONDE VA?
+		<- global.SemExecute
 	}
 }

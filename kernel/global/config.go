@@ -48,6 +48,8 @@ var MutexExecuteState sync.Mutex
 // Semaforos
 var SemMulti chan int
 var SemExecute chan int
+var SemStartShortTerm chan int
+
 
 func InitGlobal() {
 	args := os.Args[1:]
@@ -68,6 +70,9 @@ func InitGlobal() {
 
 	SemMulti = make(chan int, KernelConfig.Multiprogramming)
 	SemExecute = make(chan int, 1)
+	SemStartShortTerm = make(chan int, 1)
+	WorkingPlani = true
+
 }
 
 func GetNextPID() int {

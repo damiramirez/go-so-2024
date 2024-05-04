@@ -34,7 +34,6 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 		Path: pPath.Path,
 		PID:  pcb.PID,
 	}
-
 	
 	requests.PutHTTPwithBody[ProcessMemory, interface{}](global.KernelConfig.IPMemory, global.KernelConfig.PortMemory, "process", processMemory)
 	// _, err = requests.PutHTTPwithBody[ProcessMemory, interface{}](global.KernelConfig.IPMemory, global.KernelConfig.PortMemory, "process", processMemory)
