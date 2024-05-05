@@ -1,7 +1,8 @@
-package fetch
+package internal
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/sisoputnfrba/tp-golang/cpu/global"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
@@ -10,26 +11,34 @@ import (
 )
 
 func Fetch(pcb *model.PCB) (*model.Instruction, error) {
-	global.Logger.Log(fmt.Sprintf("PID: %d -> Buscando instruccion: %d", pcb.PID, pcb.PC), log.DEBUG)
+	// instruction, err := getInstruction(pcb.PID, pcb.PC)
 	instruction, err := getInstruction(pcb.PID, pcb.PC)
 	if err != nil {
 		global.Logger.Log("Error al obtener la instruccion: "+err.Error(), log.ERROR)
 		return nil, err
 	}
 
+	// if instruction == nil {
+	// 	global.Logger.Log("NO HAY MAS INSTRUCCIONES", log.DEBUG)
+	// 	return nil, nil
+	// }
+
+	global.Logger.Log(fmt.Sprintf("PID: %d - FETCH - Program Counter: %d", pcb.PID, pcb.PC), log.INFO)
 	pcb.PC++
-
-	global.Logger.Log(fmt.Sprintf("Actualizo PCB: %+v", pcb), log.DEBUG)
-
 	return instruction, err
 }
 
-func getInstruction(id, address int) (*model.Instruction, error) {
-	path := fmt.Sprintf("process/%d/instructions/%d", id, address)
-	instruction, err := requests.GetHTTP[model.Instruction](
+func getInstruction(id, pc int) (*model.Instruction, error) {
+	path := fmt.Sprintf("process/%d", id)
+	proccesInstruction := model.ProcessInstruction{
+		Pid: id,
+		Pc: pc,
+	}
+	raw_instruction, err := requests.PutHTTPwithBody[model.ProcessInstruction, string](
 		global.CPUConfig.IPMemory,
-		global.CPUConfig.PortKernel,
+		global.CPUConfig.PortMemory,
 		path,
+		proccesInstruction,
 	)
 
 	if err != nil {
@@ -37,6 +46,16 @@ func getInstruction(id, address int) (*model.Instruction, error) {
 		return nil, err
 	}
 
-	global.Logger.Log(fmt.Sprintf("Instruction: %+v", instruction), log.DEBUG)
+	if raw_instruction == nil {
+		return nil, nil
+	}
+
+	sliceInstruction := strings.Fields(*raw_instruction)
+
+	instruction := &model.Instruction{
+		Operation: sliceInstruction[0],
+		Parameters: sliceInstruction[1:],
+	}
+
 	return instruction, nil
 }

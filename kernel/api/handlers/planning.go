@@ -2,8 +2,11 @@ package handlers
 
 import (
 	"net/http"
+	"sync"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
+	"github.com/sisoputnfrba/tp-golang/kernel/internal/longterm"
+	"github.com/sisoputnfrba/tp-golang/kernel/internal/shortterm"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 )
 
@@ -13,16 +16,17 @@ import (
 func InitPlanningHandler(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log("Init plani", log.DEBUG)
+	
+	// TODO: WaitGroup
+	var wg sync.WaitGroup
 
-	// Testeando
-	resp, _ := http.Get("http://127.0.0.1:8003/ping")
-	/*if err!=nil{
-		http.Error(w,"error al conectarse al cpu ",500)
-		return
-	}*/
-	global.Logger.Log("Resp de CPU: "+resp.Status, log.INFO)
+	wg.Add(1)
+	go longterm.InitLongTermPlani()
+	
+	wg.Add(1)
+	go shortterm.InitShortTermPlani()
 
-	// TODO: Manejar planificacion
+	wg.Wait()
 
 	w.WriteHeader(http.StatusNoContent)
 }

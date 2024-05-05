@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -63,8 +62,9 @@ func SendInstruction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if Instruction == len(ListInstructions) { //esto chequea que no lea memoria q no le corresponde
-		mensaje := "out of memory"
-		json.NewEncoder(w).Encode(mensaje)
+		// mensaje := "out of memory"
+		// json.NewEncoder(w).Encode(mensaje)
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)

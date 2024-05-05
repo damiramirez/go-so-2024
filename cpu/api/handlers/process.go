@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/sisoputnfrba/tp-golang/cpu/global"
+	internal "github.com/sisoputnfrba/tp-golang/cpu/internal/dispatch"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 	"github.com/sisoputnfrba/tp-golang/utils/model"
 	"github.com/sisoputnfrba/tp-golang/utils/requests"
@@ -49,5 +50,7 @@ func Dispatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	global.Logger.Log(fmt.Sprintf("Recibi PCB %+v", pcb), log.DEBUG)
+	pcb, _ = internal.Dispatch(pcb)
+
+	serialization.EncodeHTTPResponse(w, pcb, http.StatusOK)
 }

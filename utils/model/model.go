@@ -2,13 +2,14 @@ package model
 
 type PCB struct {
 	PID              int
-	State            int
-	EndState         int
+	State            string
+	FinalState       string
 	PC               int
 	CPUTime          int
 	Quantum          int
 	RemainingQuantum int
 	Registers        CPURegister
+	Instruction Instruction
 }
 
 type CPURegister struct {
@@ -25,4 +26,9 @@ type CPURegister struct {
 type Instruction struct {
 	Operation  string
 	Parameters []string
+}
+
+type ProcessInstruction struct {
+	Pc  int `json:"pc"`
+	Pid int `json:"pid"`
 }
