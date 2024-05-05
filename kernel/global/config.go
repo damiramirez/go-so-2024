@@ -48,7 +48,7 @@ var MutexExecuteState sync.Mutex
 // Semaforos
 var SemMulti chan int
 var SemExecute chan int
-var SemStartShortTerm chan int
+var SemReadyList chan int
 
 
 func InitGlobal() {
@@ -70,7 +70,8 @@ func InitGlobal() {
 
 	SemMulti = make(chan int, KernelConfig.Multiprogramming)
 	SemExecute = make(chan int, 1)
-	SemStartShortTerm = make(chan int, 1)
+	SemReadyList = make(chan int)
+
 	WorkingPlani = true
 
 }

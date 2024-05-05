@@ -13,9 +13,11 @@ import (
 func Fifo(){
 	global.Logger.Log("Arranca FIFO", log.DEBUG)
 
-	// TODO: ESPERA ACTIVA? BUCLE INFINITO - VER SEMAFOROS
 	// TODO: Mover codigo
 	for {
+		// TODO: ESPERA ACTIVA? BUCLE INFINITO - VER SEMAFOROS
+		global.SemReadyList <- 0
+
 		global.SemExecute <- 0
 
 		if !global.WorkingPlani {
@@ -54,7 +56,7 @@ func Fifo(){
 				global.MutexExitState.Lock()
 				global.ExitState.PushBack(updatePCB)
 				global.MutexExitState.Unlock()
-				global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
+				global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", updatePCB.PID, updatePCB.State), log.INFO)
 			}
 
 			// Agregar a block
@@ -63,7 +65,7 @@ func Fifo(){
 				global.MutexBlockState.Lock()
 				global.BlockedState.PushBack(updatePCB)
 				global.MutexBlockState.Unlock()
-				global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
+				global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", updatePCB.PID, updatePCB.State), log.INFO)
 			}
 
 		}

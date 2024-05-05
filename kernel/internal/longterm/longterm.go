@@ -32,6 +32,7 @@ func sendPCBToReady() {
 		global.MutexReadyState.Lock()
 		global.ReadyState.PushBack(pcbToReady)
 		global.MutexReadyState.Unlock()
+		<- global.SemReadyList
 	} else {
 			global.Logger.Log("No PCB available to move to READY", log.DEBUG)
 	}
