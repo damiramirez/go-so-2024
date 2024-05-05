@@ -18,6 +18,7 @@ type Config struct {
 	PortMemory        int      `json:"port_memory"`
 	IPCPU             string   `json:"ip_cpu"`
 	PortCPU           int      `json:"port_cpu"`
+	IPIo string `json:"ip_io"`
 	PlanningAlgorithm string   `json:"planning_algorithm"`
 	Quantum           int      `json:"quantum"`
 	Resources         []string `json:"resources"`
@@ -48,7 +49,7 @@ var MutexExecuteState sync.Mutex
 // Semaforos
 var SemMulti chan int
 var SemExecute chan int
-var SemReadyList chan int
+var SemReadyList chan struct{}
 
 
 func InitGlobal() {
@@ -70,10 +71,9 @@ func InitGlobal() {
 
 	SemMulti = make(chan int, KernelConfig.Multiprogramming)
 	SemExecute = make(chan int, 1)
-	SemReadyList = make(chan int)
+	SemReadyList = make(chan struct{}, KernelConfig.Multiprogramming)
 
 	WorkingPlani = true
-
 }
 
 func GetNextPID() int {

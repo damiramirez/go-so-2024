@@ -14,7 +14,7 @@ func CreateServer() *server.Server {
 		Port: global.IOConfig.Port,
 		Handlers: map[string]http.HandlerFunc{
 			"GET /Ping":   handlers.Ping,
-			"POST /Sleep": handlers.Sleep,
+			"PUT /Sleep": handlers.Sleep,
 		},
 	}
 	return server.NewServer(configServer)
