@@ -18,7 +18,7 @@ type Config struct {
 	PortMemory        int      `json:"port_memory"`
 	IPCPU             string   `json:"ip_cpu"`
 	PortCPU           int      `json:"port_cpu"`
-	IPIo string `json:"ip_io"`
+	IPIo              string   `json:"ip_io"`
 	PlanningAlgorithm string   `json:"planning_algorithm"`
 	Quantum           int      `json:"quantum"`
 	Resources         []string `json:"resources"`
@@ -50,7 +50,6 @@ var MutexExecuteState sync.Mutex
 var SemMulti chan int
 var SemExecute chan int
 var SemReadyList chan struct{}
-
 
 func InitGlobal() {
 	args := os.Args[1:]

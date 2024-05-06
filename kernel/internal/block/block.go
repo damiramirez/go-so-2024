@@ -15,9 +15,9 @@ import (
 
 func ProcessToIO() (*model.PCB, error) {
 	type IOStruct struct {
-		Name      string `json:"name"`
+		Name        string `json:"name"`
 		Instruccion string `json:"instruccion"`
-		Time      int    `json:"tiempo"`
+		Time        int    `json:"tiempo"`
 	}
 
 	// TODO: MUTEX
@@ -28,23 +28,22 @@ func ProcessToIO() (*model.PCB, error) {
 	global.Logger.Log(fmt.Sprintf("Proceso bloqueado %+v", blockProcess), log.DEBUG)
 
 	ioStruct := IOStruct{
-		Name: blockProcess.Instruction.Parameters[0],
+		Name:        blockProcess.Instruction.Parameters[0],
 		Instruccion: blockProcess.Instruction.Operation,
-		Time: time,
+		Time:        time,
 	}
-
 
 	_, err := requests.PutHTTPwithBody[IOStruct, interface{}](global.KernelConfig.IPIo, 8005, "Sleep", ioStruct)
 	if err != nil {
-		global.Logger.Log("ERROR AL REQUEST IO:" + err.Error(), log.DEBUG)
+		global.Logger.Log("ERROR AL REQUEST IO:"+err.Error(), log.DEBUG)
 	}
-	
+
 	// TESTEO -  HACER EN OTRA FUNCION
 	blockProcess.State = "READY"
 	global.MutexReadyState.Lock()
 	global.ReadyState.PushBack(blockProcess)
 	global.MutexReadyState.Unlock()
-	
+
 	global.SemReadyList <- struct{}{}
 
 	return blockProcess, nil

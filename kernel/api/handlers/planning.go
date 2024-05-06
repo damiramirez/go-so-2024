@@ -16,7 +16,7 @@ import (
 func InitPlanningHandler(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log("Init plani", log.DEBUG)
-	
+
 	// TODO: WaitGroup
 	var wg sync.WaitGroup
 

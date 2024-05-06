@@ -34,7 +34,7 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 		Path: pPath.Path,
 		PID:  pcb.PID,
 	}
-	
+
 	requests.PutHTTPwithBody[ProcessMemory, interface{}](global.KernelConfig.IPMemory, global.KernelConfig.PortMemory, "process", processMemory)
 	// _, err = requests.PutHTTPwithBody[ProcessMemory, interface{}](global.KernelConfig.IPMemory, global.KernelConfig.PortMemory, "process", processMemory)
 	// if err != nil {
@@ -42,7 +42,7 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 	// 	http.Error(w, "Error al enviar instruccion", http.StatusBadRequest)
 	// 	return
 	// }
-	
+
 	global.NewState.PushBack(pcb)
 	processPID := utils.ProcessPID{PID: pcb.PID}
 

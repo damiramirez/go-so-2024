@@ -9,7 +9,7 @@ type PCB struct {
 	Quantum          int
 	RemainingQuantum int
 	Registers        CPURegister
-	Instruction Instruction
+	Instruction      Instruction
 }
 
 type CPURegister struct {

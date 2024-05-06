@@ -13,17 +13,16 @@ import (
 
 var updatePCB *model.PCB
 
-func Fifo(){
+func Fifo() {
 	global.Logger.Log("Arranca FIFO", log.DEBUG)
 
 	// TODO: Mover codigo
 
 	for {
-		
+
 		// TODO: ESPERA ACTIVA? BUCLE INFINITO - VER SEMAFOROS
 		global.Logger.Log("LOG ANTES DE SEMREADYLIST", log.DEBUG)
-		// global.SemReadyList <- 0
-		<- global.SemReadyList
+		<-global.SemReadyList
 		global.Logger.Log(fmt.Sprintf("READY: %d", global.ReadyState.Len()), log.DEBUG)
 
 		global.SemExecute <- 0
@@ -56,7 +55,6 @@ func Fifo(){
 			updatePCB = <-updateChan
 			global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: READY - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
 			global.Logger.Log(fmt.Sprintf("Recibi de CPU: %+v", updatePCB), log.DEBUG)
-			
 
 			// Sacar de execute
 			global.MutexExecuteState.Lock()
@@ -70,7 +68,7 @@ func Fifo(){
 				global.ExitState.PushBack(updatePCB)
 				global.MutexExitState.Unlock()
 				global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", updatePCB.PID, updatePCB.State), log.INFO)
-				<- global.SemMulti
+				<-global.SemMulti
 			}
 
 			// Agregar a block
@@ -80,10 +78,11 @@ func Fifo(){
 				global.BlockedState.PushBack(updatePCB)
 				global.MutexBlockState.Unlock()
 				global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", updatePCB.PID, updatePCB.State), log.INFO)
+
 				go block.ProcessToIO()
 			}
 		}
 		// VER ESTE SEMAFORO - DONDE VA?
-		<- global.SemExecute
+		<-global.SemExecute
 	}
 }
