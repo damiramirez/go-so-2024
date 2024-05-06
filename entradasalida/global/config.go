@@ -3,6 +3,7 @@ package global
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
@@ -24,51 +25,48 @@ type Config struct {
 	DialFSBlockCount int    `json:"dialfs_block_count"`
 }
 
-var IOConfig *Config
-
-var Logger *log.LoggerStruct
-
-var MapIOGenericsActivos map[string]GenericIODevice
-
-func InitGlobal() {
-	args := os.Args[1:]
-	if len(args) != 1 {
-		fmt.Println("Uso: programa <go run `modulo`.go dev|prod>")
-		os.Exit(1)
-	}
-	env := args[0]
-
-	Logger = log.ConfigureLogger(IOLOG, env)
-	IOConfig = config.LoadConfiguration[Config]("./config/config.json")
-
-	/*
-		Esperador := GenericIODevice{Name: "esperador", Type: "GENERIC"}
-		Teclado := GenericIODevice{Name: "teclado", Type: "STDIN"}
-		Pantalla := GenericIODevice{Name: "pantalla", Type: "STDOUT"}
-	*/
-	MapIOGenericsActivos = map[string]GenericIODevice{}
-
-	InitGenericIODevice("esperador")
-	InitGenericIODevice("teclado")
-	/*
-		MapIOGenericsActivos[Esperador.Name] = Esperador
-		MapIOGenericsActivos[Teclado.Name] = Teclado
-		MapIOGenericsActivos[Pantalla.Name] = Pantalla
-	*/
-	AvisoKernelIOExistentes()
-
-}
-
 type GenericIODevice struct {
 	Name      string
 	Type      string
 	EstaEnUso bool
 }
 
+var IOConfig *Config
+
+var Logger *log.LoggerStruct
+
+var MapIOGenericsActivos map[string]GenericIODevice
+
+var MutexListIO sync.Mutex
+
+func InitGlobal() {
+	args := os.Args[1:]
+	if len(args) != 3 {
+		fmt.Println("Uso: programa <go run `modulo`.go dev|prod>")
+		os.Exit(1)
+	}
+	env := args[0]
+	name := args[1]
+	configuracion := args[2]
+
+	Logger = log.ConfigureLogger(IOLOG, env)
+	IOConfig = config.LoadConfiguration[Config](configuracion)
+
+	MapIOGenericsActivos = map[string]GenericIODevice{}
+
+	InitGenericIODevice(name)
+
+	//AvisoKernelIOExistentes()
+
+}
+
 func InitGenericIODevice(name string) {
 
 	IODevice := GenericIODevice{Name: name, Type: IOConfig.Type}
+	MutexListIO.Lock()
 	MapIOGenericsActivos[IODevice.Name] = IODevice
+	MutexListIO.Unlock()
+
 	Logger.Log(fmt.Sprintf("Nuevo IO genérico inicializado: %+v", IODevice), log.INFO)
 	Logger.Log(fmt.Sprintf("Lista de IOs inicializados: %+v", MapIOGenericsActivos), log.INFO)
 }
