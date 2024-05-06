@@ -22,10 +22,8 @@ func InitPlanningHandler(w http.ResponseWriter, r *http.Request) {
 
 	wg.Add(1)
 	go longterm.InitLongTermPlani()
-	
 	wg.Add(1)
 	go shortterm.InitShortTermPlani()
-
 	wg.Wait()
 
 	w.WriteHeader(http.StatusNoContent)

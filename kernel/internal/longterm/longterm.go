@@ -24,17 +24,21 @@ func InitLongTermPlani() {
 
 func sendPCBToReady() {
 
-	global.MutexNewState.Lock()
 	pcbFront := global.NewState.Front()
 	if pcbFront != nil  {
+		global.MutexNewState.Lock()
 		pcbToReady := global.NewState.Remove(pcbFront).(*model.PCB)
+		global.MutexNewState.Unlock()
+
 		pcbToReady.State = "READY"
+
 		global.MutexReadyState.Lock()
 		global.ReadyState.PushBack(pcbToReady)
 		global.MutexReadyState.Unlock()
-		<- global.SemReadyList
+
+		// <- global.SemReadyList
+		global.SemReadyList <- struct{}{}
 	} else {
 			global.Logger.Log("No PCB available to move to READY", log.DEBUG)
 	}
-	global.MutexNewState.Unlock()
 }

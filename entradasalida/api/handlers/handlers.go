@@ -47,4 +47,5 @@ func Sleep(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log(fmt.Sprintf("terminé de dormir: %+v", dispositivo), log.INFO)
 
+	w.WriteHeader(http.StatusNoContent)
 }

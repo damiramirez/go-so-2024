@@ -48,14 +48,14 @@ func InitGlobal() {
 	*/
 	MapIOGenericsActivos = map[string]GenericIODevice{}
 
-	InitGenericIODevice("esperador")
+	InitGenericIODevice("Int1")
 	InitGenericIODevice("teclado")
 	/*
 		MapIOGenericsActivos[Esperador.Name] = Esperador
 		MapIOGenericsActivos[Teclado.Name] = Teclado
 		MapIOGenericsActivos[Pantalla.Name] = Pantalla
 	*/
-	AvisoKernelIOExistentes()
+	// AvisoKernelIOExistentes()
 
 }
 
