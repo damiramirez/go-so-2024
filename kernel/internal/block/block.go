@@ -21,9 +21,9 @@ func ProcessToIO() (*model.PCB, error) {
 	}
 
 	// TODO: MUTEX
-	global.MutexBlockState.Lock()
-	blockProcess := global.BlockedState.Remove(global.BlockedState.Front()).(*model.PCB)
-	global.MutexBlockState.Unlock()
+	
+	blockProcess := global.BlockedState.Front().Value.(*model.PCB)
+	
 	time, _ := strconv.Atoi(blockProcess.Instruction.Parameters[1])
 	global.Logger.Log(fmt.Sprintf("Proceso bloqueado %+v", blockProcess), log.DEBUG)
 
@@ -38,6 +38,11 @@ func ProcessToIO() (*model.PCB, error) {
 		global.Logger.Log("ERROR AL REQUEST IO:"+err.Error(), log.DEBUG)
 	}
 
+	// Saco de block cuando termino la IO
+	global.MutexBlockState.Lock()
+	global.BlockedState.Remove(global.BlockedState.Front())
+	global.MutexBlockState.Unlock()
+	
 	// TESTEO -  HACER EN OTRA FUNCION
 	blockProcess.State = "READY"
 	global.MutexReadyState.Lock()

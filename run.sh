@@ -5,8 +5,8 @@ KERNEL_URL="http://localhost:8001"
 
 # Lista de archivos de procesos
 procesos=(
-    "/tp-2024-1c-sudoers/proceso2.txt"
-    "/tp-2024-1c-sudoers/proceso1.txt"
+    "/home/utnso/tp-2024-1c-sudoers/proceso2.txt"
+    "/home/utnso/tp-2024-1c-sudoers/proceso1.txt"
 )
 
 # Crear cada proceso usando la API
