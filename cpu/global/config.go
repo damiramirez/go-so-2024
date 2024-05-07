@@ -3,6 +3,7 @@ package global
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
@@ -22,8 +23,12 @@ type Config struct {
 }
 
 var CPUConfig *Config
-
+var Execute bool
 var Logger *log.LoggerStruct
+
+
+//mutex
+var ExecuteMutex sync.Mutex
 
 func InitGlobal() {
 	args := os.Args[1:]

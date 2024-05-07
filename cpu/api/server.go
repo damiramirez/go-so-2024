@@ -15,6 +15,7 @@ func CreateServer() *server.Server {
 		Handlers: map[string]http.HandlerFunc{
 			"PUT /process":  handlers.PCBreciever,
 			"PUT /dispatch": handlers.Dispatch,
+			"GET /interrupt": handlers.Interrupt,
 		},
 	}
 	return server.NewServer(configServer)
