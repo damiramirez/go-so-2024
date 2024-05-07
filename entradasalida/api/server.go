@@ -13,8 +13,12 @@ func CreateServer() *server.Server {
 	configServer := server.Config{
 		Port: global.IOConfig.Port,
 		Handlers: map[string]http.HandlerFunc{
+<<<<<<< HEAD
 			"GET /Ping":   handlers.Ping,
 			"PUT /Sleep": handlers.Sleep,
+=======
+			"POST /sleep": handlers.Sleep,
+>>>>>>> 132a78c1d3d248f566e3a9683820fcc47bb8fe79
 		},
 	}
 	return server.NewServer(configServer)

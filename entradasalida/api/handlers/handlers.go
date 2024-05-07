@@ -16,12 +16,6 @@ type estructura_sleep struct {
 	Tiempo      int    `json:"tiempo"`
 }
 
-func Ping(w http.ResponseWriter, r *http.Request) {
-	global.Logger.Log("me hicieron un request de ping", log.INFO)
-	message := "Tu ping es infinito 777\n"
-	w.Write([]byte(message))
-}
-
 func Sleep(w http.ResponseWriter, r *http.Request) {
 	var estructura estructura_sleep
 	err := serialization.DecodeHTTPBody[*estructura_sleep](r, &estructura)
@@ -31,19 +25,19 @@ func Sleep(w http.ResponseWriter, r *http.Request) {
 	}
 	global.Logger.Log(fmt.Sprintf("Me llegó ésta instrucción: %+v", estructura), log.INFO)
 
-	dispositivo := global.MapIOGenericsActivos[estructura.Nombre]
+	dispositivo := global.Dispositivo
 
 	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.INFO)
 
 	global.Logger.Log(fmt.Sprintf("a punto de dormir: %+v", dispositivo), log.INFO)
 
-	dispositivo.EstaEnUso = true
+	dispositivo.InUse = true
 
 	global.Logger.Log(fmt.Sprintf("durmiendo: %+v", dispositivo), log.INFO)
 
 	time.Sleep(time.Duration(estructura.Tiempo*global.IOConfig.UnitWorkTime) * time.Millisecond)
 
-	dispositivo.EstaEnUso = false
+	dispositivo.InUse = false
 
 	global.Logger.Log(fmt.Sprintf("terminé de dormir: %+v", dispositivo), log.INFO)
 
