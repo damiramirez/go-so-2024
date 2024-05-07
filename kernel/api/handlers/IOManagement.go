@@ -21,7 +21,7 @@ func NewIO(w http.ResponseWriter, r *http.Request) {
 	err := serialization.DecodeHTTPBody(r, &Device)
 	if err != nil {
 		global.Logger.Log("Error al decodear el body: "+err.Error(), log.ERROR)
-		http.Error(w, "Error al decodear el body", http.StatusBadRequest)
+		http.Error(w, "Error al decodear el body ", http.StatusBadRequest)
 		return
 	}
 	global.Logger.Log("se conecto un nuevo  i/o a kernel  ", log.DEBUG)
