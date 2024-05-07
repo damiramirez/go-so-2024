@@ -3,7 +3,6 @@ package global
 import (
 	"fmt"
 	"os"
-	"sync"
 
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
@@ -26,18 +25,17 @@ type Config struct {
 }
 
 type GenericIODevice struct {
-	Name      string
-	Type      string
-	EstaEnUso bool
+	Name  string
+	Type  string
+	InUse bool
+	Port  int
 }
+
+var Dispositivo *GenericIODevice
 
 var IOConfig *Config
 
 var Logger *log.LoggerStruct
-
-var MapIOGenericsActivos map[string]GenericIODevice
-
-var MutexListIO sync.Mutex
 
 func InitGlobal() {
 	args := os.Args[1:]
@@ -52,42 +50,29 @@ func InitGlobal() {
 	Logger = log.ConfigureLogger(IOLOG, env)
 	IOConfig = config.LoadConfiguration[Config](configuracion)
 
-	MapIOGenericsActivos = map[string]GenericIODevice{}
+	Dispositivo = InitGenericIODevice(name)
 
-	InitGenericIODevice(name)
-
-	//AvisoKernelIOExistentes()
+	AvisoKernelIOExistente()
 
 }
 
-func InitGenericIODevice(name string) {
+func InitGenericIODevice(name string) *GenericIODevice {
 
-	IODevice := GenericIODevice{Name: name, Type: IOConfig.Type}
-	MutexListIO.Lock()
-	MapIOGenericsActivos[IODevice.Name] = IODevice
-	MutexListIO.Unlock()
+	dispositivo := GenericIODevice{Name: name, Type: IOConfig.Type, Port: IOConfig.Port}
 
-	Logger.Log(fmt.Sprintf("Nuevo IO genérico inicializado: %+v", IODevice), log.INFO)
-	Logger.Log(fmt.Sprintf("Lista de IOs inicializados: %+v", MapIOGenericsActivos), log.INFO)
+	Logger.Log(fmt.Sprintf("Nuevo IO genérico inicializado: %+v", dispositivo), log.INFO)
+
+	return &dispositivo
+
 }
 
-func AvisoKernelIOExistentes() {
+func AvisoKernelIOExistente() {
 
-	listaIODeviceRegistrados := []GenericIODevice{}
-
-	for _, value := range MapIOGenericsActivos {
-
-		listaIODeviceRegistrados = append(listaIODeviceRegistrados, value)
-
-	}
-
-	Logger.Log(fmt.Sprintf("%+v", listaIODeviceRegistrados), log.INFO)
-
-	_, err := requests.PutHTTPwithBody[[]GenericIODevice, interface{}](IOConfig.IPKernel, IOConfig.PortKernel, "listIO", listaIODeviceRegistrados)
+	_, err := requests.PutHTTPwithBody[GenericIODevice, interface{}](IOConfig.IPKernel, IOConfig.PortKernel, "newio", *Dispositivo)
 	if err != nil {
-		Logger.Log(fmt.Sprintf("NO se pudo enviar al kernel los IODevices %s", err.Error()), log.INFO)
+		Logger.Log(fmt.Sprintf("NO se pudo enviar al kernel el IODevice %s", err.Error()), log.INFO)
 		panic(1)
-		// TODO: kernel falta que entienda el mensaje y nos envíe la respuesta que está todo ok
+		// TODO: kernel falta que entienda el mensaje (hacer el endpoint) y nos envíe la respuesta que está todo ok
 	}
 
 }
