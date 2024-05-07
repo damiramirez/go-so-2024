@@ -2,6 +2,7 @@ package utils
 
 import (
 	"container/list"
+	"time"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
 	"github.com/sisoputnfrba/tp-golang/utils/model"
@@ -91,9 +92,10 @@ func RemoveProcessByPID(pid int) bool {
 
 func PCBToCPU(pcb *model.PCB) (*model.PCB, error) {
 	pcb.State = "EXEC"
+	
 	resp, err := requests.PutHTTPwithBody[*model.PCB, model.PCB](
 		global.KernelConfig.IPCPU, global.KernelConfig.PortCPU, "dispatch", pcb)
-
+	
 	if err != nil {
 		return nil, err
 	}

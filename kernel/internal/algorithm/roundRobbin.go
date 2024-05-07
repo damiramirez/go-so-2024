@@ -2,6 +2,8 @@ package algorithm
 
 import (
 	"fmt"
+	
+
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
 	"github.com/sisoputnfrba/tp-golang/kernel/internal/block"
 	"github.com/sisoputnfrba/tp-golang/kernel/utils"
@@ -9,10 +11,8 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/model"
 )
 
-var updatePCB *model.PCB
-
-func Fifo() {
-	global.Logger.Log("Arranca FIFO", log.DEBUG)
+func RoundRobbin() {
+	global.Logger.Log("Arranca RoundRobbin", log.DEBUG)
 
 	// TODO: Mover codigo
 
@@ -47,8 +47,10 @@ func Fifo() {
 			// Enviar a execute
 			updateChan := make(chan *model.PCB)
 			go func() {
+				
 				updatePCB, _ = utils.PCBToCPU(pcb)
 				updateChan <- updatePCB
+				
 			}()
 			updatePCB = <-updateChan
 			global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: READY - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
@@ -70,7 +72,7 @@ func Fifo() {
 			}
 
 			// Agregar a block
-			if updatePCB.DisplaceReason=="BLOCKED" {
+			if 	updatePCB.DisplaceReason=="BLOCKED"{
 				updatePCB.State = "BLOCK"
 				global.MutexBlockState.Lock()
 				global.BlockedState.PushBack(updatePCB)
@@ -78,6 +80,19 @@ func Fifo() {
 				global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", updatePCB.PID, updatePCB.State), log.INFO)
 
 				go block.ProcessToIO()
+			}
+			if updatePCB.DisplaceReason=="QUANTUM"{
+				//se saca de exec
+				global.MutexExecuteState.Lock()
+				global.ExecuteState.Remove(global.ExecuteState.Front())
+				global.MutexExecuteState.Unlock()
+
+				//se guarda en ready	
+				updatePCB.State = "READY"
+				global.MutexReadyState.Lock()
+				global.ReadyState.PushBack(updatePCB)
+				global.MutexReadyState.Unlock()
+				global.SemReadyList <- struct{}{}
 			}
 
 		}

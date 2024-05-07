@@ -8,6 +8,7 @@ type PCB struct {
 	CPUTime          int
 	Quantum          int
 	RemainingQuantum int
+	DisplaceReason   string
 	Registers        CPURegister
 	Instruction      Instruction
 }
