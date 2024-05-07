@@ -33,7 +33,7 @@ func ProcessToIO() (*model.PCB, error) {
 		Time:        time,
 	}
 
-	_, err := requests.PutHTTPwithBody[IOStruct, interface{}](global.KernelConfig.IPIo, 8005, "Sleep", ioStruct)
+	_, err := requests.PutHTTPwithBody[IOStruct, interface{}](global.KernelConfig.IPIo, 8005, "sleep", ioStruct)
 	if err != nil {
 		global.Logger.Log("ERROR AL REQUEST IO:"+err.Error(), log.DEBUG)
 	}
