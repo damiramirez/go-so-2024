@@ -47,10 +47,8 @@ func RoundRobbin() {
 			// Enviar a execute
 			updateChan := make(chan *model.PCB)
 			go func() {
-				
 				updatePCB, _ = utils.PCBToCPU(pcb)
 				updateChan <- updatePCB
-				
 			}()
 			updatePCB = <-updateChan
 			global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: READY - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
@@ -82,13 +80,9 @@ func RoundRobbin() {
 				go block.ProcessToIO()
 			}
 			if updatePCB.DisplaceReason=="QUANTUM"{
-				//se saca de exec
-				global.MutexExecuteState.Lock()
-				global.ExecuteState.Remove(global.ExecuteState.Front())
-				global.MutexExecuteState.Unlock()
-
 				//se guarda en ready	
 				updatePCB.State = "READY"
+				global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", updatePCB.PID, updatePCB.State), log.INFO)
 				global.MutexReadyState.Lock()
 				global.ReadyState.PushBack(updatePCB)
 				global.MutexReadyState.Unlock()

@@ -2,8 +2,6 @@ package utils
 
 import (
 	"container/list"
-	"time"
-
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
 	"github.com/sisoputnfrba/tp-golang/utils/model"
 	"github.com/sisoputnfrba/tp-golang/utils/requests"

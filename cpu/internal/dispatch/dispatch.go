@@ -3,7 +3,7 @@ package internal
 import (
 	"fmt"
 	"strings"
-
+	"time"
 	"github.com/sisoputnfrba/tp-golang/cpu/global"
 	"github.com/sisoputnfrba/tp-golang/cpu/internal/execute"
 	internal "github.com/sisoputnfrba/tp-golang/cpu/internal/fetch"
@@ -17,8 +17,10 @@ func Dispatch(pcb *model.PCB) (*model.PCB, error) {
 	global.ExecuteMutex.Lock()
 	global.Execute=true
 	global.ExecuteMutex.Unlock()
-	
+	//esta logica se deberia hacer en una funcion 
+	inicioTime := time.Now()
 	for global.Execute {
+		
 		instruction, err := internal.Fetch(pcb)
 		if err != nil {
 			return nil, err
@@ -26,9 +28,19 @@ func Dispatch(pcb *model.PCB) (*model.PCB, error) {
 
 		exec_result := execute.Execute(pcb, instruction)
 		if exec_result == execute.RETURN_CONTEXT{
-			DisplaceReason(pcb)
 			global.Execute = false
 		}
+		QuantumTime:=time.Duration(pcb.Quantum)
+		InitTime:=time.Since(inicioTime)
+		pcb.CPUTime=int(InitTime*time.Millisecond)
+		global.Logger.Log(fmt.Sprintf("valor de cpu time %d",pcb.CPUTime),log.DEBUG)
+		//al igual q esta 
+		if InitTime*time.Millisecond>QuantumTime*time.Millisecond{
+			global.ExecuteMutex.Lock()
+			global.Execute=false
+			global.ExecuteMutex.Unlock()
+		}
+		DisplaceReason(pcb)
 	}
 	global.Logger.Log(fmt.Sprintf("PCB Actualizada %+v", pcb), log.DEBUG)
 	return pcb, nil
