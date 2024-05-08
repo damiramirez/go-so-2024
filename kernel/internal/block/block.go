@@ -15,7 +15,7 @@ import (
 
 func ProcessToIO() (*model.PCB, error) {
 	type IOStruct struct {
-		Name        string `json:"name"`
+		Name        string `json:"nombre"`
 		Instruccion string `json:"instruccion"`
 		Time        int    `json:"tiempo"`
 	}
