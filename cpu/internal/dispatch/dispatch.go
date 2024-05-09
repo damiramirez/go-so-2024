@@ -28,7 +28,6 @@ func Dispatch(pcb *model.PCB) (*model.PCB, error) {
 		exec_result := execute.Execute(pcb, instruction)
 		if exec_result == execute.RETURN_CONTEXT{
 			global.Execute = false
-			global.Logger.Log(fmt.Sprintf("se desalojo a la pcb  %s", pcb.DisplaceReason), log.DEBUG)
 		}
 		DisplaceReason(pcb)
 	}

@@ -2,6 +2,7 @@ package algorithm
 
 import (
 	"fmt"
+
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
 	"github.com/sisoputnfrba/tp-golang/kernel/internal/block"
 	"github.com/sisoputnfrba/tp-golang/kernel/utils"
@@ -70,7 +71,7 @@ func Fifo() {
 			}
 
 			// Agregar a block
-			if updatePCB.DisplaceReason=="BLOCKED" {
+			if updatePCB.DisplaceReason == "BLOCKED" {
 				updatePCB.State = "BLOCK"
 				global.MutexBlockState.Lock()
 				global.BlockedState.PushBack(updatePCB)

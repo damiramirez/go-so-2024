@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 	"github.com/sisoputnfrba/tp-golang/utils/model"
@@ -12,8 +13,19 @@ import (
 
 // MAP de IOs "conectadas"
 // nombre - puerto - tipo
+//implemnetar checktype y chequear para distintas ios
+func CheckIfExist(name string) bool{
+	_,Ioexist:=global.IoMap[name]
+	return Ioexist
+}
+func CheckType(name string,Type string)bool{
+	if global.IoMap[name].Type==Type{
 
-func ProcessToIO() (*model.PCB, error) {
+		return global.IoMap[name].Type==Type
+	}
+	return false 
+}
+func ProcessToIO()  {
 	type IOStruct struct {
 		Name        string `json:"nombre"`
 		Instruccion string `json:"instruccion"`
@@ -32,8 +44,24 @@ func ProcessToIO() (*model.PCB, error) {
 		Instruccion: blockProcess.Instruction.Operation,
 		Time:        time,
 	}
+	if !CheckIfExist(ioStruct.Name){
+		global.MutexBlockState.Lock()
+		global.BlockedState.Remove(global.BlockedState.Front())
+		global.MutexBlockState.Unlock()
+
+		blockProcess.State = "EXIT"
+
+		global.MutexExitState.Lock()
+		global.ExitState.PushBack(blockProcess)
+		global.MutexExitState.Unlock()
+		global.SemReadyList <- struct{}{}
+		global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: INVALID_RESOURCE",blockProcess.PID), log.INFO)
+		global.Logger.Log(fmt.Sprintf("PID: <%d> - Estado Anterior: BLOCK - Estado Actual: %s ",blockProcess.PID,blockProcess.State), log.INFO)
+
+		return
+	}
 	
-	_, err := requests.PutHTTPwithBody[IOStruct, interface{}](global.KernelConfig.IPIo, 8005, "sleep", ioStruct)
+	_, err := requests.PutHTTPwithBody[IOStruct, interface{}](global.KernelConfig.IPIo, global.IoMap[ioStruct.Name].Port, ioStruct.Instruccion, ioStruct)
 	if err != nil {
 		global.Logger.Log("ERROR AL REQUEST IO:"+err.Error(), log.DEBUG)
 	}
@@ -51,5 +79,5 @@ func ProcessToIO() (*model.PCB, error) {
 
 	global.SemReadyList <- struct{}{}
 
-	return blockProcess, nil
+	
 }
