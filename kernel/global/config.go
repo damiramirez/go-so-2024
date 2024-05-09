@@ -6,6 +6,7 @@ import (
 	"os"
 	"sync"
 
+	
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 )
@@ -25,7 +26,12 @@ type Config struct {
 	ResourceInstances []int    `json:"resource_instances"`
 	Multiprogramming  int      `json:"multiprogramming"`
 }
-
+type NewDevice struct {
+	Port  int    `json:"port"`
+	Usage bool   `json:"usage"`
+	Name  string `json:"name"`
+	Type  string `json:"type"`
+}
 var KernelConfig *Config
 var Logger *log.LoggerStruct
 var nextPID int = 1
@@ -52,6 +58,9 @@ var SemExecute chan int
 var SemReadyList chan struct{}
 var SemInterrupt chan int
 
+//Io MAP
+var IoMap map[string]NewDevice
+
 func InitGlobal() {
 	args := os.Args[1:]
 	if len(args) != 1 {
@@ -72,7 +81,10 @@ func InitGlobal() {
 	SemMulti = make(chan int, KernelConfig.Multiprogramming)
 	SemExecute = make(chan int, 1)
 	SemReadyList = make(chan struct{}, KernelConfig.Multiprogramming)
+
 	SemInterrupt = make(chan int)
+	IoMap=map[string]NewDevice{}
+
 	WorkingPlani = true
 }
 
