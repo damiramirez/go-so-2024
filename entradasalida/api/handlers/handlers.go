@@ -16,6 +16,13 @@ type estructura_sleep struct {
 	Tiempo      int    `json:"tiempo"`
 }
 
+type estructura_STDIN_read struct {
+	Nombre      string `json:"nombre"`
+	Instruccion string `json:"instruccion"`
+	Direccion 	string `json:"direccion"`
+	Tamanio 	string `json:"tamanio"`
+}
+
 func Sleep(w http.ResponseWriter, r *http.Request) {
 	var estructura estructura_sleep
 	err := serialization.DecodeHTTPBody[*estructura_sleep](r, &estructura)
@@ -41,4 +48,23 @@ func Sleep(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log(fmt.Sprintf("terminé de dormir: %+v", dispositivo), log.INFO)
 
+}
+
+func Stdin_read(w http.ResponseWriter, r *http.Request) {
+	var estructura estructura_STDIN_read
+	var texto string
+	err := serialization.DecodeHTTPBody[*estructura_STDIN_read](r, &estructura)
+	if err != nil {
+		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
+		http.Error(w, "Error al decodear", http.StatusBadRequest)
+	}
+	global.Logger.Log(fmt.Sprintf("Me llegó ésta instrucción: %+v", estructura), log.INFO)
+
+	dispositivo := global.Dispositivo
+
+	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.INFO)
+
+	global.Logger.Log(fmt.Sprintf("Ingrese un valor: "), log.INFO)
+
+	fmt.Scanf("%s", texto)
 }
