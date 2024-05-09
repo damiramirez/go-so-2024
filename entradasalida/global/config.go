@@ -33,6 +33,8 @@ type IODevice struct {
 
 var Dispositivo *IODevice
 
+var Texto *string
+
 var IOConfig *Config
 
 var Logger *log.LoggerStruct

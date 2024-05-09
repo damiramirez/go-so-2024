@@ -8,6 +8,7 @@ import (
 	"github.com/sisoputnfrba/tp-golang/entradasalida/global"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 	"github.com/sisoputnfrba/tp-golang/utils/serialization"
+	"github.com/sisoputnfrba/tp-golang/utils/requests"
 )
 
 type estructura_sleep struct {
@@ -52,7 +53,6 @@ func Sleep(w http.ResponseWriter, r *http.Request) {
 
 func Stdin_read(w http.ResponseWriter, r *http.Request) {
 	var estructura estructura_STDIN_read
-	var texto string
 	err := serialization.DecodeHTTPBody[*estructura_STDIN_read](r, &estructura)
 	if err != nil {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
@@ -66,5 +66,19 @@ func Stdin_read(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log(fmt.Sprintf("Ingrese un valor: "), log.INFO)
 
-	fmt.Scanf("%s", texto)
+	fmt.Scanf("%s", global.Texto)
+
+	// PUT a memoria de "texto"
+	stdin_read()
+
+}
+
+func stdin_read() {
+
+	_, err := requests.PutHTTPwithBody[string, interface{}](global.IOConfig.IPMemory, global.IOConfig.PortMemory, "stdin_read", *global.Texto)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("NO se pudo enviar a memoria el valor a escribir %s", err.Error()), log.INFO)
+		panic(1)
+		// TODO: memoria falta que entienda el mensaje (hacer el endpoint) y vea si puede escribir o no (?)
+	}
 }
