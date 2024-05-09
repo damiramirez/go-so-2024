@@ -50,6 +50,7 @@ var MutexExecuteState sync.Mutex
 var SemMulti chan int
 var SemExecute chan int
 var SemReadyList chan struct{}
+var SemInterrupt chan int
 
 func InitGlobal() {
 	args := os.Args[1:]
@@ -71,7 +72,7 @@ func InitGlobal() {
 	SemMulti = make(chan int, KernelConfig.Multiprogramming)
 	SemExecute = make(chan int, 1)
 	SemReadyList = make(chan struct{}, KernelConfig.Multiprogramming)
-
+	SemInterrupt = make(chan int)
 	WorkingPlani = true
 }
 

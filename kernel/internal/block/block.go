@@ -15,7 +15,7 @@ import (
 
 func ProcessToIO() (*model.PCB, error) {
 	type IOStruct struct {
-		Name        string `json:"name"`
+		Name        string `json:"nombre"`
 		Instruccion string `json:"instruccion"`
 		Time        int    `json:"tiempo"`
 	}
@@ -32,7 +32,7 @@ func ProcessToIO() (*model.PCB, error) {
 		Instruccion: blockProcess.Instruction.Operation,
 		Time:        time,
 	}
-
+	
 	_, err := requests.PutHTTPwithBody[IOStruct, interface{}](global.KernelConfig.IPIo, 8005, "sleep", ioStruct)
 	if err != nil {
 		global.Logger.Log("ERROR AL REQUEST IO:"+err.Error(), log.DEBUG)

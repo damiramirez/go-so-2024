@@ -11,7 +11,7 @@ import (
 )
 
 type estructura_sleep struct {
-	Nombre      string `json:"name"`
+	Nombre      string `json:"nombre"`
 	Instruccion string `json:"instruccion"`
 	Tiempo      int    `json:"tiempo"`
 }

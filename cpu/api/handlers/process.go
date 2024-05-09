@@ -56,13 +56,7 @@ func Dispatch(w http.ResponseWriter, r *http.Request) {
 }
 
 func Interrupt(w http.ResponseWriter, r *http.Request){
-	pcb := &model.PCB{}
-	err := serialization.DecodeHTTPBody(r, pcb)
-	if err != nil {
-		http.Error(w, "Error al decodear PCB", http.StatusBadRequest)
-		global.Logger.Log(fmt.Sprintf("Error al decodear PCB: %v", err), log.ERROR)
-		return
-	}
+	global.Logger.Log("entramos a interrupt", log.DEBUG)
 	global.ExecuteMutex.Lock()
 	global.Execute=false
 	global.ExecuteMutex.Unlock()
