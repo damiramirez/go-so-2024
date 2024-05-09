@@ -15,6 +15,7 @@ func CreateServer() *server.Server {
 		Handlers: map[string]http.HandlerFunc{
 			"PUT /sleep": handlers.Sleep,
 			"PUT /stdin_read" : handlers.Stdin_read,
+			"PUT /stdout_write" : handlers.Stdout_write,
 		},
 	}
 	return server.NewServer(configServer)
