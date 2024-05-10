@@ -1,12 +1,17 @@
 #!/bin/bash
 
+# Obtener la ruta del directorio donde se encuentra el script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+
 # Definir la URL del kernel
 KERNEL_URL="http://localhost:8001"
 
-# Lista de archivos de procesos
+# Lista de archivos de procesos, relativos al script
 procesos=(
-    "/home/utnso/Documents/SO/TPSO/tp-2024-1c-sudoers/proceso2.txt"
-    "/home/utnso/Documents/SO/TPSO/tp-2024-1c-sudoers/proceso1.txt"
+    "$SCRIPT_DIR/proceso1.txt"
+    "$SCRIPT_DIR/proceso2.txt"
+    "$SCRIPT_DIR/proceso3.txt"
+    "$SCRIPT_DIR/proceso4.txt"
 )
 
 # Crear cada proceso usando la API

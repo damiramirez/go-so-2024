@@ -126,7 +126,8 @@ func PCBtoBlock(updatePCB *model.PCB) {
 	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", updatePCB.PID, updatePCB.State), log.INFO)
 	global.Logger.Log(fmt.Sprintf("PID: %d - Bloqueado por: %s ", updatePCB.PID, updatePCB.Instruction.Parameters[0]), log.INFO)
 
-	go block.ProcessToIO()
+	go block.ProcessToIO(updatePCB)
+	
 }
 
 func PCBReadytoExec() *model.PCB {

@@ -8,7 +8,6 @@ import (
 
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
-
 )
 
 const KERNELLOG = "./kernel.log"
@@ -27,11 +26,12 @@ type Config struct {
 	Multiprogramming  int      `json:"multiprogramming"`
 }
 type IoDevice struct {
-	Port  int    `json:"port"`
-	Usage bool   `json:"usage"`
-	Name  string `json:"name"`
-	Type  string `json:"type"`
+	Port int    `json:"port"`
+	Name string `json:"name"`
+	Type string `json:"type"`
+	Sem  chan int
 }
+
 var KernelConfig *Config
 var Logger *log.LoggerStruct
 var nextPID int = 1
@@ -42,7 +42,7 @@ var NewState *list.List
 var BlockedState *list.List
 var ExecuteState *list.List
 var ExitState *list.List
-var PidList *list.List
+
 
 var WorkingPlani bool
 
@@ -59,7 +59,7 @@ var SemExecute chan int
 var SemReadyList chan struct{}
 var SemInterrupt chan int
 
-//Io MAP
+// Io MAP
 var IoMap map[string]IoDevice
 
 func InitGlobal() {
@@ -78,14 +78,14 @@ func InitGlobal() {
 	BlockedState = list.New()
 	ExecuteState = list.New()
 	ExitState = list.New()
-	PidList = list.New()
-	
+
+
 	SemMulti = make(chan int, KernelConfig.Multiprogramming)
 	SemExecute = make(chan int, 1)
 	SemReadyList = make(chan struct{}, KernelConfig.Multiprogramming)
 
 	SemInterrupt = make(chan int)
-	IoMap=map[string]IoDevice{}
+	IoMap = map[string]IoDevice{}
 
 	WorkingPlani = true
 }

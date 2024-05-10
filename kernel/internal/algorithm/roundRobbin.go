@@ -34,14 +34,12 @@ func RoundRobbin() {
 			pcb:= utils.PCBReadytoExec()
 			// Enviar a execute
 			updateChan := make(chan *model.PCB)
-			reciveBlockInterrupt := make(chan int)
+			InterruptTimer := make(chan int)
 
-			go DisplaceFunction(reciveBlockInterrupt)
+			go DisplaceFunction(InterruptTimer)
 
 			go func() {
-				global.Logger.Log("se bloquea funcion", log.DEBUG)
 				global.SemInterrupt <- 0
-				global.Logger.Log("se libera funcion", log.DEBUG)
 				updatePCB, _ = utils.PCBToCPU(pcb)
 				
 				updateChan <- updatePCB
@@ -58,13 +56,17 @@ func RoundRobbin() {
 
 			// EXIT - Agregar a exit
 			if updatePCB.DisplaceReason == "EXIT" {
+				global.Logger.Log("antes del timerinterrupt",log.DEBUG)
+				InterruptTimer <- 0
+				global.Logger.Log("despues del timerinterrupt",log.DEBUG)
 				utils.PCBtoExit(updatePCB)
+				
 			}
 
 			// Agregar a block
 			if updatePCB.DisplaceReason == "BLOCKED" {
-				reciveBlockInterrupt <- 0
-				//
+				InterruptTimer <- 0 
+				
 				utils.PCBtoBlock(updatePCB)
 				
 			}
@@ -78,7 +80,8 @@ func RoundRobbin() {
 	}
 }
 
-func DisplaceFunction(reciveBlockInterrupt chan int) {
+func DisplaceFunction(InterruptTimer chan int) {
+	
 
 	<-global.SemInterrupt
 
@@ -86,6 +89,7 @@ func DisplaceFunction(reciveBlockInterrupt chan int) {
 	//time.Sleep(Time * time.Millisecond)
 	timer := time.NewTimer(Time * time.Millisecond)
 	defer timer.Stop()
+
 	select {
 	case <-timer.C:
 		global.Logger.Log("EJECUTE DISPLACE", log.DEBUG)
@@ -94,11 +98,9 @@ func DisplaceFunction(reciveBlockInterrupt chan int) {
 		if err != nil {
 			return
 		}
-		return
-	case <-reciveBlockInterrupt:
+	case <-InterruptTimer:
 		global.Logger.Log("CORTE EL TIMER", log.DEBUG)
 		
-		return
 	}
-
+	
 }

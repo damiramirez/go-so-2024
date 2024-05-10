@@ -18,7 +18,7 @@ func NewIO(w http.ResponseWriter, r *http.Request){
 		http.Error(w, "Error al decodear el body", http.StatusBadRequest)
 		return
 	}
-	//global.Logger.Log(fmt.Sprintf("se conecto un nuevo  i/o a kernel %s ",Device.Name), log.DEBUG)
+	Device.Sem=make(chan int,1)
 	global.IoMap[Device.Name]=Device
 	global.Logger.Log(fmt.Sprintf("se conecto un nuevo  i/o a kernel %s ",global.IoMap[Device.Name].Name), log.DEBUG)
 
