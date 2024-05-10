@@ -6,9 +6,9 @@ import (
 	"os"
 	"sync"
 
-	
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
+
 )
 
 const KERNELLOG = "./kernel.log"
@@ -42,6 +42,7 @@ var NewState *list.List
 var BlockedState *list.List
 var ExecuteState *list.List
 var ExitState *list.List
+var PidList *list.List
 
 var WorkingPlani bool
 
@@ -77,7 +78,8 @@ func InitGlobal() {
 	BlockedState = list.New()
 	ExecuteState = list.New()
 	ExitState = list.New()
-
+	PidList = list.New()
+	
 	SemMulti = make(chan int, KernelConfig.Multiprogramming)
 	SemExecute = make(chan int, 1)
 	SemReadyList = make(chan struct{}, KernelConfig.Multiprogramming)

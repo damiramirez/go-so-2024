@@ -75,6 +75,7 @@ func ProcessToIO()  {
 	blockProcess.State = "READY"
 	global.MutexReadyState.Lock()
 	global.ReadyState.PushBack(blockProcess)
+	global.PidList.PushBack(blockProcess.PID)
 	global.MutexReadyState.Unlock()
 
 	global.SemReadyList <- struct{}{}

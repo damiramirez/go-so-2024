@@ -7,10 +7,10 @@ import (
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
 	"github.com/sisoputnfrba/tp-golang/kernel/internal/block"
+	"github.com/sisoputnfrba/tp-golang/kernel/internal/longterm"
 	"github.com/sisoputnfrba/tp-golang/kernel/utils"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 	"github.com/sisoputnfrba/tp-golang/utils/model"
-
 )
 
 func RoundRobbin() {
@@ -20,11 +20,9 @@ func RoundRobbin() {
 
 	for {
 
-		// TODO: ESPERA ACTIVA? BUCLE INFINITO - VER SEMAFOROS
 		global.Logger.Log("LOG ANTES DE SEMREADYLIST", log.DEBUG)
 		<-global.SemReadyList
 		global.Logger.Log(fmt.Sprintf("READY: %d", global.ReadyState.Len()), log.DEBUG)
-
 		global.SemExecute <- 0
 
 		if !global.WorkingPlani {
@@ -39,6 +37,7 @@ func RoundRobbin() {
 			global.MutexReadyState.Lock()
 			pcb := global.ReadyState.Front().Value.(*model.PCB)
 			global.ReadyState.Remove(global.ReadyState.Front())
+			
 			global.MutexReadyState.Unlock()
 
 			// Pasar a execute
@@ -59,6 +58,7 @@ func RoundRobbin() {
 			}()
 			
 			updatePCB = <-updateChan
+			//LOG CAMBIO DE ESTADO 
 			global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: READY - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
 			global.Logger.Log(fmt.Sprintf("Recibi de CPU: %+v", updatePCB), log.DEBUG)
 
@@ -73,6 +73,7 @@ func RoundRobbin() {
 				global.MutexExitState.Lock()
 				global.ExitState.PushBack(updatePCB)
 				global.MutexExitState.Unlock()
+				//LOG CAMBIO DE ESTADO 
 				global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", updatePCB.PID, updatePCB.State), log.INFO)
 				<-global.SemMulti
 			}
@@ -83,16 +84,30 @@ func RoundRobbin() {
 				global.MutexBlockState.Lock()
 				global.BlockedState.PushBack(updatePCB)
 				global.MutexBlockState.Unlock()
+				//LOG DE CAMBIO DE ESTADO 
 				global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", updatePCB.PID, updatePCB.State), log.INFO)
-
+				//LOG DE MOTIVO DE BLOQUEO 
+				global.Logger.Log(fmt.Sprintf("PID: %d - Bloqueado por: %s",updatePCB.PID,updatePCB.FinalState), log.INFO)
+				
 				go block.ProcessToIO()
+				array:=longterm.ConvertListToArray(global.ReadyState)
+				global.Logger.Log(fmt.Sprintf("Cola Ready : %v",array), log.INFO)
 			}
 			if updatePCB.DisplaceReason=="QUANTUM"{
 				//se guarda en ready	
 				updatePCB.State = "READY"
+				//LOG CAMBIO DE ESTADO 
 				global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", updatePCB.PID, updatePCB.State), log.INFO)
+				
+				//LOG COLA A READY CHEQUEAR EN ESTE CASO
+				array:=longterm.ConvertListToArray(global.ReadyState)
+				global.Logger.Log(fmt.Sprintf("Cola Ready : %v",array), log.INFO)
+
+				//LOG FIN DE QUANTUM
+				global.Logger.Log(fmt.Sprintf("PID: %d - Desalojado por fin de Quantum ", updatePCB.PID), log.INFO)
 				global.MutexReadyState.Lock()
 				global.ReadyState.PushBack(updatePCB)
+				
 				global.MutexReadyState.Unlock()
 				global.SemReadyList <- struct{}{}
 			}
