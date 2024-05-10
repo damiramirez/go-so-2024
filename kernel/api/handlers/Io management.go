@@ -11,7 +11,7 @@ import (
 
 func NewIO(w http.ResponseWriter, r *http.Request){
 
-	var Device global.NewDevice
+	var Device global.IoDevice
 	err := serialization.DecodeHTTPBody(r, &Device)
 	if err != nil {
 		global.Logger.Log("Error al decodear el body: "+err.Error(), log.ERROR)
@@ -19,7 +19,7 @@ func NewIO(w http.ResponseWriter, r *http.Request){
 		return
 	}
 	//global.Logger.Log(fmt.Sprintf("se conecto un nuevo  i/o a kernel %s ",Device.Name), log.DEBUG)
-	global.IoMap[Device.Name]=global.NewDevice{Name: Device.Name,Port: Device.Port,Usage: Device.Usage,Type: Device.Type}
+	global.IoMap[Device.Name]=Device
 	global.Logger.Log(fmt.Sprintf("se conecto un nuevo  i/o a kernel %s ",global.IoMap[Device.Name].Name), log.DEBUG)
 
 	w.WriteHeader(http.StatusNoContent)

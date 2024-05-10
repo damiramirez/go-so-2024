@@ -26,7 +26,7 @@ type Config struct {
 	ResourceInstances []int    `json:"resource_instances"`
 	Multiprogramming  int      `json:"multiprogramming"`
 }
-type NewDevice struct {
+type IoDevice struct {
 	Port  int    `json:"port"`
 	Usage bool   `json:"usage"`
 	Name  string `json:"name"`
@@ -60,7 +60,7 @@ var SemReadyList chan struct{}
 var SemInterrupt chan int
 
 //Io MAP
-var IoMap map[string]NewDevice
+var IoMap map[string]IoDevice
 
 func InitGlobal() {
 	args := os.Args[1:]
@@ -85,7 +85,7 @@ func InitGlobal() {
 	SemReadyList = make(chan struct{}, KernelConfig.Multiprogramming)
 
 	SemInterrupt = make(chan int)
-	IoMap=map[string]NewDevice{}
+	IoMap=map[string]IoDevice{}
 
 	WorkingPlani = true
 }

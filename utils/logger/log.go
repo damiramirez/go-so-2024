@@ -37,7 +37,7 @@ func (l *LoggerStruct) CloseLogger() {
 
 // Initializes a Logger to write to both stdout and a specified file.
 func ConfigureLogger(filename, env string) *LoggerStruct {
-	logFile, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
+	logFile, err := os.OpenFile(filename, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0666)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
