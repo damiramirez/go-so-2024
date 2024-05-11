@@ -10,5 +10,8 @@ func InitShortTermPlani() {
 	switch global.KernelConfig.PlanningAlgorithm {
 	case "FIFO":
 		algorithm.Fifo()
+	case "Round Robin":
+		algorithm.RoundRobbin()
 	}
+
 }

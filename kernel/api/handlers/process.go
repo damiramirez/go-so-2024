@@ -34,7 +34,7 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 		Path: pPath.Path,
 		PID:  pcb.PID,
 	}
-	
+
 	requests.PutHTTPwithBody[ProcessMemory, interface{}](global.KernelConfig.IPMemory, global.KernelConfig.PortMemory, "process", processMemory)
 	// _, err = requests.PutHTTPwithBody[ProcessMemory, interface{}](global.KernelConfig.IPMemory, global.KernelConfig.PortMemory, "process", processMemory)
 	// if err != nil {
@@ -42,8 +42,14 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 	// 	http.Error(w, "Error al enviar instruccion", http.StatusBadRequest)
 	// 	return
 	// }
-	
+
+	global.MutexNewState.Lock()
 	global.NewState.PushBack(pcb)
+	global.MutexNewState.Unlock()
+
+	global.SemNewList <- struct{}{}
+	global.Logger.Log(fmt.Sprintf("Semaforo de NEWLIST: %d", len(global.SemNewList)), log.DEBUG)
+
 	processPID := utils.ProcessPID{PID: pcb.PID}
 
 	global.Logger.Log(fmt.Sprintf("Se crea el proceso %d en NEW", pcb.PID), log.INFO)
@@ -106,4 +112,7 @@ func ProcessByIdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	global.Logger.Log(fmt.Sprintf("Process %d - State: %s", pcb.PID, pcb.State), log.DEBUG)
+}
+func Interrupt(w http.ResponseWriter, r *http.Request) {
+
 }

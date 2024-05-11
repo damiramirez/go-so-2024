@@ -2,9 +2,9 @@ package global
 
 import (
 	"fmt"
-	"os"
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
+	"os"
 )
 
 const MEMORYLOG = "./memoria.log"
@@ -21,11 +21,14 @@ type Config struct {
 
 var MemoryConfig *Config
 var Logger *log.LoggerStruct
+
 type ProcessInstructions struct {
 	Instructions []string
 }
 type ListInstructions ProcessInstructions
+
 var DictProcess map[int]ListInstructions
+
 func InitGlobal() {
 	args := os.Args[1:]
 	if len(args) != 1 {
@@ -36,5 +39,5 @@ func InitGlobal() {
 
 	Logger = log.ConfigureLogger(MEMORYLOG, env)
 	MemoryConfig = config.LoadConfiguration[Config]("./config/config.json")
-	DictProcess=map[int]ListInstructions{}
+	DictProcess = map[int]ListInstructions{}
 }

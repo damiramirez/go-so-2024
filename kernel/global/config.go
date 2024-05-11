@@ -18,11 +18,18 @@ type Config struct {
 	PortMemory        int      `json:"port_memory"`
 	IPCPU             string   `json:"ip_cpu"`
 	PortCPU           int      `json:"port_cpu"`
+	IPIo              string   `json:"ip_io"`
 	PlanningAlgorithm string   `json:"planning_algorithm"`
 	Quantum           int      `json:"quantum"`
 	Resources         []string `json:"resources"`
 	ResourceInstances []int    `json:"resource_instances"`
 	Multiprogramming  int      `json:"multiprogramming"`
+}
+type IoDevice struct {
+	Port int    `json:"port"`
+	Name string `json:"name"`
+	Type string `json:"type"`
+	Sem  chan int
 }
 
 var KernelConfig *Config
@@ -48,8 +55,12 @@ var MutexExecuteState sync.Mutex
 // Semaforos
 var SemMulti chan int
 var SemExecute chan int
-var SemReadyList chan int
+var SemInterrupt chan int
+var SemReadyList chan struct{}
+var SemNewList chan struct{}
 
+// Io MAP
+var IoMap map[string]IoDevice
 
 func InitGlobal() {
 	args := os.Args[1:]
@@ -70,10 +81,14 @@ func InitGlobal() {
 
 	SemMulti = make(chan int, KernelConfig.Multiprogramming)
 	SemExecute = make(chan int, 1)
-	SemReadyList = make(chan int)
+	SemInterrupt = make(chan int)
+	SemReadyList = make(chan struct{}, KernelConfig.Multiprogramming)
+	// Revisar el size
+	SemNewList = make(chan struct{}, 20)
 
-	WorkingPlani = true
+	IoMap = map[string]IoDevice{}
 
+	WorkingPlani = false
 }
 
 func GetNextPID() int {

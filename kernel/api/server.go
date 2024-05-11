@@ -19,6 +19,8 @@ func CreateServer() *server.Server {
 			"DELETE /process/{pid}": handlers.EndProcessHandler,
 			"PUT /plani":            handlers.InitPlanningHandler,
 			"DELETE /plani":         handlers.StopPlanningHandler,
+			"PUT /newio":            handlers.NewIO,
+			"GET /interrupt":        handlers.Interrupt,
 		},
 	}
 	return server.NewServer(configServer)

@@ -16,16 +16,14 @@ import (
 func InitPlanningHandler(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log("Init plani", log.DEBUG)
-	
+
 	// TODO: WaitGroup
 	var wg sync.WaitGroup
 
 	wg.Add(1)
 	go longterm.InitLongTermPlani()
-	
 	wg.Add(1)
 	go shortterm.InitShortTermPlani()
-
 	wg.Wait()
 
 	w.WriteHeader(http.StatusNoContent)

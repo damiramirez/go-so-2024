@@ -3,13 +3,13 @@ package model
 type PCB struct {
 	PID              int
 	State            string
-	FinalState       string
 	PC               int
 	CPUTime          int
 	Quantum          int
 	RemainingQuantum int
+	DisplaceReason   string
 	Registers        CPURegister
-	Instruction Instruction
+	Instruction      Instruction
 }
 
 type CPURegister struct {

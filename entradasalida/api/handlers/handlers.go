@@ -11,15 +11,10 @@ import (
 )
 
 type estructura_sleep struct {
-	Nombre      string `json:"name"`
+	Nombre      string `json:"nombre"`
 	Instruccion string `json:"instruccion"`
 	Tiempo      int    `json:"tiempo"`
-}
-
-func Ping(w http.ResponseWriter, r *http.Request) {
-	global.Logger.Log("me hicieron un request de ping", log.INFO)
-	message := "Tu ping es infinito 777\n"
-	w.Write([]byte(message))
+	Pid         int    `json:"pid"`
 }
 
 func Sleep(w http.ResponseWriter, r *http.Request) {
@@ -29,22 +24,23 @@ func Sleep(w http.ResponseWriter, r *http.Request) {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
 	}
-	global.Logger.Log(fmt.Sprintf("Me llegó ésta instrucción: %+v", estructura), log.INFO)
+	global.Logger.Log(fmt.Sprintf("Me llegó ésta instrucción: %+v", estructura), log.DEBUG)
 
-	dispositivo := global.MapIOGenericsActivos[estructura.Nombre]
+	dispositivo := global.Dispositivo
 
-	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.INFO)
+	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.DEBUG)
 
-	global.Logger.Log(fmt.Sprintf("a punto de dormir: %+v", dispositivo), log.INFO)
+	global.Logger.Log(fmt.Sprintf("a punto de dormir: %+v", dispositivo), log.DEBUG)
 
-	dispositivo.EstaEnUso = true
-
+	dispositivo.InUse = true
+	global.Logger.Log(fmt.Sprintf("PID: %d - Operacion: %s", estructura.Pid, estructura.Instruccion), log.INFO)
 	global.Logger.Log(fmt.Sprintf("durmiendo: %+v", dispositivo), log.INFO)
 
 	time.Sleep(time.Duration(estructura.Tiempo*global.IOConfig.UnitWorkTime) * time.Millisecond)
 
-	dispositivo.EstaEnUso = false
+	dispositivo.InUse = false
 
 	global.Logger.Log(fmt.Sprintf("terminé de dormir: %+v", dispositivo), log.INFO)
 
+	w.WriteHeader(http.StatusNoContent)
 }
