@@ -107,26 +107,26 @@ func PCBToCPU(pcb *model.PCB) (*model.PCB, error) {
 	return resp, nil
 }
 
-func PCBtoExit(updatePCB *model.PCB) {
-	updatePCB.State = "EXIT"
+func PCBtoExit(pcb *model.PCB) {
+	pcb.State = "EXIT"
 	global.MutexExitState.Lock()
-	global.ExitState.PushBack(updatePCB)
+	global.ExitState.PushBack(pcb)
 	global.MutexExitState.Unlock()
 	//LOG CAMBIO DE ESTADO
-	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", updatePCB.PID, updatePCB.State), log.INFO)
-	global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: SUCCESS ", updatePCB.PID), log.INFO)
+	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
+	global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: SUCCESS ", pcb.PID), log.INFO)
 	<-global.SemMulti
 }
 
-func PCBtoBlock(updatePCB *model.PCB) {
-	updatePCB.State = "BLOCK"
+func PCBtoBlock(pcb *model.PCB) {
+	pcb.State = "BLOCK"
 	global.MutexBlockState.Lock()
-	global.BlockedState.PushBack(updatePCB)
+	global.BlockedState.PushBack(pcb)
 	global.MutexBlockState.Unlock()
-	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", updatePCB.PID, updatePCB.State), log.INFO)
-	global.Logger.Log(fmt.Sprintf("PID: %d - Bloqueado por: %s ", updatePCB.PID, updatePCB.Instruction.Parameters[0]), log.INFO)
+	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
+	global.Logger.Log(fmt.Sprintf("PID: %d - Bloqueado por: %s ", pcb.PID, pcb.Instruction.Parameters[0]), log.INFO)
 
-	go block.ProcessToIO(updatePCB)
+	go block.ProcessToIO(pcb)
 
 }
 
@@ -146,19 +146,19 @@ func PCBReadytoExec() *model.PCB {
 	return pcb
 }
 
-func PCBExectoReady(updatePCB *model.PCB) {
+func PCBExectoReady(pcb *model.PCB) {
 	//se guarda en ready
-	updatePCB.State = "READY"
+	pcb.State = "READY"
 	//LOG CAMBIO DE ESTADO
-	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", updatePCB.PID, updatePCB.State), log.INFO)
+	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
 
 	//LOG COLA A READY CHEQUEAR EN ESTE CASO
 
 	//LOG FIN DE QUANTUM
-	global.Logger.Log(fmt.Sprintf("PID: %d - Desalojado por fin de Quantum ", updatePCB.PID), log.INFO)
+	global.Logger.Log(fmt.Sprintf("PID: %d - Desalojado por fin de Quantum ", pcb.PID), log.INFO)
 
 	global.MutexReadyState.Lock()
-	global.ReadyState.PushBack(updatePCB)
+	global.ReadyState.PushBack(pcb)
 
 	global.MutexReadyState.Unlock()
 	array := longterm.ConvertListToArray(global.ReadyState)
