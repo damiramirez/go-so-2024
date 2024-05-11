@@ -14,6 +14,11 @@ import (
 func InitLongTermPlani() {
 	global.WorkingPlani = true
 	for global.WorkingPlani {
+		global.Logger.Log(fmt.Sprintf("Semaforo de NEWLIST ANTES DE PLANO: %d", len(global.SemNewList)), log.DEBUG)
+
+		<-global.SemNewList
+		global.Logger.Log(fmt.Sprintf("Semaforo de NEWLIST DESPIUES DE PLANI: %d", len(global.SemNewList)), log.DEBUG)
+
 		if global.NewState.Len() != 0 {
 			global.Logger.Log(fmt.Sprintf("NEW LEN: %d", global.NewState.Len()), log.DEBUG)
 			global.SemMulti <- 0

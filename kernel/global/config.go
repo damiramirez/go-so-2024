@@ -55,8 +55,9 @@ var MutexExecuteState sync.Mutex
 // Semaforos
 var SemMulti chan int
 var SemExecute chan int
-var SemReadyList chan struct{}
 var SemInterrupt chan int
+var SemReadyList chan struct{}
+var SemNewList chan struct{}
 
 // Io MAP
 var IoMap map[string]IoDevice
@@ -80,12 +81,13 @@ func InitGlobal() {
 
 	SemMulti = make(chan int, KernelConfig.Multiprogramming)
 	SemExecute = make(chan int, 1)
-	SemReadyList = make(chan struct{}, KernelConfig.Multiprogramming)
-
 	SemInterrupt = make(chan int)
+	SemReadyList = make(chan struct{}, KernelConfig.Multiprogramming)
+	SemNewList = make(chan struct{}, 20)
+
 	IoMap = map[string]IoDevice{}
 
-	WorkingPlani = true
+	WorkingPlani = false
 }
 
 func GetNextPID() int {
