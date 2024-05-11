@@ -129,7 +129,6 @@ func PCBtoBlock(pcb *model.PCB) {
 	global.Logger.Log(fmt.Sprintf("PID: %d - Bloqueado por: %s ", pcb.PID, pcb.Instruction.Parameters[0]), log.INFO)
 
 	go block.ProcessToIO(pcb)
-
 }
 
 func PCBReadytoExec() *model.PCB {
@@ -164,5 +163,4 @@ func PCBExectoReady(pcb *model.PCB) {
 	array := longterm.ConvertListToArray(global.ReadyState)
 	global.Logger.Log(fmt.Sprintf("Cola Ready : %v", array), log.INFO)
 	global.SemReadyList <- struct{}{}
-
 }
