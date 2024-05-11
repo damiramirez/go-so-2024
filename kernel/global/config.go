@@ -83,6 +83,7 @@ func InitGlobal() {
 	SemExecute = make(chan int, 1)
 	SemInterrupt = make(chan int)
 	SemReadyList = make(chan struct{}, KernelConfig.Multiprogramming)
+	// Revisar el size
 	SemNewList = make(chan struct{}, 20)
 
 	IoMap = map[string]IoDevice{}

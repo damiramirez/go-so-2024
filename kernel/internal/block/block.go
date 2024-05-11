@@ -70,14 +70,15 @@ func ProcessToIO(pcb *model.PCB) {
 	global.MutexBlockState.Lock()
 	global.BlockedState.Remove(global.BlockedState.Front())
 	global.MutexBlockState.Unlock()
+
 	<-global.IoMap[ioStruct.Name].Sem
 	// TESTEO -  HACER EN OTRA FUNCION
 	pcb.State = "READY"
 
 	global.MutexReadyState.Lock()
 	global.ReadyState.PushBack(pcb)
-
 	global.MutexReadyState.Unlock()
+
 	array := longterm.ConvertListToArray(global.ReadyState)
 	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: BLOCK - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
 	global.Logger.Log(fmt.Sprintf("Cola Ready : %v", array), log.INFO)
@@ -96,7 +97,8 @@ func moveToExit(pcb *model.PCB) {
 	global.MutexExitState.Lock()
 	global.ExitState.PushBack(pcb)
 	global.MutexExitState.Unlock()
+
 	global.SemReadyList <- struct{}{}
-	global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: INVALID_RESOURCE", pcb.PID), log.INFO)
 	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: BLOCK - Estado Actual: %s ", pcb.PID, pcb.State), log.INFO)
+	global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: INVALID_RESOURCE", pcb.PID), log.INFO)
 }

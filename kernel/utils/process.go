@@ -112,6 +112,7 @@ func PCBtoExit(pcb *model.PCB) {
 	global.MutexExitState.Lock()
 	global.ExitState.PushBack(pcb)
 	global.MutexExitState.Unlock()
+
 	//LOG CAMBIO DE ESTADO
 	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
 	global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: SUCCESS ", pcb.PID), log.INFO)
@@ -123,6 +124,7 @@ func PCBtoBlock(pcb *model.PCB) {
 	global.MutexBlockState.Lock()
 	global.BlockedState.PushBack(pcb)
 	global.MutexBlockState.Unlock()
+
 	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
 	global.Logger.Log(fmt.Sprintf("PID: %d - Bloqueado por: %s ", pcb.PID, pcb.Instruction.Parameters[0]), log.INFO)
 
@@ -141,8 +143,6 @@ func PCBReadytoExec() *model.PCB {
 	global.MutexExecuteState.Lock()
 	global.ExecuteState.PushBack(pcb)
 	global.MutexExecuteState.Unlock()
-	//global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: READY - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
-
 	return pcb
 }
 
@@ -159,8 +159,8 @@ func PCBExectoReady(pcb *model.PCB) {
 
 	global.MutexReadyState.Lock()
 	global.ReadyState.PushBack(pcb)
-
 	global.MutexReadyState.Unlock()
+
 	array := longterm.ConvertListToArray(global.ReadyState)
 	global.Logger.Log(fmt.Sprintf("Cola Ready : %v", array), log.INFO)
 	global.SemReadyList <- struct{}{}

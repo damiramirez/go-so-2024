@@ -52,7 +52,6 @@ func sendPCBToReady() {
 
 		global.MutexReadyState.Lock()
 		global.ReadyState.PushBack(pcbToReady)
-
 		global.MutexReadyState.Unlock()
 
 		// <- global.SemReadyList

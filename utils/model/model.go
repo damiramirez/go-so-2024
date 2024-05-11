@@ -3,7 +3,6 @@ package model
 type PCB struct {
 	PID              int
 	State            string
-	FinalState       string
 	PC               int
 	CPUTime          int
 	Quantum          int
