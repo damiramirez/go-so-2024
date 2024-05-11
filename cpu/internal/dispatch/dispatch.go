@@ -3,7 +3,7 @@ package internal
 import (
 	"fmt"
 	"strings"
-	
+
 	"github.com/sisoputnfrba/tp-golang/cpu/global"
 	"github.com/sisoputnfrba/tp-golang/cpu/internal/execute"
 	internal "github.com/sisoputnfrba/tp-golang/cpu/internal/fetch"
@@ -15,18 +15,18 @@ func Dispatch(pcb *model.PCB) (*model.PCB, error) {
 	global.Logger.Log(fmt.Sprintf("Recibi PCB %+v", pcb), log.DEBUG)
 
 	global.ExecuteMutex.Lock()
-	global.Execute=true
+	global.Execute = true
 	global.ExecuteMutex.Unlock()
 
 	for global.Execute {
-		
+
 		instruction, err := internal.Fetch(pcb)
 		if err != nil {
 			return nil, err
 		}
 
 		exec_result := execute.Execute(pcb, instruction)
-		if exec_result == execute.RETURN_CONTEXT{
+		if exec_result == execute.RETURN_CONTEXT {
 			global.Execute = false
 		}
 		DisplaceReason(pcb)
@@ -35,13 +35,13 @@ func Dispatch(pcb *model.PCB) (*model.PCB, error) {
 	return pcb, nil
 }
 
-func DisplaceReason(pcb *model.PCB){
-	if strings.Contains(pcb.Instruction.Operation, "IO"){
-		pcb.DisplaceReason="BLOCKED"
-	}else if pcb.Instruction.Operation == "EXIT"{
-		pcb.DisplaceReason="EXIT"
-	}else{
-		pcb.DisplaceReason="QUANTUM"
+func DisplaceReason(pcb *model.PCB) {
+	if strings.Contains(pcb.Instruction.Operation, "IO") {
+		pcb.DisplaceReason = "BLOCKED"
+	} else if pcb.Instruction.Operation == "EXIT" {
+		pcb.DisplaceReason = "EXIT"
+	} else {
+		pcb.DisplaceReason = "QUANTUM"
 	}
-		
+
 }

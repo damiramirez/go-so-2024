@@ -1,10 +1,10 @@
 package api
 
 import (
-	"net/http"
 	handlers "github.com/sisoputnfrba/tp-golang/memoria/api/handlers"
 	global "github.com/sisoputnfrba/tp-golang/memoria/global"
 	server "github.com/sisoputnfrba/tp-golang/utils/server"
+	"net/http"
 )
 
 func CreateServer() *server.Server {
@@ -12,9 +12,9 @@ func CreateServer() *server.Server {
 	configServer := server.Config{
 		Port: global.MemoryConfig.Port,
 		Handlers: map[string]http.HandlerFunc{
-			"GET  /ping": func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("msg: Se conecto a Memoria")) },
-			"PUT /process": handlers.CodeReciever,
-			"PUT /process/{pid}":handlers.SendInstruction,
+			"GET  /ping":         func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("msg: Se conecto a Memoria")) },
+			"PUT /process":       handlers.CodeReciever,
+			"PUT /process/{pid}": handlers.SendInstruction,
 		},
 	}
 	return server.NewServer(configServer)

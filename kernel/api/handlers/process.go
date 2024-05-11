@@ -107,6 +107,6 @@ func ProcessByIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log(fmt.Sprintf("Process %d - State: %s", pcb.PID, pcb.State), log.DEBUG)
 }
-func Interrupt(w http.ResponseWriter, r *http.Request){
-	
+func Interrupt(w http.ResponseWriter, r *http.Request) {
+
 }

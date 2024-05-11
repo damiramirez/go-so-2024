@@ -13,4 +13,3 @@ func CreateNewProcess() *model.PCB {
 		RemainingQuantum: global.KernelConfig.Quantum,
 	}
 }
-

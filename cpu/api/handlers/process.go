@@ -55,10 +55,10 @@ func Dispatch(w http.ResponseWriter, r *http.Request) {
 	serialization.EncodeHTTPResponse(w, pcb, http.StatusOK)
 }
 
-func Interrupt(w http.ResponseWriter, r *http.Request){
+func Interrupt(w http.ResponseWriter, r *http.Request) {
 	global.Logger.Log("entramos a interrupt", log.DEBUG)
 	global.ExecuteMutex.Lock()
-	global.Execute=false
+	global.Execute = false
 	global.ExecuteMutex.Unlock()
 	w.WriteHeader(http.StatusOK)
 }

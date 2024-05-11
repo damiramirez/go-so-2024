@@ -20,7 +20,7 @@ func CreateServer() *server.Server {
 			"PUT /plani":            handlers.InitPlanningHandler,
 			"DELETE /plani":         handlers.StopPlanningHandler,
 			"PUT /newio":            handlers.NewIO,
-			"GET /interrupt":		 handlers.Interrupt,
+			"GET /interrupt":        handlers.Interrupt,
 		},
 	}
 	return server.NewServer(configServer)

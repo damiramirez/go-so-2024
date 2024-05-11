@@ -22,15 +22,15 @@ func CodeReciever(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error al decodear el body", http.StatusBadRequest)
 		return
 	}
-	
+
 	ListInstructions, err := ReadTxt(pPath.Path)
 	if err != nil {
 		global.Logger.Log("error al leer el archivo "+err.Error(), log.ERROR)
 		http.Error(w, "Error al leer archivo", http.StatusBadRequest)
 		return
 	}
-	internal.InstructionStorage(ListInstructions,pPath.Pid)
-	global.Logger.Log(fmt.Sprintf("%+v\n",global.DictProcess),log.INFO)
+	internal.InstructionStorage(ListInstructions, pPath.Pid)
+	global.Logger.Log(fmt.Sprintf("%+v\n", global.DictProcess), log.INFO)
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -54,7 +54,7 @@ func SendInstruction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//en este paso deberia tomar la info de memoria y no del archivo
-	ListInstructions:=(global.DictProcess)[PC.Pid].Instructions
+	ListInstructions := (global.DictProcess)[PC.Pid].Instructions
 	//de aca en adelante la logica es la misma
 	if Instruction > len(ListInstructions) { //esto chequea si la intruccion esta dentro del rango
 		global.Logger.Log("out of memory: ", log.ERROR)

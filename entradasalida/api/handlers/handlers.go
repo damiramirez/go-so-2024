@@ -33,11 +33,11 @@ func Sleep(w http.ResponseWriter, r *http.Request) {
 	global.Logger.Log(fmt.Sprintf("a punto de dormir: %+v", dispositivo), log.DEBUG)
 
 	dispositivo.InUse = true
-	global.Logger.Log(fmt.Sprintf("PID: %d - Operacion: %s",estructura.Pid,estructura.Instruccion),log.INFO)
+	global.Logger.Log(fmt.Sprintf("PID: %d - Operacion: %s", estructura.Pid, estructura.Instruccion), log.INFO)
 	global.Logger.Log(fmt.Sprintf("durmiendo: %+v", dispositivo), log.INFO)
 
 	time.Sleep(time.Duration(estructura.Tiempo*global.IOConfig.UnitWorkTime) * time.Millisecond)
-	
+
 	dispositivo.InUse = false
 
 	global.Logger.Log(fmt.Sprintf("terminé de dormir: %+v", dispositivo), log.INFO)

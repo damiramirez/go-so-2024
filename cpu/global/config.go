@@ -26,8 +26,7 @@ var CPUConfig *Config
 var Execute bool
 var Logger *log.LoggerStruct
 
-
-//mutex
+// mutex
 var ExecuteMutex sync.Mutex
 
 func InitGlobal() {

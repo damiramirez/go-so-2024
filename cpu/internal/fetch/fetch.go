@@ -32,7 +32,7 @@ func getInstruction(id, pc int) (*model.Instruction, error) {
 	path := fmt.Sprintf("process/%d", id)
 	proccesInstruction := model.ProcessInstruction{
 		Pid: id,
-		Pc: pc,
+		Pc:  pc,
 	}
 	raw_instruction, err := requests.PutHTTPwithBody[model.ProcessInstruction, string](
 		global.CPUConfig.IPMemory,
@@ -53,7 +53,7 @@ func getInstruction(id, pc int) (*model.Instruction, error) {
 	sliceInstruction := strings.Fields(*raw_instruction)
 
 	instruction := &model.Instruction{
-		Operation: sliceInstruction[0],
+		Operation:  sliceInstruction[0],
 		Parameters: sliceInstruction[1:],
 	}
 

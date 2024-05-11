@@ -3,12 +3,11 @@ package main
 import (
 	"fmt"
 
-	"os"
 	api "github.com/sisoputnfrba/tp-golang/memoria/api"
 	global "github.com/sisoputnfrba/tp-golang/memoria/global"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
+	"os"
 )
-
 
 func main() {
 	global.InitGlobal()

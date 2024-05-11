@@ -35,7 +35,7 @@ func Execute(pcb *model.PCB, instruction *model.Instruction) int {
 	case "IO_GEN_SLEEP":
 		result = RETURN_CONTEXT
 	case "IO_STDIN_READ":
-		result= RETURN_CONTEXT	
+		result = RETURN_CONTEXT
 	case "EXIT":
 		result = RETURN_CONTEXT
 	}

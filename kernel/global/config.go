@@ -43,7 +43,6 @@ var BlockedState *list.List
 var ExecuteState *list.List
 var ExitState *list.List
 
-
 var WorkingPlani bool
 
 // Mutex
@@ -78,7 +77,6 @@ func InitGlobal() {
 	BlockedState = list.New()
 	ExecuteState = list.New()
 	ExitState = list.New()
-
 
 	SemMulti = make(chan int, KernelConfig.Multiprogramming)
 	SemExecute = make(chan int, 1)

@@ -50,7 +50,7 @@ func ProcessToIO(blockProcess *model.PCB) {
 	/*global.MutexBlockState.Lock()
 	blockProcess:=global.BlockedState.Remove(global.BlockedState.Front()).(*model.PCB)
 	global.MutexBlockState.Unlock()*/
-	
+
 	time, _ := strconv.Atoi(blockProcess.Instruction.Parameters[1])
 	global.Logger.Log(fmt.Sprintf("Proceso bloqueado %+v", blockProcess), log.INFO)
 
@@ -58,7 +58,7 @@ func ProcessToIO(blockProcess *model.PCB) {
 		Name:        blockProcess.Instruction.Parameters[0],
 		Instruccion: blockProcess.Instruction.Operation,
 		Time:        time,
-		Pid: blockProcess.PID,
+		Pid:         blockProcess.PID,
 	}
 	if !CheckIfExist(ioStruct.Name) || !CheckIfIsValid(ioStruct.Name, ioStruct.Instruccion) {
 		global.MutexBlockState.Lock()

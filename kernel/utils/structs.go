@@ -12,4 +12,3 @@ type ProcessState struct {
 type ProcessPath struct {
 	Path string `json:"path"`
 }
-
