@@ -26,4 +26,3 @@ type MemAccess struct {
 	Adress        int    `json:"adress"`
 	NumberOfPages int    `json:"numberofpages"`
 }
-

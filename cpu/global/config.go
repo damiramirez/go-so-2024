@@ -3,6 +3,7 @@ package global
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
@@ -18,12 +19,15 @@ type Config struct {
 	PortMemory       int    `json:"port_memory"`
 	NumberFellingTLB int    `json:"number_felling_tlb"`
 	AlgorithmTLB     string `json:"algorithm_tlb"`
-	Page_size 		 int	`json:"page_size"`	
+	Page_size        int    `json:"page_size"`
 }
 
 var CPUConfig *Config
-
+var Execute bool
 var Logger *log.LoggerStruct
+
+// mutex
+var ExecuteMutex sync.Mutex
 
 func InitGlobal() {
 	args := os.Args[1:]

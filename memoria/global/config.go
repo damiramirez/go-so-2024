@@ -2,9 +2,9 @@ package global
 
 import (
 	"fmt"
-	"os"
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
+	"os"
 )
 
 const MEMORYLOG = "./memoria.log"
@@ -20,10 +20,12 @@ type Config struct {
 }
 var MemoryConfig *Config
 var Logger *log.LoggerStruct
+
 type ProcessInstructions struct {
 	Instructions []string
 }
 type ListInstructions ProcessInstructions
+
 var DictProcess map[int]ListInstructions
 type MemoryST struct {
 	Spaces []byte

@@ -6,53 +6,16 @@ import (
 	"strconv"
 
 	global "github.com/sisoputnfrba/tp-golang/kernel/global"
+	"github.com/sisoputnfrba/tp-golang/kernel/internal/pcb"
+	"github.com/sisoputnfrba/tp-golang/kernel/utils"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
+	"github.com/sisoputnfrba/tp-golang/utils/requests"
 	"github.com/sisoputnfrba/tp-golang/utils/serialization"
 )
 
-// Donde crear structs que solo me sirven para enviar body o recibir json???
-
-type Process struct {
-	PID   int    `json:"pid"`
-	State string `json:"state"`
-}
-
-// Handler para devolver a memoria el estado del proceso
-func ProcessByIdHandler(w http.ResponseWriter, r *http.Request) {
-	pid, _ := strconv.Atoi(r.PathValue("pid"))
-	global.Logger.Log(fmt.Sprintf("State - PID: %d", pid), log.DEBUG)
-
-	// TODO: Buscar PID en slice de procesos
-	// Ver que pasa si no existe
-
-	state := "READY"
-	processState := struct {
-		PID   int    `json:"pid"`
-		State string `json:"state"`
-	}{
-		PID:   pid,
-		State: state,
-	}
-
-	err := serialization.EncodeHTTPResponse(w, processState, http.StatusOK)
-	if err != nil {
-		http.Error(w, "Error encoding response", http.StatusInternalServerError)
-		return
-	}
-
-	global.Logger.Log(fmt.Sprintf("Process %d - State: %s", pid, state), log.DEBUG)
-}
-
-// Se encargará de ejecutar un nuevo proceso en base a un archivo
-// dentro del file system de Linux. Dicho mensaje se encargará de
-// la creación del proceso (PCB) y dejará el mismo en el estado NEW.
 func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
-	type ProcessPath struct {
-		Path string `json:"path"`
-	}
 
-	var pPath ProcessPath
-
+	var pPath utils.ProcessPath
 	err := serialization.DecodeHTTPBody(r, &pPath)
 
 	if err != nil {
@@ -61,17 +24,35 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, _ := http.Get("http://127.0.0.1:8002/ping")
-	global.Logger.Log("Resp de memoria: "+resp.Status, log.INFO)
+	pcb := pcb.CreateNewProcess()
 
-	// TODO: Crear proceso - PCB y dejarlo en NEW
-	global.Logger.Log("Init process - Path: "+pPath.Path, log.DEBUG)
-
-	processPID := struct {
-		PID int `json:"pid"`
-	}{
-		PID: 321,
+	type ProcessMemory struct {
+		Path string `json:"path"`
+		PID  int    `json:"pid"`
 	}
+	processMemory := ProcessMemory{
+		Path: pPath.Path,
+		PID:  pcb.PID,
+	}
+
+	requests.PutHTTPwithBody[ProcessMemory, interface{}](global.KernelConfig.IPMemory, global.KernelConfig.PortMemory, "process", processMemory)
+	// _, err = requests.PutHTTPwithBody[ProcessMemory, interface{}](global.KernelConfig.IPMemory, global.KernelConfig.PortMemory, "process", processMemory)
+	// if err != nil {
+	// 	global.Logger.Log("Error al enviar instruccion "+err.Error(), log.ERROR)
+	// 	http.Error(w, "Error al enviar instruccion", http.StatusBadRequest)
+	// 	return
+	// }
+
+	global.MutexNewState.Lock()
+	global.NewState.PushBack(pcb)
+	global.MutexNewState.Unlock()
+
+	global.SemNewList <- struct{}{}
+	global.Logger.Log(fmt.Sprintf("Semaforo de NEWLIST: %d", len(global.SemNewList)), log.DEBUG)
+
+	processPID := utils.ProcessPID{PID: pcb.PID}
+
+	global.Logger.Log(fmt.Sprintf("Se crea el proceso %d en NEW", pcb.PID), log.INFO)
 
 	err = serialization.EncodeHTTPResponse(w, processPID, http.StatusCreated)
 	if err != nil {
@@ -80,34 +61,58 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Se encargará de finalizar un proceso que se encuentre dentro del sistema.
-// Este mensaje se encargará de realizar las mismas operaciones como si el proceso
-// llegara a EXIT por sus caminos habituales (deberá liberar recursos, archivos y memoria).
 func EndProcessHandler(w http.ResponseWriter, r *http.Request) {
-	pid := r.PathValue("pid")
-	global.Logger.Log("End process - PID: "+pid, log.DEBUG)
+	pid, _ := strconv.Atoi(r.PathValue("pid"))
 
-	// TODO: Delete process
+	// TODO: Request a memoria
+	// VER LOGICA DE: Traerme la PCB - Ver estado actual
+	// 	- Si esta en CPU -> INTERRUPT
+	// AHORA SOLO LO BORRA DE LA LISTA
 
+	if !utils.RemoveProcessByPID(pid) {
+		global.Logger.Log(fmt.Sprintf("No existe el PID %d", pid), log.DEBUG)
+		http.Error(w, fmt.Sprintf("No existe el PID %d", pid), http.StatusNotFound)
+		return
+	}
+
+	global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: Eliminado desde la API", pid), log.INFO)
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func ListProcessHandler(w http.ResponseWriter, r *http.Request) {
-	global.Logger.Log("List process", log.DEBUG)
+	allProcess := utils.GetAllProcess()
 
-	// TODO: Buscar procesos y listarlos
-
-	processes := []struct {
-		PID   int    `json:"pid"`
-		State string `json:"state"`
-	}{
-		{PID: 1, State: "READY"},
-		{PID: 2, State: "EXEC"},
-	}
-
-	err := serialization.EncodeHTTPResponse(w, processes, http.StatusOK)
+	err := serialization.EncodeHTTPResponse(w, allProcess, http.StatusOK)
 	if err != nil {
 		http.Error(w, "Error encoding response", http.StatusInternalServerError)
 		return
 	}
+}
+
+func ProcessByIdHandler(w http.ResponseWriter, r *http.Request) {
+	pid, _ := strconv.Atoi(r.PathValue("pid"))
+
+	pcb := utils.FindProcessInList(pid)
+
+	if pcb == nil {
+		global.Logger.Log(fmt.Sprintf("No existe el PID %d", pid), log.DEBUG)
+		http.Error(w, fmt.Sprintf("No existe el PID %d", pid), http.StatusNotFound)
+		return
+	}
+
+	processState := utils.ProcessState{
+		PID:   pcb.PID,
+		State: pcb.State,
+	}
+
+	err := serialization.EncodeHTTPResponse(w, processState, http.StatusOK)
+	if err != nil {
+		http.Error(w, "Error encoding response", http.StatusInternalServerError)
+		return
+	}
+
+	global.Logger.Log(fmt.Sprintf("Process %d - State: %s", pcb.PID, pcb.State), log.DEBUG)
+}
+func Interrupt(w http.ResponseWriter, r *http.Request) {
+
 }

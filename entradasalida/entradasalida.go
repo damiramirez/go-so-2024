@@ -2,25 +2,27 @@ package main
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/sisoputnfrba/tp-golang/entradasalida/api"
 	"github.com/sisoputnfrba/tp-golang/entradasalida/global"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
-	"github.com/sisoputnfrba/tp-golang/utils/requests"
 )
-
-type ProcessState struct {
-	PID   int    `json:"pid"`
-	State string `json:"state"`
-}
 
 func main() {
 
+	// Me crea el loger y la configuracion
 	global.InitGlobal()
 
-	processSlice, _ := requests.GetHTTP[ProcessState](global.IOConfig.IPKernel, global.IOConfig.PortKernel, "process/12")
-	global.Logger.Log(fmt.Sprintf("%+v", processSlice), log.INFO)
+	s := api.CreateServer()
 
-	// requests.DeleteHTTP[interface{}]("plani", global.IOConfig.PortKernel, nil, global.IOConfig.IPKernel)
+	global.Logger.Log(fmt.Sprintf("Starting IO server on port: %d", global.IOConfig.Port), log.INFO)
+
+	err := s.Start()
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Failed to start IO server: %v", err), log.ERROR)
+		os.Exit(1)
+	}
 
 	global.Logger.CloseLogger()
 }

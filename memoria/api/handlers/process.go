@@ -26,9 +26,22 @@ func CodeReciever(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error al leer archivo", http.StatusBadRequest)
 		return
 	}
-	internal.InstructionStorage(ListInstructions,pPath.Pid)
-	w.WriteHeader(http.StatusNoContent)
+	internal.InstructionStorage(ListInstructions, pPath.Pid)
+	global.Logger.Log(fmt.Sprintf("%+v\n", global.DictProcess), log.INFO)
+	w.WriteHeader(http.StatusOK)
 }
+
+func ReadTxt(Path string) ([]string, error) {
+	Data, err := os.ReadFile(Path)
+	if err != nil {
+		global.Logger.Log("error al leer el archivo "+err.Error(), log.ERROR)
+		return nil, err
+	}
+	ListInstructions := strings.Split(string(Data), "\n")
+
+	return ListInstructions, nil
+}
+
 func SendInstruction(w http.ResponseWriter, r *http.Request) {
 	var ProcessAssets internal.ProcessAssets
 	err := serialization.DecodeHTTPBody(r, &ProcessAssets)
@@ -45,10 +58,13 @@ func SendInstruction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if Instruction == len(ListInstructions) { //esto chequea que no lea memoria q no le corresponde
+		// mensaje := "out of memory"
+		// json.NewEncoder(w).Encode(mensaje)
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)
+	time.Sleep(DelayResponse * time.Millisecond) //genera el delay response de la respuesta
 	time.Sleep(DelayResponse * time.Millisecond) //genera el delay response de la respuesta
 	err = serialization.EncodeHTTPResponse(w, ListInstructions[Instruction], http.StatusOK)
 	if err != nil {

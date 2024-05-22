@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	handlers "github.com/sisoputnfrba/tp-golang/kernel/api/handlers"
+	"github.com/sisoputnfrba/tp-golang/kernel/api/handlers"
 	global "github.com/sisoputnfrba/tp-golang/kernel/global"
 	"github.com/sisoputnfrba/tp-golang/utils/server"
 )
@@ -19,6 +19,8 @@ func CreateServer() *server.Server {
 			"DELETE /process/{pid}": handlers.EndProcessHandler,
 			"PUT /plani":            handlers.InitPlanningHandler,
 			"DELETE /plani":         handlers.StopPlanningHandler,
+			"PUT /newio":            handlers.NewIO,
+			"GET /interrupt":        handlers.Interrupt,
 		},
 	}
 	return server.NewServer(configServer)

@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-
 	handlers "github.com/sisoputnfrba/tp-golang/memoria/api/handlers"
 	global "github.com/sisoputnfrba/tp-golang/memoria/global"
 	server "github.com/sisoputnfrba/tp-golang/utils/server"
