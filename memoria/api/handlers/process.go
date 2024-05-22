@@ -3,6 +3,8 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	global "github.com/sisoputnfrba/tp-golang/memoria/global"
@@ -58,14 +60,11 @@ func SendInstruction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if Instruction == len(ListInstructions) { //esto chequea que no lea memoria q no le corresponde
-		// mensaje := "out of memory"
-		// json.NewEncoder(w).Encode(mensaje)
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)
-	time.Sleep(DelayResponse * time.Millisecond) //genera el delay response de la respuesta
-	time.Sleep(DelayResponse * time.Millisecond) //genera el delay response de la respuesta
+	time.Sleep(DelayResponse * time.Millisecond)  //genera el delay response de la respuesta
 	err = serialization.EncodeHTTPResponse(w, ListInstructions[Instruction], http.StatusOK)
 	if err != nil {
 		global.Logger.Log("Error al encodear el body: "+err.Error(), log.ERROR)
