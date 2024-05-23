@@ -14,7 +14,9 @@ var NumPages int
 // Se inicializa cada página de la memoria con datos vacíos
 
 func InstructionStorage(data []string, pid int) {
-	global.DictProcess[pid] = global.ListInstructions{Instructions: data}
+	PageTable:=global.NewPageTable()
+	global.DictProcess[pid] = global.ListInstructions{Instructions: data,PageTable: PageTable}
+	
 }
 
 

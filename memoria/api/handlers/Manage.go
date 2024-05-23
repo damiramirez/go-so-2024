@@ -40,20 +40,27 @@ func PageTableAccess(w http.ResponseWriter, r *http.Request){
 }
 
 func MemoryAccess(w http.ResponseWriter, r *http.Request){
-	var MemoryAcess internal.MemAccess
-	err := serialization.DecodeHTTPBody(r, &MemoryAcess)
+	var MemoryAccess internal.MemAccess
+	err := serialization.DecodeHTTPBody(r, &MemoryAccess)
 	if err != nil {
 		global.Logger.Log("Error al decodear el body: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear el body", http.StatusBadRequest)
 		return
 	}
-	if MemoryAcess.Tipo=="Read"{
+	if MemoryAccess.Tipo=="Read"{
 		//devuelve el valor solicitado en ese espacio de memoria 
-		global.Logger.Log(fmt.Sprintf("se quiere leer  memoria con esta direccion %d",MemoryAcess.Adress), log.DEBUG)
+		//global.Logger.Log(fmt.Sprintf("se quiere leer  memoria con esta direccion %d",MemoryAccess.Adress), log.DEBUG)
+		Frame:=int(global.DictProcess[MemoryAccess.Pid].PageTable.Page[MemoryAccess.NumPage])
+		MemoryAccess.Content=global.Memory.Spaces[Frame+MemoryAccess.Offset]
+		serialization.EncodeHTTPResponse(w,MemoryAccess,r.Response.StatusCode)
 	}
-	if MemoryAcess.Tipo=="Write" {
+	if MemoryAccess.Tipo=="Write" {
 		//escribe en el espacio de memoria solicitado 
-		global.Logger.Log(fmt.Sprintf("se quiere escribir memoria con esta direccion %d",MemoryAcess.Adress), log.DEBUG)
+		//global.Logger.Log(fmt.Sprintf("se escribio memoria con esta direccion %d",MemoryAccess.Adress), log.DEBUG)
+		
+		//global.Memory.Spaces[MemoryAccess.Adress]=MemoryAccess.Content
+		global.Logger.Log(fmt.Sprintf("Memoria  %+v",global.Memory), log.DEBUG)
+		w.WriteHeader(http.StatusAccepted)
 	}
 	
 }

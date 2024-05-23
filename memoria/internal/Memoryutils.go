@@ -23,6 +23,10 @@ type Resize struct {
 
 type MemAccess struct {
 	Tipo          string `json:"type"`
-	Adress        int    `json:"adress"`
+	NumPage       int    `json:"numpage"`
+	Offset        int    `json:"offset"`
 	NumberOfPages int    `json:"numberofpages"`
+	Content       byte   `json:"content"`
+	Pid           int    `json:"pid"`
 }
+
