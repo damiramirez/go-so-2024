@@ -73,16 +73,18 @@ func Stdin_read(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log(fmt.Sprintf("Ingrese un valor: "), log.INFO)
 
-	fmt.Scanf("%s", global.Texto)
+	fmt.Scanf("%s", &global.Texto)
+
+	fmt.Println(global.Texto)
 
 	// PUT a memoria de "texto"
-	stdin_read()
+	//stdin_read()
 
 }
 
 func stdin_read() {
 
-	_, err := requests.PutHTTPwithBody[string, interface{}](global.IOConfig.IPMemory, global.IOConfig.PortMemory, "stdin_read", *global.Texto)
+	_, err := requests.PutHTTPwithBody[string, interface{}](global.IOConfig.IPMemory, global.IOConfig.PortMemory, "stdin_read", global.Texto)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("NO se pudo enviar a memoria el valor a escribir %s", err.Error()), log.INFO)
 		panic(1)
@@ -110,7 +112,7 @@ func Stdout_write(w http.ResponseWriter, r *http.Request) {
 
 func stdout_write() {
 
-	valor, err := requests.PutHTTPwithBody[string, interface{}](global.IOConfig.IPMemory, global.IOConfig.PortMemory, "stdout_write", *global.Texto)
+	valor, err := requests.PutHTTPwithBody[string, interface{}](global.IOConfig.IPMemory, global.IOConfig.PortMemory, "stdout_write", global.Texto)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("NO se pudo enviar a memoria el valor a escribir %s", err.Error()), log.INFO)
 		panic(1)

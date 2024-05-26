@@ -33,7 +33,7 @@ type IODevice struct {
 
 var Dispositivo *IODevice
 
-var Texto *string
+var Texto string
 
 var IOConfig *Config
 
@@ -42,7 +42,7 @@ var Logger *log.LoggerStruct
 func InitGlobal() {
 	args := os.Args[1:]
 	if len(args) != 3 {
-		fmt.Println("Uso: programa <go run `modulo`.go dev|prod>")
+		fmt.Println("Uso: programa <go run `modulo`.go dev|prod N=name P=path>")
 		os.Exit(1)
 	}
 	env := args[0]
