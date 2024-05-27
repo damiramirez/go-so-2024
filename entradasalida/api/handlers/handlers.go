@@ -7,8 +7,8 @@ import (
 
 	"github.com/sisoputnfrba/tp-golang/entradasalida/global"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
-	"github.com/sisoputnfrba/tp-golang/utils/serialization"
 	"github.com/sisoputnfrba/tp-golang/utils/requests"
+	"github.com/sisoputnfrba/tp-golang/utils/serialization"
 )
 
 type estructura_sleep struct {
@@ -20,15 +20,21 @@ type estructura_sleep struct {
 type estructura_STDIN_read struct {
 	Nombre      string `json:"nombre"`
 	Instruccion string `json:"instruccion"`
-	Direccion 	string `json:"direccion"`
-	Tamanio 	string `json:"tamanio"`
+	Direccion   string `json:"direccion"`
+	Tamanio     string `json:"tamanio"`
+}
+
+type estructura_read struct {
+	Texto     string
+	Direccion string
+	Tamanio   string
 }
 
 type estructura_STDOUT_write struct {
 	Nombre      string `json:"nombre"`
 	Instruccion string `json:"instruccion"`
-	Direccion 	string `json:"direccion"`
-	Tamanio 	string `json:"tamanio"`
+	Direccion   string `json:"direccion"`
+	Tamanio     string `json:"tamanio"`
 }
 
 func Sleep(w http.ResponseWriter, r *http.Request) {
@@ -60,6 +66,7 @@ func Sleep(w http.ResponseWriter, r *http.Request) {
 
 func Stdin_read(w http.ResponseWriter, r *http.Request) {
 	var estructura estructura_STDIN_read
+	var estructura_actualizada estructura_read
 	err := serialization.DecodeHTTPBody[*estructura_STDIN_read](r, &estructura)
 	if err != nil {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
@@ -71,25 +78,27 @@ func Stdin_read(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.INFO)
 
-	global.Logger.Log(fmt.Sprintf("Ingrese un valor: "), log.INFO)
+	global.Logger.Log(fmt.Sprintf("Ingrese un valor de tamaño (%s", estructura.Tamanio)+"): ", log.INFO)
+
+	dispositivo.InUse = true
 
 	fmt.Scanf("%s", &global.Texto)
 
-	fmt.Println(global.Texto)
+	estructura_actualizada.Direccion = estructura.Direccion
+	estructura_actualizada.Tamanio = estructura.Tamanio
+	estructura_actualizada.Texto = global.Texto
+
+	global.Logger.Log(fmt.Sprintf("Estructura actualizada para mandar a memoria: %+v", estructura_actualizada), log.INFO)
 
 	// PUT a memoria de "texto"
-	//stdin_read()
-
-}
-
-func stdin_read() {
-
-	_, err := requests.PutHTTPwithBody[string, interface{}](global.IOConfig.IPMemory, global.IOConfig.PortMemory, "stdin_read", global.Texto)
+	_, err = requests.PutHTTPwithBody[estructura_read, interface{}](global.IOConfig.IPMemory, global.IOConfig.PortMemory, "stdin_read", estructura_actualizada)
 	if err != nil {
-		global.Logger.Log(fmt.Sprintf("NO se pudo enviar a memoria el valor a escribir %s", err.Error()), log.INFO)
+		global.Logger.Log(fmt.Sprintf("NO se pudo enviar a memoria la estructura %s", err.Error()), log.INFO)
 		panic(1)
 		// TODO: memoria falta que entienda el mensaje (hacer el endpoint) y vea si puede escribir o no (?)
 	}
+
+	dispositivo.InUse = false
 }
 
 func Stdout_write(w http.ResponseWriter, r *http.Request) {
