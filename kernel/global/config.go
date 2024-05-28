@@ -51,6 +51,7 @@ var MutexNewState sync.Mutex
 var MutexExitState sync.Mutex
 var MutexBlockState sync.Mutex
 var MutexExecuteState sync.Mutex
+var MutexPlani sync.Mutex
 
 // Semaforos
 var SemMulti chan int
@@ -58,6 +59,7 @@ var SemExecute chan int
 var SemInterrupt chan int
 var SemReadyList chan struct{}
 var SemNewList chan struct{}
+var SemStopPlani chan struct{}
 
 // Io MAP
 var IoMap map[string]IoDevice
@@ -79,6 +81,7 @@ func InitGlobal() {
 	ExecuteState = list.New()
 	ExitState = list.New()
 
+	SemStopPlani = make(chan struct{})
 	SemMulti = make(chan int, KernelConfig.Multiprogramming)
 	SemExecute = make(chan int, 1)
 	SemInterrupt = make(chan int)

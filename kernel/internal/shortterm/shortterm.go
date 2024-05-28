@@ -13,5 +13,4 @@ func InitShortTermPlani() {
 	case "Round Robin":
 		algorithm.RoundRobbin()
 	}
-
 }

@@ -56,7 +56,7 @@ func Fifo() {
 			}
 
 		}
-		// VER ESTE SEMAFORO - DONDE VA?
+
 		<-global.SemExecute
 	}
 }
