@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/sisoputnfrba/tp-golang/entradasalida/global"
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 	"github.com/sisoputnfrba/tp-golang/utils/requests"
@@ -31,6 +30,39 @@ type IODevice struct {
 	InUse bool
 	Port  int
 }
+
+type Estructura_sleep struct {
+	Nombre      string `json:"nombre"`
+	Instruccion string `json:"instruccion"`
+	Tiempo      int    `json:"tiempo"`
+}
+
+type Estructura_STDIN_read struct {
+	Nombre      string `json:"nombre"`
+	Instruccion string `json:"instruccion"`
+	Direccion   string `json:"direccion"`
+	Tamanio     string `json:"tamanio"`
+}
+
+type Estructura_read struct {
+	Texto     string
+	Direccion string
+	Tamanio   string
+}
+
+type Estructura_STDOUT_write struct {
+	Nombre      string `json:"nombre"`
+	Instruccion string `json:"instruccion"`
+	Direccion   string `json:"direccion"`
+	Tamanio     string `json:"tamanio"`
+}
+
+type Estructura_write struct {
+	Direccion string
+	Tamanio   string
+}
+
+var Estructura_actualizada Estructura_read
 
 var Dispositivo *IODevice
 
@@ -82,15 +114,56 @@ func AvisoKernelIOExistente() {
 
 func VerificacionTamanio(texto string, tamanio string) {
 
-	if estructura_actualizada.Tamanio == global.Texto { // TO DO: implementar la comparacion, hacer estructura global?
-		estructura_actualizada.Texto = global.Texto
+	var tamanioEnBytes int
+
+	BtT := []byte(Texto)
+
+	switch Estructura_actualizada.Tamanio {
+
+	case "PC":
+		tamanioEnBytes = 4
+
+	case "AX":
+		tamanioEnBytes = 1
+
+	case "BX":
+		tamanioEnBytes = 1
+
+	case "CX":
+		tamanioEnBytes = 1
+
+	case "DX":
+		tamanioEnBytes = 1
+
+	case "EAX":
+		tamanioEnBytes = 4
+
+	case "EBX":
+		tamanioEnBytes = 4
+
+	case "ECX":
+		tamanioEnBytes = 4
+
+	case "EDX":
+		tamanioEnBytes = 4
+
+	case "SI":
+		tamanioEnBytes = 4
+
+	case "DI":
+		tamanioEnBytes = 4
+
+	}
+
+	if tamanioEnBytes == len(BtT) { // TO DO: implementar la comparacion, hacer estructura global?
+		Estructura_actualizada.Texto = Texto
 		return
 	}
 
-	global.Logger.Log(fmt.Sprintf("Tamaño incorrecto, ingrese un nuevo valor de tamaño (%s", estructura.Tamanio)+"): ", log.INFO)
+	Logger.Log(fmt.Sprintf("Tamaño incorrecto, ingrese un nuevo valor de tamaño (%s", Estructura_actualizada.Tamanio)+"): ", log.INFO)
 
-	fmt.Scanf("%s", &global.Texto)
+	fmt.Scanf("%s", &Texto)
 
-	VerificacionTamanio(global.Texto, estructura_actualizada.Tamanio)
+	VerificacionTamanio(Texto, Estructura_actualizada.Tamanio)
 
 }

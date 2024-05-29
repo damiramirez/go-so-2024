@@ -11,43 +11,12 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/serialization"
 )
 
-type estructura_sleep struct {
-	Nombre      string `json:"nombre"`
-	Instruccion string `json:"instruccion"`
-	Tiempo      int    `json:"tiempo"`
-}
-
-type estructura_STDIN_read struct {
-	Nombre      string `json:"nombre"`
-	Instruccion string `json:"instruccion"`
-	Direccion   string `json:"direccion"`
-	Tamanio     string `json:"tamanio"`
-}
-
-type estructura_read struct {
-	Texto     string
-	Direccion string
-	Tamanio   string
-}
-
-type estructura_STDOUT_write struct {
-	Nombre      string `json:"nombre"`
-	Instruccion string `json:"instruccion"`
-	Direccion   string `json:"direccion"`
-	Tamanio     string `json:"tamanio"`
-}
-
-type estructura_write struct {
-	Direccion string
-	Tamanio   string
-}
-
 func Sleep(w http.ResponseWriter, r *http.Request) {
 	dispositivo := global.Dispositivo
 	dispositivo.InUse = true
 
-	var estructura estructura_sleep
-	err := serialization.DecodeHTTPBody[*estructura_sleep](r, &estructura)
+	var estructura global.Estructura_sleep
+	err := serialization.DecodeHTTPBody[*global.Estructura_sleep](r, &estructura)
 	if err != nil {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
@@ -71,9 +40,9 @@ func Stdin_read(w http.ResponseWriter, r *http.Request) {
 	dispositivo := global.Dispositivo
 	dispositivo.InUse = true
 
-	var estructura estructura_STDIN_read
-	var estructura_actualizada estructura_read
-	err := serialization.DecodeHTTPBody[*estructura_STDIN_read](r, &estructura)
+	var estructura global.Estructura_STDIN_read
+	var estructura_actualizada global.Estructura_read
+	err := serialization.DecodeHTTPBody[*global.Estructura_STDIN_read](r, &estructura)
 	if err != nil {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
@@ -89,12 +58,12 @@ func Stdin_read(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Scanf("%s", &global.Texto)
 
-	global.VerificacionTamanio(global.Texto, estructura_actualizada.Tamanio)
+	global.VerificacionTamanio(global.Texto, global.Estructura_actualizada.Tamanio)
 
 	global.Logger.Log(fmt.Sprintf("Estructura actualizada para mandar a memoria: %+v", estructura_actualizada), log.INFO)
 
 	// PUT a memoria de la estructura
-	_, err = requests.PutHTTPwithBody[estructura_read, interface{}](global.IOConfig.IPMemory, global.IOConfig.PortMemory, "stdin_read", estructura_actualizada)
+	_, err = requests.PutHTTPwithBody[global.Estructura_read, interface{}](global.IOConfig.IPMemory, global.IOConfig.PortMemory, "stdin_read", estructura_actualizada)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("NO se pudo enviar a memoria la estructura %s", err.Error()), log.INFO)
 		panic(1)
@@ -107,10 +76,9 @@ func Stdin_read(w http.ResponseWriter, r *http.Request) {
 func Stdout_write(w http.ResponseWriter, r *http.Request) {
 	dispositivo := global.Dispositivo
 	dispositivo.InUse = true
-
-	var estructura estructura_STDOUT_write
-	var estructura_actualizada estructura_write
-	err := serialization.DecodeHTTPBody[*estructura_STDOUT_write](r, &estructura)
+	var estructura_actualizada global.Estructura_write
+	var estructura global.Estructura_STDOUT_write
+	err := serialization.DecodeHTTPBody[*global.Estructura_STDOUT_write](r, &estructura)
 	if err != nil {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
@@ -128,7 +96,7 @@ func Stdout_write(w http.ResponseWriter, r *http.Request) {
 
 	// PUT a memoria (le paso un registro y me devuelve el valor)
 
-	valor, err := requests.PutHTTPwithBody[estructura_write, interface{}](global.IOConfig.IPMemory, global.IOConfig.PortMemory, "stdout_write", estructura_actualizada)
+	valor, err := requests.PutHTTPwithBody[global.Estructura_write, interface{}](global.IOConfig.IPMemory, global.IOConfig.PortMemory, "stdout_write", estructura_actualizada)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("NO se pudo enviar a memoria el valor a escribir %s", err.Error()), log.INFO)
 		panic(1)
