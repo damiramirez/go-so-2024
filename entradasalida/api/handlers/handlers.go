@@ -121,6 +121,10 @@ func Stdout_write(w http.ResponseWriter, r *http.Request) {
 	estructura_actualizada.Direccion = estructura.Direccion
 	estructura_actualizada.Tamanio = estructura.Tamanio
 
+	global.Logger.Log(fmt.Sprintf("Intentando leer con %s", estructura.Nombre), log.INFO)
+
+	time.Sleep(time.Duration(global.IOConfig.UnitWorkTime) * time.Millisecond)
+
 	// PUT a memoria (le paso un registro y me devuelve el valor)
 
 	valor, err := requests.PutHTTPwithBody[estructura_write, interface{}](global.IOConfig.IPMemory, global.IOConfig.PortMemory, "stdout_write", estructura_actualizada)
