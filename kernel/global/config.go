@@ -35,8 +35,8 @@ type Resource struct {
 	Name        string
 	Count       int
 	BlockedList *list.List
-	MutexList  sync.Mutex
-	PidList    []int
+	MutexList   sync.Mutex
+	PidList     []int
 }
 
 var KernelConfig *Config
@@ -96,7 +96,7 @@ func InitGlobal() {
 	SemReadyList = make(chan struct{}, KernelConfig.Multiprogramming)
 	// Revisar el size
 	SemNewList = make(chan struct{}, 20)
-	ResourceMap=CreateResourceMap()
+	ResourceMap = CreateResourceMap()
 	IoMap = map[string]IoDevice{}
 
 	WorkingPlani = false
@@ -112,9 +112,9 @@ func CreateResourceMap() map[string]*Resource {
 	ResourceMap = map[string]*Resource{}
 	for i := 0; i < len(KernelConfig.Resources); i++ {
 		ResourceMap[KernelConfig.Resources[i]] = &Resource{
-			Name: KernelConfig.Resources[i],
-			Count: KernelConfig.ResourceInstances[i],
-			PidList: make([]int, 0),
+			Name:        KernelConfig.Resources[i],
+			Count:       KernelConfig.ResourceInstances[i],
+			PidList:     make([]int, 0),
 			BlockedList: list.New()}
 	}
 

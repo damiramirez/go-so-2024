@@ -14,16 +14,12 @@ import (
 )
 
 func RoundRobbin() {
-	global.Logger.Log("Arranca RoundRobbin", log.DEBUG)
 	global.Logger.Log(fmt.Sprintf("Semaforo de SemReadyList INICIO: %d", len(global.SemReadyList)), log.DEBUG)
 
 	for {
 
 		<-global.SemReadyList
-		global.Logger.Log("Pase el SemReadyList", log.DEBUG)
 		global.SemExecute <- 0
-
-		global.Logger.Log(fmt.Sprintf("RR GLOBAL WORKINGPLANI: %t", global.WorkingPlani), log.INFO)
 
 		if !global.WorkingPlani {
 			global.Logger.Log("TERMINO CON ROUND ROBIN", log.DEBUG)
@@ -75,10 +71,10 @@ func RoundRobbin() {
 				utils.PCBExectoReady(updatePCB)
 			}
 
-			if updatePCB.DisplaceReason=="WAIT" {
+			if updatePCB.DisplaceReason == "WAIT" {
 				resource.Wait(updatePCB)
 			}
-			if updatePCB.DisplaceReason=="SIGNAL" {
+			if updatePCB.DisplaceReason == "SIGNAL" {
 				resource.Signal(updatePCB)
 			}
 		}

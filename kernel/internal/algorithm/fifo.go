@@ -18,7 +18,7 @@ func Fifo() {
 
 	for {
 
-		global.Logger.Log(fmt.Sprintf("LOG ANTES DE SEMREADYLIST largo %d",len(global.SemReadyList)), log.DEBUG)
+		global.Logger.Log(fmt.Sprintf("LOG ANTES DE SEMREADYLIST largo %d", len(global.SemReadyList)), log.DEBUG)
 		<-global.SemReadyList
 
 		global.SemExecute <- 0
@@ -55,10 +55,10 @@ func Fifo() {
 			if updatePCB.DisplaceReason == "BLOCKED" {
 				utils.PCBtoBlock(updatePCB)
 			}
-			if updatePCB.DisplaceReason=="WAIT" {
+			if updatePCB.DisplaceReason == "WAIT" {
 				resource.Wait(updatePCB)
 			}
-			if updatePCB.DisplaceReason=="SIGNAL" {
+			if updatePCB.DisplaceReason == "SIGNAL" {
 				resource.Signal(updatePCB)
 			}
 
