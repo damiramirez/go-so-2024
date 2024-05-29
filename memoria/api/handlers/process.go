@@ -64,7 +64,7 @@ func SendInstruction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)
-	time.Sleep(DelayResponse * time.Millisecond)  //genera el delay response de la respuesta
+	time.Sleep(DelayResponse * time.Millisecond) //genera el delay response de la respuesta
 	err = serialization.EncodeHTTPResponse(w, ListInstructions[Instruction], http.StatusOK)
 	if err != nil {
 		global.Logger.Log("Error al encodear el body: "+err.Error(), log.ERROR)

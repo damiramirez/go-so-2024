@@ -47,20 +47,19 @@ func MemoryAccess(w http.ResponseWriter, r *http.Request){
 		http.Error(w, "Error al decodear el body", http.StatusBadRequest)
 		return
 	}
-	if MemoryAccess.Tipo=="Read"{
+	if MemoryAccess.Tipo=="In"{
 		//devuelve el valor solicitado en ese espacio de memoria 
-		//global.Logger.Log(fmt.Sprintf("se quiere leer  memoria con esta direccion %d",MemoryAccess.Adress), log.DEBUG)
-		Frame:=int(global.DictProcess[MemoryAccess.Pid].PageTable.Page[MemoryAccess.NumPage])
-		MemoryAccess.Content=global.Memory.Spaces[Frame+MemoryAccess.Offset]
-		serialization.EncodeHTTPResponse(w,MemoryAccess,r.Response.StatusCode)
-	}
-	if MemoryAccess.Tipo=="Write" {
+		MemoryAccess.Content=int(internal.MemIn(MemoryAccess.NumPage,MemoryAccess.Offset,MemoryAccess.Pid))
+		serialization.EncodeHTTPResponse(w,MemoryAccess.Content,r.Response.StatusCode)
+	}else if MemoryAccess.Tipo=="Out" {
 		//escribe en el espacio de memoria solicitado 
-		//global.Logger.Log(fmt.Sprintf("se escribio memoria con esta direccion %d",MemoryAccess.Adress), log.DEBUG)
-		
-		//global.Memory.Spaces[MemoryAccess.Adress]=MemoryAccess.Content
+		internal.MemOut(MemoryAccess.NumPage,MemoryAccess.Offset,MemoryAccess.Content,MemoryAccess.Pid)
+		global.Logger.Log(fmt.Sprintf("page table %d %+v",MemoryAccess.Pid,global.DictProcess[MemoryAccess.Pid].PageTable), log.DEBUG)
+		global.Logger.Log(fmt.Sprintf("Bit Map  %+v",global.BitMap), log.DEBUG)
 		global.Logger.Log(fmt.Sprintf("Memoria  %+v",global.Memory), log.DEBUG)
-		w.WriteHeader(http.StatusAccepted)
+		w.WriteHeader(http.StatusNoContent)
+	}else {
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
-	
 }

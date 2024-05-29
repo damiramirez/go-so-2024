@@ -25,8 +25,7 @@ type MemAccess struct {
 	Tipo          string `json:"type"`
 	NumPage       int    `json:"numpage"`
 	Offset        int    `json:"offset"`
-	NumberOfPages int    `json:"numberofpages"`
-	Content       byte   `json:"content"`
+	Content       int    `json:"content"`
 	Pid           int    `json:"pid"`
 }
 

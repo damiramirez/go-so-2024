@@ -2,9 +2,10 @@ package global
 
 import (
 	"fmt"
+	"os"
+
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
-	"os"
 )
 
 const MEMORYLOG = "./memoria.log"
@@ -18,43 +19,55 @@ type Config struct {
 	InstructionsPath string `json:"instructions_path"`
 	DelayResponse    int    `json:"delay_response"`
 }
+
 var MemoryConfig *Config
 var Logger *log.LoggerStruct
 
 type ProcessInstructions struct {
 	Instructions []string
-	PageTable *PageTable
+	PageTable    *PageTable
 }
 type ListInstructions ProcessInstructions
 
 var DictProcess map[int]ListInstructions
+
 type MemoryST struct {
 	Spaces []byte
 }
 type PageTable struct {
-	Page []byte
-	Pid int
+	Pages       []int
 }
-var MaxNumPages=MemoryConfig.MemorySize/MemoryConfig.PageSize//256 segun el archivo de config actual 
 
 var Memory *MemoryST
+
 func NewMemory() *MemoryST {
-	
-	ByteArray := make([]byte,MemoryConfig.MemorySize)
-    mem := MemoryST{Spaces: ByteArray}
-    return &mem
+
+	ByteArray := make([]byte, MemoryConfig.MemorySize)
+	mem := MemoryST{Spaces: ByteArray}
+	return &mem
 }
 
 
 var PTable *PageTable
-func NewPageTable()*PageTable{
-	var ByteArray []byte
-	pagetable:=PageTable{Page: ByteArray}
+
+func NewPageTable() *PageTable {
+	Array:=make([]int,MemoryConfig.PageSize)
+	for i := 0; i < len(Array); i++ {
+		Array[i]=-1
+	}
+	pagetable := PageTable{Pages: Array}
 
 	return &pagetable
 }
 
+func NewBitMap()[]int{
+	NumPages:=MemoryConfig.MemorySize/MemoryConfig.PageSize
+	Array := make([]int, NumPages)
+	
+	return Array
+}
 
+var BitMap []int
 func InitGlobal() {
 	args := os.Args[1:]
 	if len(args) != 1 {
@@ -65,6 +78,7 @@ func InitGlobal() {
 
 	Logger = log.ConfigureLogger(MEMORYLOG, env)
 	MemoryConfig = config.LoadConfiguration[Config]("./config/config.json")
-	DictProcess=map[int]ListInstructions{}
-	Memory=NewMemory()
+	DictProcess = map[int]ListInstructions{}
+	Memory = NewMemory()
+	BitMap = NewBitMap()
 }
