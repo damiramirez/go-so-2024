@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/sisoputnfrba/tp-golang/entradasalida/global"
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 	"github.com/sisoputnfrba/tp-golang/utils/requests"
@@ -76,5 +77,20 @@ func AvisoKernelIOExistente() {
 		panic(1)
 		// TODO: kernel falta que entienda el mensaje (hacer el endpoint) y nos envíe la respuesta que está todo ok
 	}
+
+}
+
+func VerificacionTamanio(texto string, tamanio string) {
+
+	if estructura_actualizada.Tamanio == global.Texto { // TO DO: implementar la comparacion, hacer estructura global?
+		estructura_actualizada.Texto = global.Texto
+		return
+	}
+
+	global.Logger.Log(fmt.Sprintf("Tamaño incorrecto, ingrese un nuevo valor de tamaño (%s", estructura.Tamanio)+"): ", log.INFO)
+
+	fmt.Scanf("%s", &global.Texto)
+
+	VerificacionTamanio(global.Texto, estructura_actualizada.Tamanio)
 
 }
