@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
+	resource "github.com/sisoputnfrba/tp-golang/kernel/internal/Resource"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/utils"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
@@ -72,6 +73,13 @@ func RoundRobbin() {
 			}
 			if updatePCB.DisplaceReason == "QUANTUM" {
 				utils.PCBExectoReady(updatePCB)
+			}
+
+			if updatePCB.DisplaceReason=="WAIT" {
+				resource.Wait(updatePCB)
+			}
+			if updatePCB.DisplaceReason=="SIGNAL" {
+				resource.Signal(updatePCB)
 			}
 		}
 

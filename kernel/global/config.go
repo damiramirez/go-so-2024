@@ -31,6 +31,13 @@ type IoDevice struct {
 	Type string `json:"type"`
 	Sem  chan int
 }
+type Resource struct {
+	Name        string
+	Count       int
+	BlockedList *list.List
+	MutexList  sync.Mutex
+	PidList    []int
+}
 
 var KernelConfig *Config
 var Logger *log.LoggerStruct
@@ -61,8 +68,9 @@ var SemReadyList chan struct{}
 var SemNewList chan struct{}
 var SemStopPlani chan struct{}
 
-// Io MAP
+// MAPs
 var IoMap map[string]IoDevice
+var ResourceMap map[string]*Resource
 
 func InitGlobal() {
 	args := os.Args[1:]
@@ -88,7 +96,7 @@ func InitGlobal() {
 	SemReadyList = make(chan struct{}, KernelConfig.Multiprogramming)
 	// Revisar el size
 	SemNewList = make(chan struct{}, 20)
-
+	ResourceMap=CreateResourceMap()
 	IoMap = map[string]IoDevice{}
 
 	WorkingPlani = false
@@ -98,4 +106,17 @@ func GetNextPID() int {
 	actualPID := nextPID
 	nextPID++
 	return actualPID
+}
+
+func CreateResourceMap() map[string]*Resource {
+	ResourceMap = map[string]*Resource{}
+	for i := 0; i < len(KernelConfig.Resources); i++ {
+		ResourceMap[KernelConfig.Resources[i]] = &Resource{
+			Name: KernelConfig.Resources[i],
+			Count: KernelConfig.ResourceInstances[i],
+			PidList: make([]int, 0),
+			BlockedList: list.New()}
+	}
+
+	return ResourceMap
 }

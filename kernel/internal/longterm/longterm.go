@@ -18,7 +18,7 @@ func InitLongTermPlani(ctx context.Context) {
 		select {
 
 		case <-global.SemNewList:
-			global.Logger.Log(fmt.Sprintf("Semaforo de NEWLIST DESPIUES DE PLANI: %d", len(global.SemNewList)), log.DEBUG)
+			global.Logger.Log(fmt.Sprintf("Semaforo de NEWLIST DESPUES DE PLANI: %d", len(global.SemNewList)), log.DEBUG)
 
 			if global.NewState.Len() != 0 {
 				global.Logger.Log(fmt.Sprintf("NEW LEN: %d", global.NewState.Len()), log.DEBUG)

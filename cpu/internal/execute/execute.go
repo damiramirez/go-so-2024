@@ -38,7 +38,11 @@ func Execute(pcb *model.PCB, instruction *model.Instruction) int {
 		result = RETURN_CONTEXT
 	case "EXIT":
 		result = RETURN_CONTEXT
-	}
+	case "WAIT":
+		result = RETURN_CONTEXT
+	case "SIGNAL":
+		result = RETURN_CONTEXT
+	}	
 
 	global.Logger.Log(
 		fmt.Sprintf("PID: %d - Ejecutando: %s - %+v",

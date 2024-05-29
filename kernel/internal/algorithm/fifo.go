@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
+	resource "github.com/sisoputnfrba/tp-golang/kernel/internal/Resource"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/utils"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
@@ -17,7 +18,7 @@ func Fifo() {
 
 	for {
 
-		global.Logger.Log("LOG ANTES DE SEMREADYLIST", log.DEBUG)
+		global.Logger.Log(fmt.Sprintf("LOG ANTES DE SEMREADYLIST largo %d",len(global.SemReadyList)), log.DEBUG)
 		<-global.SemReadyList
 
 		global.SemExecute <- 0
@@ -53,6 +54,12 @@ func Fifo() {
 			// Agregar a block
 			if updatePCB.DisplaceReason == "BLOCKED" {
 				utils.PCBtoBlock(updatePCB)
+			}
+			if updatePCB.DisplaceReason=="WAIT" {
+				resource.Wait(updatePCB)
+			}
+			if updatePCB.DisplaceReason=="SIGNAL" {
+				resource.Signal(updatePCB)
 			}
 
 		}

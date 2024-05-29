@@ -40,7 +40,11 @@ func DisplaceReason(pcb *model.PCB) {
 		pcb.DisplaceReason = "BLOCKED"
 	} else if pcb.Instruction.Operation == "EXIT" {
 		pcb.DisplaceReason = "EXIT"
-	} else {
+	}else if pcb.Instruction.Operation == "WAIT"{
+		pcb.DisplaceReason = "WAIT"
+	} else if pcb.Instruction.Operation == "SIGNAL"{
+		pcb.DisplaceReason = "SIGNAL"
+	}else {
 		pcb.DisplaceReason = "QUANTUM"
 	}
 
