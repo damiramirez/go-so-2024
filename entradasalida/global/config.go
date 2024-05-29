@@ -160,7 +160,7 @@ func VerificacionTamanio(texto string, tamanio string) {
 		return
 	}
 
-	Logger.Log(fmt.Sprintf("Tamaño incorrecto, ingrese un nuevo valor de tamaño (%s", Estructura_actualizada.Tamanio)+"): ", log.INFO)
+	Logger.Log(fmt.Sprintf("Tamaño excedido, ingrese un nuevo valor (tamaño máximo %s", Estructura_actualizada.Tamanio)+"): ", log.INFO)
 
 	fmt.Scanf("%s", &Texto)
 
