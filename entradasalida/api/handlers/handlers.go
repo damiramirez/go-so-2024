@@ -128,5 +128,5 @@ func stdout_write() {
 		// TODO: memoria falta que entienda el mensaje (hacer el endpoint) y me devuelva el valor del registro
 	}
 
-	fmt.Sprintf("%d", valor)
+	fmt.Printf("%d", valor)
 }
