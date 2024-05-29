@@ -155,7 +155,7 @@ func VerificacionTamanio(texto string, tamanio string) {
 
 	}
 
-	if tamanioEnBytes == len(BtT) { // TO DO: implementar la comparacion, hacer estructura global?
+	if len(BtT) <= tamanioEnBytes {
 		Estructura_actualizada.Texto = Texto
 		return
 	}
