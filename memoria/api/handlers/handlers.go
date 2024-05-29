@@ -16,6 +16,11 @@ type estructura_read struct {
 	Tamanio   string
 }
 
+type estructura_write struct {
+	Direccion string
+	Tamanio   string
+}
+
 func Stdin_read(w http.ResponseWriter, r *http.Request) {
 	var estructura estructura_read
 	err := serialization.DecodeHTTPBody[*estructura_read](r, &estructura)
@@ -31,8 +36,8 @@ func Stdin_read(w http.ResponseWriter, r *http.Request) {
 }
 
 func Stdout_write(w http.ResponseWriter, r *http.Request) {
-	var estructura estructura_read
-	err := serialization.DecodeHTTPBody[*estructura_read](r, &estructura)
+	var estructura estructura_write
+	err := serialization.DecodeHTTPBody[*estructura_write](r, &estructura)
 	if err != nil {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
