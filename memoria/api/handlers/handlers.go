@@ -46,6 +46,7 @@ func Stdout_write(w http.ResponseWriter, r *http.Request) {
 	respuesta, err := json.Marshal(valor)
 	if err != nil {
 		global.Logger.Log("Error al convertir la respuesta a JSON: "+err.Error(), log.ERROR)
+		http.Error(w, "Error al convertir la respuesta a JSON", http.StatusInternalServerError)
 		return
 	}
 
