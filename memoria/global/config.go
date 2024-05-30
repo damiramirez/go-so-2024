@@ -19,6 +19,11 @@ type Config struct {
 	InstructionsPath string `json:"instructions_path"`
 	DelayResponse    int    `json:"delay_response"`
 }
+type ValoraMandar struct {
+	Texto string `json:"texto"`
+}
+
+var ValoraM ValoraMandar
 
 var MemoryConfig *Config
 

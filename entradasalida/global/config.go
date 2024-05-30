@@ -61,6 +61,9 @@ type Estructura_write struct {
 	Direccion string
 	Tamanio   string
 }
+type ValoraMandar struct {
+	Texto string `json:"texto"`
+}
 
 var Estructura_actualizada Estructura_read
 

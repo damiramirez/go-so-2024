@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -48,13 +47,11 @@ func Stdout_write(w http.ResponseWriter, r *http.Request) {
 
 	valor := "10A"
 
-	respuesta, err := json.Marshal(valor)
+	global.ValoraM.Texto = valor
+
+	serialization.EncodeHTTPResponse(w, global.ValoraM, 200)
 	if err != nil {
-		global.Logger.Log("Error al convertir la respuesta a JSON: "+err.Error(), log.ERROR)
-		http.Error(w, "Error al convertir la respuesta a JSON", http.StatusInternalServerError)
+		http.Error(w, "Error encodeando respuesta", http.StatusInternalServerError)
 		return
 	}
-
-	w.Write(respuesta)
-
 }
