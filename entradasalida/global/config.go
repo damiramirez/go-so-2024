@@ -158,6 +158,15 @@ func VerificacionTamanio(texto string, tamanio string) {
 
 	}
 
+	if len(BtT) == 0 {
+
+		Logger.Log(fmt.Sprintf("No ingresó nada, ingrese un nuevo valor (tamaño máximo %s", Estructura_actualizada.Tamanio)+"): ", log.INFO)
+
+		fmt.Scanf("%s", &Texto)
+
+		VerificacionTamanio(Texto, Estructura_actualizada.Tamanio)
+	}
+
 	if len(BtT) <= tamanioEnBytes {
 		Estructura_actualizada.Texto = Texto
 		return
