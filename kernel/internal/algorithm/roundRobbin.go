@@ -103,5 +103,5 @@ func DisplaceFunction(InterruptTimer chan int) {
 	case <-InterruptTimer:
 		global.Logger.Log(fmt.Sprintf("Displace - Interrupt: Semaforo: %d", len(InterruptTimer)), log.DEBUG)
 		timer.Stop()
-	}
+}
 }
