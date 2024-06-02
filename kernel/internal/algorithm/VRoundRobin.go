@@ -2,6 +2,7 @@ package algorithm
 
 import (
 	"fmt"
+	"math"
 	"net/http"
 	"time"
 
@@ -113,12 +114,18 @@ func VRRDisplaceFunction(interruptTimer chan int) {
 		global.Logger.Log(fmt.Sprintf("PCB EN DISPLACE: %+v", pcb), log.DEBUG)
 		if pcb.DisplaceReason == "BLOCKED" {
 
+			// Transformar e ltiempo a segundos para redondearlo y despues pasarlo a ms
+			// Asi uso los ms en la PCB
 			elapsedTime := time.Since(startTime)
-			elapsedMillis := elapsedTime.Milliseconds()
-			global.Logger.Log(fmt.Sprintf("ElapsedTime: %d ms", elapsedMillis), log.DEBUG)
+			elapsedSeconds := math.Round(elapsedTime.Seconds())
+			elapsedMillisRounded := int64(elapsedSeconds * 1000)
+
 			remainingQuantum := quantumTime - elapsedTime
-			remainingMillis := remainingQuantum.Milliseconds()
-			global.Logger.Log(fmt.Sprintf("RemainingTime: %d ms", remainingMillis), log.DEBUG)
+			remainingSeconds := math.Round(remainingQuantum.Seconds())
+			remainingMillisRounded := int64(remainingSeconds * 1000)
+
+			global.Logger.Log(fmt.Sprintf("Rounded ElapsedTime: %d ms", elapsedMillisRounded), log.DEBUG)
+			global.Logger.Log(fmt.Sprintf("Rounded RemainingTime: %d ms", remainingMillisRounded), log.DEBUG)
 
 			global.Logger.Log(fmt.Sprintf("PCB BLOQUEADA: %+v ", pcb), log.DEBUG)
 		}
