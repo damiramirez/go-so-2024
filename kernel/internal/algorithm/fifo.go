@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
-	resource "github.com/sisoputnfrba/tp-golang/kernel/internal/Resource"
+	resource "github.com/sisoputnfrba/tp-golang/kernel/internal/resources"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/utils"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"

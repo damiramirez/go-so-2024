@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
-	resource "github.com/sisoputnfrba/tp-golang/kernel/internal/Resource"
+	resource "github.com/sisoputnfrba/tp-golang/kernel/internal/resources"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/utils"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
@@ -87,9 +87,8 @@ func DisplaceFunction(InterruptTimer chan int) {
 
 	<-global.SemInterrupt
 
-	Time := time.Duration(global.KernelConfig.Quantum)
-	//time.Sleep(Time * time.Millisecond)
-	timer := time.NewTimer(Time * time.Millisecond)
+	quantumTime := time.Duration(global.KernelConfig.Quantum)
+	timer := time.NewTimer(quantumTime * time.Millisecond)
 	defer timer.Stop()
 
 	select {

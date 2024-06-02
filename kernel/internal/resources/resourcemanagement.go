@@ -1,4 +1,4 @@
-package resource
+package resources
 
 import (
 	"fmt"
@@ -9,61 +9,65 @@ import (
 )
 
 func Wait(Pcb *model.PCB) {
+	resource := global.ResourceMap[Pcb.Instruction.Parameters[0]]
+	resource.Count -= 1
+	resource.PidList = append(resource.PidList, Pcb.PID)
+	global.Logger.Log(fmt.Sprintf("Recurso: %s - Cantidad instancias: %d", resource.Name, resource.Count), log.DEBUG)
+	
+	if resource.Count < 0 {
+		resource.MutexList.Lock()
+		resource.BlockedList.PushBack(Pcb)
+		resource.MutexList.Unlock()
 
-	Resource := global.ResourceMap[Pcb.Instruction.Parameters[0]]
-	Resource.Count -= 1
-	Resource.PidList = append(Resource.PidList, Pcb.PID)
-	global.Logger.Log(fmt.Sprintf("Recurso: %s - Cantidad instancias: %d", Resource.Name, Resource.Count), log.DEBUG)
-	if Resource.Count < 0 {
-		Resource.MutexList.Lock()
-		Resource.BlockedList.PushBack(Pcb)
-		Resource.MutexList.Unlock()
 		//poner en listar procesos
 		global.Logger.Log(fmt.Sprintf("Bloqueo proceso: %d", Pcb.PID), log.DEBUG)
 	} else {
-
 		global.MutexReadyState.Lock()
 		global.ReadyState.PushFront(Pcb)
 		global.MutexReadyState.Unlock()
+
 		global.Logger.Log(fmt.Sprintf("Envio PID %d primero a Ready", Pcb.PID), log.DEBUG)
 		global.SemReadyList <- struct{}{}
 	}
-
 }
 
 func Signal(PcbExec *model.PCB) {
+	resource := global.ResourceMap[PcbExec.Instruction.Parameters[0]]
+	resource.Count += 1
+	global.Logger.Log(fmt.Sprintf("%s %d", resource.Name, resource.Count), log.DEBUG)
 
-	Resource := global.ResourceMap[PcbExec.Instruction.Parameters[0]]
-	Resource.Count += 1
-	global.Logger.Log(fmt.Sprintf("%s %d", Resource.Name, Resource.Count), log.DEBUG)
-	if Resource.BlockedList.Len() > 0 {
-		Resource.MutexList.Lock()
-		PCBBlock := Resource.BlockedList.Front().Value.(*model.PCB)
-		Resource.BlockedList.Remove(Resource.BlockedList.Front())
-		Resource.MutexList.Unlock()
+	if resource.BlockedList.Len() > 0 {
+		resource.MutexList.Lock()
+		PCBBlock := resource.BlockedList.Front().Value.(*model.PCB)
+		resource.BlockedList.Remove(resource.BlockedList.Front())
+		resource.MutexList.Unlock()
+
 		global.MutexReadyState.Lock()
 		global.ReadyState.PushBack(PCBBlock)
 		global.MutexReadyState.Unlock()
+
 		global.Logger.Log(fmt.Sprintf("Envio PID %d al fondo de ready", PCBBlock.PID), log.DEBUG)
 		global.SemReadyList <- struct{}{}
-
-	}
-	Value := CheckInArray(Resource.PidList, PcbExec.PID)
-	if Value != -1 {
-		Resource.PidList = removeAt(Resource.PidList, Value)
 	}
 
-	global.Logger.Log(fmt.Sprintf("PIDs consumiendo instancia %s: %+v", Resource.Name, Resource.PidList), log.DEBUG)
+	value := checkInArray(resource.PidList, PcbExec.PID)
+
+	if value != -1 {
+		resource.PidList = removeAt(resource.PidList, value)
+	}
+
+	global.Logger.Log(fmt.Sprintf("PIDs consumiendo instancia %s: %+v", resource.Name, resource.PidList), log.DEBUG)
 	global.MutexReadyState.Lock()
 	global.ReadyState.PushFront(PcbExec)
 	global.MutexReadyState.Unlock()
+
 	global.SemReadyList <- struct{}{}
 	global.Logger.Log(fmt.Sprintf("Envio PID %d primero a Ready", PcbExec.PID), log.DEBUG)
 }
 
-func CheckInArray(Array []int, Pid int) int {
-	for i, Value := range Array {
-		if Value == Pid {
+func checkInArray(resourcesIdds []int, pid int) int {
+	for i, value := range resourcesIdds {
+		if value == pid {
 			return i
 		}
 	}
