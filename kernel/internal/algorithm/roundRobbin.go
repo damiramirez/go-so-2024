@@ -89,6 +89,7 @@ func DisplaceFunction(InterruptTimer chan int) {
 
 	quantumTime := time.Duration(global.KernelConfig.Quantum)
 	timer := time.NewTimer(quantumTime * time.Millisecond)
+	
 	defer timer.Stop()
 
 	select {

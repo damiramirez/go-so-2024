@@ -155,7 +155,8 @@ func PCBExectoReady(pcb *model.PCB) {
 
 	//LOG FIN DE QUANTUM
 	global.Logger.Log(fmt.Sprintf("PID: %d - Desalojado por fin de Quantum ", pcb.PID), log.INFO)
-
+	pcb.RemainingQuantum=global.KernelConfig.Quantum
+	
 	global.MutexReadyState.Lock()
 	global.ReadyState.PushBack(pcb)
 	global.MutexReadyState.Unlock()
@@ -164,3 +165,39 @@ func PCBExectoReady(pcb *model.PCB) {
 	global.Logger.Log(fmt.Sprintf("Cola Ready : %v", array), log.INFO)
 	global.SemReadyList <- struct{}{}
 }
+
+
+func PCBExectoReadyVRR(pcb *model.PCB){
+	//se guarda en ready
+	pcb.State = "READY"
+	//LOG CAMBIO DE ESTADO
+	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
+
+	//LOG COLA A READY CHEQUEAR EN ESTE CASO
+
+	//LOG FIN DE QUANTUM
+	global.Logger.Log(fmt.Sprintf("PID: %d - Desalojado por fin de Quantum ", pcb.PID), log.INFO)
+
+	global.MutexReadyPlus.Lock()
+	global.ReadyPlus.PushBack(pcb)
+	global.MutexReadyPlus.Unlock()
+
+	array := longterm.ConvertListToArray(global.ReadyPlus)
+	global.Logger.Log(fmt.Sprintf("Cola Ready : %v", array), log.INFO)
+
+	global.SemReadyList <- struct{}{}
+}
+
+func VrrPCBtoEXEC()*model.PCB{
+	global.MutexReadyPlus.Lock()
+	pcb := global.ReadyPlus.Front().Value.(*model.PCB)
+	global.ReadyPlus.Remove(global.ReadyPlus.Front())
+	global.MutexReadyPlus.Unlock()
+
+	// Pasar a execute
+	global.MutexExecuteState.Lock()
+	global.ExecuteState.PushBack(pcb)
+	global.MutexExecuteState.Unlock()
+	return pcb
+}
+

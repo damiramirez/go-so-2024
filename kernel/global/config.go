@@ -60,6 +60,7 @@ var MutexExitState sync.Mutex
 var MutexBlockState sync.Mutex
 var MutexExecuteState sync.Mutex
 var MutexPlani sync.Mutex
+var MutexReadyPlus sync.Mutex
 
 // Semaforos
 var SemMulti chan int
@@ -68,7 +69,7 @@ var SemInterrupt chan int
 var SemReadyList chan struct{}
 var SemNewList chan struct{}
 var SemStopPlani chan struct{}
-
+var SemReadyPlus chan struct{}
 
 
 // MAPs

@@ -65,24 +65,18 @@ func ProcessToIO(pcb *model.PCB) {
 		moveToExit(pcb)
 		return
 	}
-
-	// Saco de block cuando termino la IO
-	global.MutexBlockState.Lock()
-	global.BlockedState.Remove(global.BlockedState.Front())
-	global.MutexBlockState.Unlock()
-
 	<-global.IoMap[ioStruct.Name].Sem
-	// TESTEO -  HACER EN OTRA FUNCION
-	pcb.State = "READY"
 
-	global.MutexReadyState.Lock()
-	global.ReadyState.PushBack(pcb)
-	global.MutexReadyState.Unlock()
+	BlockToReady(pcb)
 
-	array := longterm.ConvertListToArray(global.ReadyState)
+	arrayReady := longterm.ConvertListToArray(global.ReadyState)
+	arrayPlus := longterm.ConvertListToArray(global.ReadyPlus)
+
+	
+
 	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: BLOCK - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
-	global.Logger.Log(fmt.Sprintf("Cola Ready : %v", array), log.INFO)
-
+	global.Logger.Log(fmt.Sprintf("Cola Ready : %v, Cola Ready+ : %v", arrayReady,arrayPlus), log.INFO)
+	global.Logger.Log(fmt.Sprintf("pcb : %+v", pcb), log.INFO)
 	global.SemReadyList <- struct{}{}
 
 }
@@ -98,7 +92,37 @@ func moveToExit(pcb *model.PCB) {
 	global.ExitState.PushBack(pcb)
 	global.MutexExitState.Unlock()
 
-	global.SemReadyList <- struct{}{}
+	
+
+
 	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: BLOCK - Estado Actual: %s ", pcb.PID, pcb.State), log.INFO)
 	global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: INVALID_RESOURCE", pcb.PID), log.INFO)
+}
+
+func BlockToReady(pcb *model.PCB){
+	global.Logger.Log("estoy dentro de block to ready vrr",log.DEBUG)
+	// Saco de block cuando termino la IO
+	global.MutexBlockState.Lock()
+	global.BlockedState.Remove(global.BlockedState.Front())
+	global.MutexBlockState.Unlock()
+	
+
+	pcb.State = "READY"
+	
+	if global.KernelConfig.PlanningAlgorithm=="VRR" && pcb.RemainingQuantum>0 {
+		global.MutexReadyPlus.Lock()
+		global.ReadyPlus.PushBack(pcb)
+		global.MutexReadyPlus.Unlock()
+		
+		global.Logger.Log("estoy dentro ready plus blocked",log.DEBUG)
+		
+	
+	}else{
+		global.MutexReadyState.Lock()
+		global.ReadyState.PushBack(pcb)
+		global.MutexReadyState.Unlock()
+		
+		
+	}
+
 }
