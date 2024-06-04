@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"encoding/json"
+	
 	"fmt"
 	"net/http"
 
@@ -46,15 +46,21 @@ func Stdout_write(w http.ResponseWriter, r *http.Request) {
 
 	// busca en memoria y devuelve un valor
 
-	valor := "10A"
+	valor := "5A"
+	type Valor_a_mandar struct {
+		Mensaje string `json:"mensaje"`
+	}
+	ValorM:= Valor_a_mandar{
+		Mensaje: valor,
+	}
 
-	respuesta, err := json.Marshal(valor)
+	serialization.EncodeHTTPResponse(w, ValorM, 200)
 	if err != nil {
 		global.Logger.Log("Error al convertir la respuesta a JSON: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al convertir la respuesta a JSON", http.StatusInternalServerError)
 		return
 	}
 
-	w.Write(respuesta)
+	
 
 }

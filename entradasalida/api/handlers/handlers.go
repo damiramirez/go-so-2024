@@ -126,14 +126,16 @@ func Stdout_write(w http.ResponseWriter, r *http.Request) {
 	estructura_actualizada.Tamanio = estructura.Tamanio
 
 	// PUT a memoria (le paso un registro y me devuelve el valor)
-
-	valor, err := requests.PutHTTPwithBody[estructura_write, interface{}](global.IOConfig.IPMemory, global.IOConfig.PortMemory, "stdout_write", estructura_actualizada)
+	type Valor_a_mandar struct {
+		Mensaje string `json:"mensaje"`
+	}
+	valor, err := requests.PutHTTPwithBody[estructura_write, Valor_a_mandar](global.IOConfig.IPMemory, global.IOConfig.PortMemory, "stdout_write", estructura_actualizada)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("NO se pudo enviar a memoria el valor a escribir %s", err.Error()), log.INFO)
 		panic(1)
 		// TODO: memoria falta que entienda el mensaje (hacer el endpoint) y me devuelva el valor del registro
 	}
-	global.Logger.Log(fmt.Sprintf("Memoria devolvió este valor: %d", valor), log.INFO)
+	global.Logger.Log(fmt.Sprintf("Memoria devolvió este valor: %+v", valor), log.INFO)
 
 	dispositivo.InUse = false
 
