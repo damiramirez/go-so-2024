@@ -76,7 +76,6 @@ func ProcessToIO(pcb *model.PCB) {
 
 	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: BLOCK - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
 	global.Logger.Log(fmt.Sprintf("Cola Ready : %v, Cola Ready+ : %v", arrayReady,arrayPlus), log.INFO)
-	global.Logger.Log(fmt.Sprintf("pcb : %+v", pcb), log.INFO)
 	global.SemReadyList <- struct{}{}
 
 }
@@ -100,7 +99,6 @@ func moveToExit(pcb *model.PCB) {
 }
 
 func BlockToReady(pcb *model.PCB){
-	global.Logger.Log("estoy dentro de block to ready vrr",log.DEBUG)
 	// Saco de block cuando termino la IO
 	global.MutexBlockState.Lock()
 	global.BlockedState.Remove(global.BlockedState.Front())
@@ -114,14 +112,15 @@ func BlockToReady(pcb *model.PCB){
 		global.ReadyPlus.PushBack(pcb)
 		global.MutexReadyPlus.Unlock()
 		
-		global.Logger.Log("estoy dentro ready plus blocked",log.DEBUG)
+		global.Logger.Log(fmt.Sprintf("PID: %d - Bloqueado a Ready Plus", pcb.PID),log.DEBUG)
 		
 	
 	}else{
 		global.MutexReadyState.Lock()
 		global.ReadyState.PushBack(pcb)
 		global.MutexReadyState.Unlock()
-		
+		global.Logger.Log(fmt.Sprintf("PID: %d - Bloqueado normal", pcb.PID),log.DEBUG)
+
 		
 	}
 
