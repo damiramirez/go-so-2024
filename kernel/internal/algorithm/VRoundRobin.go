@@ -1,9 +1,11 @@
 package algorithm
 
 import (
+	"container/list"
 	"fmt"
 	"math"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
@@ -16,8 +18,11 @@ import (
 
 var updateChan = make(chan *model.PCB)
 var displaceChan = make(chan *model.PCB)
+var DisplaceList *list.List = list.New()
+var MutexDisplaceList sync.Mutex
 
 func VirtualRoundRobin() {
+	
 	global.Logger.Log(fmt.Sprintf("Semaforo de SemReadyList INICIO: %d", len(global.SemReadyList)), log.DEBUG)
 	var pcb *model.PCB
 	for {
@@ -54,6 +59,7 @@ func VirtualRoundRobin() {
 			}()
 
 			updatePCB = <-updateChan
+			
 			//LOG CAMBIO DE ESTADO
 			global.Logger.Log(fmt.Sprintf("Recibi de CPU: %+v", updatePCB), log.DEBUG)
 
@@ -75,7 +81,10 @@ func VirtualRoundRobin() {
 				interruptTimer <- 0
 				global.Logger.Log(fmt.Sprintf("en medio de semaforos: %d", len(interruptTimer)), log.DEBUG)
 				global.Logger.Log(fmt.Sprintf("antes de chan: %d", len(displaceChan)), log.DEBUG)
-				displaceChan <- updatePCB
+				//displaceChan <- updatePCB
+				MutexDisplaceList.Lock()
+				DisplaceList.PushBack(updatePCB)
+				MutexDisplaceList.Unlock()
 				global.Logger.Log(fmt.Sprintf("despues de chan: %d", len(displaceChan)), log.DEBUG)
 				global.Logger.Log(fmt.Sprintf("BLOCKED - Despues de Interrupt. Semaforo: %d", len(interruptTimer)), log.DEBUG)
 				utils.PCBtoBlock(updatePCB)
@@ -120,18 +129,20 @@ func VRRDisplaceFunction(interruptTimer chan int, OldPcb *model.PCB) {
 	case <-interruptTimer:
 		timer.Stop()
 		global.Logger.Log("antes de displace chan: ", log.DEBUG)
-		pcb := <-displaceChan
+		pcb := DisplaceList.Front().Value.(*model.PCB)
+		global.ReadyState.Remove(DisplaceList.Front())
+
 		global.Logger.Log(fmt.Sprintf("PCB EN DISPLACE: %+v", pcb), log.DEBUG)
 
 		
 		if pcb.DisplaceReason == "BLOCKED" {
 
-			// Transformar e ltiempo a segundos para redondearlo y despues pasarlo a ms
+			// Transformar el tiempo a segundos para redondearlo y despues pasarlo a ms
 			// Asi uso los ms en la PCB
 			elapsedTime := time.Since(startTime)
 			elapsedSeconds := math.Round(elapsedTime.Seconds())
 			elapsedMillisRounded := int64(elapsedSeconds * 1000)
-
+			global.Logger.Log("estoy dentro de block", log.DEBUG)
 			remainingQuantum := quantumTime - elapsedTime
 			remainingSeconds := math.Round(remainingQuantum.Seconds())
 			remainingMillisRounded := int64(remainingSeconds * 1000)
