@@ -2,9 +2,10 @@ package global
 
 import (
 	"fmt"
+	"os"
+
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
-	"os"
 )
 
 const MEMORYLOG = "./memoria.log"
@@ -26,6 +27,11 @@ type ProcessInstructions struct {
 	Instructions []string
 }
 type ListInstructions ProcessInstructions
+
+type Estructura_mov struct {
+	DataValue      int `json:"data"`
+	DirectionValue int `json:"direction"`
+}
 
 var DictProcess map[int]ListInstructions
 

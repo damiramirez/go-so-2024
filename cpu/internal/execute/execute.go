@@ -7,6 +7,7 @@ import (
 	"github.com/sisoputnfrba/tp-golang/cpu/global"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 	"github.com/sisoputnfrba/tp-golang/utils/model"
+	"github.com/sisoputnfrba/tp-golang/utils/requests"
 )
 
 // TODO: IO_GEN_SLEEP
@@ -15,6 +16,13 @@ const (
 	CONTINUE       = 0
 	RETURN_CONTEXT = 1
 )
+
+type Estructura_mov struct {
+	DataValue      int `json:"data"`
+	DirectionValue int `json:"direction"`
+}
+
+var estructura_mov Estructura_mov
 
 // Ejecuto -> sumo PC en dispatch?
 func Execute(pcb *model.PCB, instruction *model.Instruction) int {
@@ -42,7 +50,13 @@ func Execute(pcb *model.PCB, instruction *model.Instruction) int {
 		result = RETURN_CONTEXT
 	case "SIGNAL":
 		result = RETURN_CONTEXT
-	}	
+	case "MOV_IN":
+		mov_in(pcb, instruction)
+		result = CONTINUE
+		/*case "MOV_OUT":
+		mov_out(pcb, instruction)
+		result = CONTINUE*/
+	}
 
 	global.Logger.Log(
 		fmt.Sprintf("PID: %d - Ejecutando: %s - %+v",
@@ -121,3 +135,39 @@ func setRegister(register string, value int, pcb *model.PCB) {
 		pcb.Registers.DX = value
 	}
 }
+
+func mov_in(pcb *model.PCB, instruction *model.Instruction) {
+	dataValue := instruction.Parameters[0]
+	estructura_mov.DirectionValue = getRegister(instruction.Parameters[1], pcb)
+
+	// put a memoria para que devuelva el valor solicitado
+
+	resp, err := requests.PutHTTPwithBody[Estructura_mov, Estructura_mov](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "mov_in", estructura_mov)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("NO se pudo enviar a memoria la estructura %s", err.Error()), log.INFO)
+		panic(1)
+		// TODO: falta que memoria vea si puede escribir o no (?)
+	}
+	global.Logger.Log(fmt.Sprintf("Resp %+v", resp), log.INFO)
+	setRegister(dataValue, int(resp.DataValue), pcb)
+}
+
+/*
+func mov_out(pcb *model.PCB, instruction *model.Instruction) {
+	dataValue := instruction.Parameters[1]
+	directionValue := getRegister(instruction.Parameters[0], pcb)
+
+	global.Estructura_actualizada.DataValue = dataValue
+	global.Estructura_actualizada.DirectionValue = directionValue
+
+	// put a memoria para que guarde
+
+	_, err := requests.PutHTTPwithBody[global.Estructura_mov, interface{}](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "mov_out", global.Estructura_actualizada)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("NO se pudo enviar a memoria la estructura %s", err.Error()), log.INFO)
+		panic(1)
+		// TODO: falta que memoria vea si puede escribir o no (?)
+	}
+
+}
+*/

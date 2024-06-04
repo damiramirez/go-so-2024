@@ -76,3 +76,35 @@ func SendInstruction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func Mov_in(w http.ResponseWriter, r *http.Request) {
+	var estructura global.Estructura_mov
+	err := serialization.DecodeHTTPBody[*global.Estructura_mov](r, &estructura)
+	if err != nil {
+		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
+		http.Error(w, "Error al decodear", http.StatusBadRequest)
+	}
+	global.Logger.Log(fmt.Sprintf("Me llegó ésta instrucción: %+v", estructura), log.INFO)
+
+	// busca en memoria y devuelve el valor solicitado
+
+	valor := 10
+
+	estructura.DataValue = valor
+
+	serialization.EncodeHTTPResponse(w, estructura, http.StatusOK)
+}
+
+func Mov_out(w http.ResponseWriter, r *http.Request) {
+	var estructura global.Estructura_mov
+	err := serialization.DecodeHTTPBody[*global.Estructura_mov](r, &estructura)
+	if err != nil {
+		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
+		http.Error(w, "Error al decodear", http.StatusBadRequest)
+	}
+	global.Logger.Log(fmt.Sprintf("Me llegó ésta instrucción: %+v", estructura), log.INFO)
+
+	// escribe en memoria
+
+	w.WriteHeader(http.StatusNoContent)
+}
