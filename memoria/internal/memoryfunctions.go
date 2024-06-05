@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	
 	"os"
 	"strings"
 
@@ -9,14 +10,14 @@ import (
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 )
 
-
-
 var NumPages int
 
 // Se inicializa cada página de la memoria con datos vacíos
 
 func InstructionStorage(data []string, pid int) {
+	//creo tabla de paginas (struct con array de paginas) y las inicio en -1
 	pagetable:=global.NewPageTable()
+	//le asigno al map la lista de instrucciones y la tabla de paginas del proceso q pase por id
 	global.DictProcess[pid] = global.ListInstructions{Instructions: data, PageTable: pagetable}
 	
 	global.Logger.Log(fmt.Sprintf("contenido pagetable %+v",pagetable),log.DEBUG)
@@ -42,6 +43,7 @@ func MemOut(PageNumber int,Offset int,content int,Pid int){
 		global.Logger.Log("memoria inaccesible",log.ERROR)
 		return
 	}
+	//verifico si esta creada la pagina o si esta llena y necesito crear otra
 	PageCheck(PageNumber,Pid,Offset)
 	FrameBase:=global.DictProcess[Pid].PageTable.Pages[PageNumber-1]
 	if  FrameBase==-1{
@@ -64,12 +66,36 @@ func MemIn(PageNumber int,Offset int,Pid int)  byte{
 	
 }
 
-func PageCheck(PageNumber int,Pid int,Offset int){
-	if  global.DictProcess[Pid].PageTable.Pages[PageNumber-1]==-1 {
-		AddPage(PageNumber,Pid)
-		global.Logger.Log("estoy dentro de la addpage",log.DEBUG)
+func PageCheck(PageNumber int,Pid int,Offset int)bool{
+	//si la pagina es valida y que el ultimo valor es igual a 0, osea hay tengo espacio
+	if CheckIfValid(PageNumber,Pid)&& global.Memory.Spaces[global.DictProcess[Pid].PageTable.Pages[PageNumber-1]+16]==0{
+		return true
 	}
+	if  len(global.DictProcess[Pid].PageTable.Pages)==0 {
+		//agrego pagina
+		if PageNumber ==1{
+			AddPage(PageNumber,Pid)
+			global.Logger.Log("estoy dentro de la addpage",log.DEBUG)
+			return true
+		}
+	}else if global.Memory.Spaces[global.DictProcess[Pid].PageTable.Pages[PageNumber-1]+16]!=0{
+		AddPage(PageNumber,Pid)
+		return true
+	}
+	return false
 }
+
+func CheckIfValid (PageNumber int,Pid int)bool{
+	if  len(global.DictProcess[Pid].PageTable.Pages)!=0 {
+		for i:= range global.DictProcess[Pid].PageTable.Pages{	
+			if PageNumber==i{
+				return true 
+			}
+		}	
+	}
+	return false
+}
+
 func AddPage(PageNumber int,Pid int){
 	for i := 0; i < len(global.BitMap); i++ {
 		if global.BitMap[i]==0 {

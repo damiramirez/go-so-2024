@@ -39,7 +39,9 @@ func PageTableAccess(w http.ResponseWriter, r *http.Request){
 	global.Logger.Log(fmt.Sprintf("buscando frame asociado a pagina %d",PageNumber.PageNumber),log.DEBUG)
 }
 
+//hacer 2 funciones distintas para in y para out
 func MemoryAccess(w http.ResponseWriter, r *http.Request){
+	//content si es out tiene contenido, lo q quiero guardar, si es in no
 	var MemoryAccess internal.MemAccess
 	err := serialization.DecodeHTTPBody(r, &MemoryAccess)
 	if err != nil {

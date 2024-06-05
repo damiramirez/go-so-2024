@@ -23,11 +23,11 @@ type Config struct {
 var MemoryConfig *Config
 var Logger *log.LoggerStruct
 
-type ProcessInstructions struct {
+type ListInstructions struct {
 	Instructions []string
 	PageTable    *PageTable
 }
-type ListInstructions ProcessInstructions
+
 
 var DictProcess map[int]ListInstructions
 
@@ -51,10 +51,10 @@ func NewMemory() *MemoryST {
 var PTable *PageTable
 
 func NewPageTable() *PageTable {
-	Array:=make([]int,MemoryConfig.PageSize)
-	for i := 0; i < len(Array); i++ {
-		Array[i]=-1
-	}
+	//inicializo las 16 paginas en -1
+	Array:=make([]int,0)
+	
+	//le asigno al "struct" pagetable el array con las paginas
 	pagetable := PageTable{Pages: Array}
 
 	return &pagetable

@@ -14,9 +14,9 @@ func CreateServer() *server.Server {
 		Port: global.MemoryConfig.Port,
 		Handlers: map[string]http.HandlerFunc{
 			"GET /process":       handlers.DeleteProcess,
-			"PUT /process":       handlers.CodeReciever,
-			"PUT /process/{pid}": handlers.SendInstruction,
-			"GET /resize":        handlers.Resize,
+			"PUT /process":       handlers.CodeReciever, //me envian el path y el pid
+			"PUT /process/{pid}": handlers.SendInstruction, //envio instruccion segun el pc
+			"GET /resize":        handlers.Resize, //agrando o achico tamaño dle proceso
 			"PUT /framenumber":   handlers.PageTableAccess,
 			"PUT /memaccess":     handlers.MemoryAccess,
 			"GET /ping":          func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("msg: Se conecto a Memoria")) },
