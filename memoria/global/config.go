@@ -28,7 +28,6 @@ type ListInstructions struct {
 	PageTable    *PageTable
 }
 
-
 var DictProcess map[int]ListInstructions
 
 type MemoryST struct {
@@ -52,10 +51,10 @@ var PTable *PageTable
 
 func NewPageTable() *PageTable {
 	//inicializo las 16 paginas en -1
-	Array:=make([]int,0)
+	Slice:=make([]int,0)
 	
 	//le asigno al "struct" pagetable el array con las paginas
-	pagetable := PageTable{Pages: Array}
+	pagetable := PageTable{Pages: Slice}
 
 	return &pagetable
 }

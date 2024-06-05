@@ -36,15 +36,17 @@ func ReadTxt(Path string) ([]string, error) {
 	return ListInstructions, nil
 }
 
-
+//escribir en memoria
 func MemOut(PageNumber int,Offset int,content int,Pid int){
 	Byte:=byte(content)
 	if Offset>=16 {
 		global.Logger.Log("memoria inaccesible",log.ERROR)
 		return
 	}
+	global.Logger.Log("El offset esta bien", log.DEBUG)
 	//verifico si esta creada la pagina o si esta llena y necesito crear otra
 	PageCheck(PageNumber,Pid,Offset)
+	
 	FrameBase:=global.DictProcess[Pid].PageTable.Pages[PageNumber-1]
 	if  FrameBase==-1{
 		return
@@ -71,27 +73,33 @@ func PageCheck(PageNumber int,Pid int,Offset int)bool{
 	if CheckIfValid(PageNumber,Pid)&& global.Memory.Spaces[global.DictProcess[Pid].PageTable.Pages[PageNumber-1]+16]==0{
 		return true
 	}
+	global.Logger.Log("La pagina esta bien", log.DEBUG)
+	
 	if  len(global.DictProcess[Pid].PageTable.Pages)==0 {
 		//agrego pagina
+		global.Logger.Log("entre al if",log.DEBUG)
 		if PageNumber ==1{
 			AddPage(PageNumber,Pid)
 			global.Logger.Log("estoy dentro de la addpage",log.DEBUG)
 			return true
 		}
 	}else if global.Memory.Spaces[global.DictProcess[Pid].PageTable.Pages[PageNumber-1]+16]!=0{
+		global.Logger.Log("estoy dentro de la addpage del else",log.DEBUG)
 		AddPage(PageNumber,Pid)
 		return true
 	}
 	return false
 }
 
-func CheckIfValid (PageNumber int,Pid int)bool{
-	if  len(global.DictProcess[Pid].PageTable.Pages)!=0 {
-		for i:= range global.DictProcess[Pid].PageTable.Pages{	
-			if PageNumber==i{
-				return true 
+func CheckIfValid(PageNumber int, Pid int) bool {
+	if process, ok := global.DictProcess[Pid]; ok && process.PageTable != nil {
+		if len(process.PageTable.Pages) > 0 {
+			for pageNum := range process.PageTable.Pages {
+				if PageNumber == pageNum {
+					return true
+				}
 			}
-		}	
+		}
 	}
 	return false
 }

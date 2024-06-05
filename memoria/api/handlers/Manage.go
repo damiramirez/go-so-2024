@@ -42,6 +42,7 @@ func PageTableAccess(w http.ResponseWriter, r *http.Request){
 //hacer 2 funciones distintas para in y para out
 func MemoryAccess(w http.ResponseWriter, r *http.Request){
 	//content si es out tiene contenido, lo q quiero guardar, si es in no
+	global.Logger.Log("ENtrando a memoryAcess", log.DEBUG)
 	var MemoryAccess internal.MemAccess
 	err := serialization.DecodeHTTPBody(r, &MemoryAccess)
 	if err != nil {
@@ -49,12 +50,15 @@ func MemoryAccess(w http.ResponseWriter, r *http.Request){
 		http.Error(w, "Error al decodear el body", http.StatusBadRequest)
 		return
 	}
+	global.Logger.Log(fmt.Sprintf("Me enviaron: %+v", MemoryAccess),log.DEBUG)
 	if MemoryAccess.Tipo=="In"{
+		global.Logger.Log("ENtrando a memoIn", log.DEBUG)
 		//devuelve el valor solicitado en ese espacio de memoria 
 		MemoryAccess.Content=int(internal.MemIn(MemoryAccess.NumPage,MemoryAccess.Offset,MemoryAccess.Pid))
 		serialization.EncodeHTTPResponse(w,MemoryAccess.Content,r.Response.StatusCode)
 	}else if MemoryAccess.Tipo=="Out" {
 		//escribe en el espacio de memoria solicitado 
+		global.Logger.Log("ENtrando a memoOut", log.DEBUG)
 		internal.MemOut(MemoryAccess.NumPage,MemoryAccess.Offset,MemoryAccess.Content,MemoryAccess.Pid)
 		global.Logger.Log(fmt.Sprintf("page table %d %+v",MemoryAccess.Pid,global.DictProcess[MemoryAccess.Pid].PageTable), log.DEBUG)
 		global.Logger.Log(fmt.Sprintf("Bit Map  %+v",global.BitMap), log.DEBUG)
