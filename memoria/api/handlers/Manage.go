@@ -12,7 +12,9 @@ import (
 
 //recibo tamaño en frames
 func Resize(w http.ResponseWriter, r *http.Request) {
+	
 	var Process internal.Resize
+	
 	err := serialization.DecodeHTTPBody(r, &Process)
 	if err != nil {
 		global.Logger.Log("Error al decodear el body: "+err.Error(), log.ERROR)
@@ -20,10 +22,13 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//si la cantidad de frames que me envian(tamaño del proceso) es mas grande que el tamaño de mi tabla de paginas, amplio por la diferencia
-	if len(global.DictProcess[Process.Pid].PageTable.Pages) < Process.Frames{
+	//Aumento tamaño
+	bitMap:=global.BitMap
+	tablaPag:=global.DictProcess[Process.Pid].PageTable.Pages
+	if len(tablaPag) < Process.Frames{
 		//
-		tamaño:=len(global.DictProcess[Process.Pid].PageTable.Pages)
-		for i := 0; i < Process.Frames-tamaño; i++ {
+		
+		for i := 0; i < Process.Frames-len(tablaPag); i++ {
 			internal.AddPage(Process.Pid)
 		}
 		global.Logger.Log(fmt.Sprintf("se solicito ampliar la memoria del proceso %d con los siguiente frames %d", Process.Pid, Process.Frames), log.DEBUG)
@@ -33,27 +38,31 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 
 		
 		w.WriteHeader(http.StatusNoContent)
+		//Reduzco tamaño
+	}else if len(tablaPag) >Process.Frames&&Process.Frames!=0{
+		difTam:=len(tablaPag) -Process.Frames
+		global.Logger.Log(fmt.Sprintf("se solicito reducir la memoria del proceso %d en %d frames ", Process.Pid, difTam), log.DEBUG)
 
-	}else if len(global.DictProcess[Process.Pid].PageTable.Pages) >Process.Frames&&Process.Frames!=0{
-		nuevoTam:=len(global.DictProcess[Process.Pid].PageTable.Pages) -Process.Frames
-		for i := nuevoTam; i >0; i-- {
-			global.BitMap[global.DictProcess[Process.Pid].PageTable.Pages[i]]=0
+		for i := 0; i <difTam; i++ {
+			bitMap[tablaPag[len(tablaPag)-1-i]]=0
+			//bitMap[global.DictProcess[Process.Pid].PageTable.Pages[len(global.DictProcess[Process.Pid].PageTable.Pages)-1-i]]=0
 		}
-		global.Logger.Log(fmt.Sprintf("Bit Map  %+v", global.BitMap), log.DEBUG)
-		global.Logger.Log(fmt.Sprintf("se solicito reducir la memoria del proceso %d con los siguiente frames %d", Process.Pid, Process.Frames), log.DEBUG)
-		
 		global.DictProcess[Process.Pid].PageTable.Pages=global.DictProcess[Process.Pid].PageTable.Pages[:Process.Frames]
 		global.Logger.Log(fmt.Sprintf("page table %d %+v", Process.Pid, global.DictProcess[Process.Pid].PageTable), log.DEBUG)
+		global.Logger.Log(fmt.Sprintf("Bit Map  %+v", global.BitMap), log.DEBUG)
 		
+		
+		//Limpio bitmap y tabla de paginas
 	}else if Process.Frames ==0{
-		for i := len(global.DictProcess[Process.Pid].PageTable.Pages); i >0; i-- {
-			global.BitMap[global.DictProcess[Process.Pid].PageTable.Pages[i]]=0
+		
+		for i := 0; i <len(tablaPag); i++ {
+			bitMap[tablaPag[len(tablaPag)-1-i]]=0
 		}
 		global.DictProcess[Process.Pid].PageTable.Pages=global.DictProcess[Process.Pid].PageTable.Pages[:0]
 
 		global.Logger.Log("vaciando tabla de paginas", log.DEBUG)
 		global.Logger.Log(fmt.Sprintf("Bit Map  %+v", global.BitMap), log.DEBUG)
-
+ 
 		global.Logger.Log(fmt.Sprintf("page table %d %+v", Process.Pid, global.DictProcess[Process.Pid].PageTable), log.DEBUG)
 
 	}
