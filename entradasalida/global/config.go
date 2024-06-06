@@ -31,6 +31,42 @@ type IODevice struct {
 	Port  int
 }
 
+type Estructura_sleep struct {
+	Nombre      string `json:"nombre"`
+	Instruccion string `json:"instruccion"`
+	Tiempo      int    `json:"tiempo"`
+}
+
+type Estructura_STDIN_read struct {
+	Nombre      string `json:"nombre"`
+	Instruccion string `json:"instruccion"`
+	Direccion   string `json:"direccion"`
+	Tamanio     string `json:"tamanio"`
+}
+
+type Estructura_read struct {
+	Texto     string
+	Direccion string
+	Tamanio   string
+}
+
+type Estructura_STDOUT_write struct {
+	Nombre      string `json:"nombre"`
+	Instruccion string `json:"instruccion"`
+	Direccion   string `json:"direccion"`
+	Tamanio     string `json:"tamanio"`
+}
+
+type Estructura_write struct {
+	Direccion string
+	Tamanio   string
+}
+type ValoraMandar struct {
+	Texto string `json:"texto"`
+}
+
+var Estructura_actualizada Estructura_read
+
 var Dispositivo *IODevice
 
 var Texto string
@@ -76,5 +112,70 @@ func AvisoKernelIOExistente() {
 		panic(1)
 		// TODO: kernel falta que entienda el mensaje (hacer el endpoint) y nos envíe la respuesta que está todo ok
 	}
+
+}
+
+func VerificacionTamanio(texto string, tamanio string) {
+
+	var tamanioEnBytes int
+
+	BtT := []byte(Texto)
+
+	switch Estructura_actualizada.Tamanio {
+
+	case "PC":
+		tamanioEnBytes = 4
+
+	case "AX":
+		tamanioEnBytes = 1
+
+	case "BX":
+		tamanioEnBytes = 1
+
+	case "CX":
+		tamanioEnBytes = 1
+
+	case "DX":
+		tamanioEnBytes = 1
+
+	case "EAX":
+		tamanioEnBytes = 4
+
+	case "EBX":
+		tamanioEnBytes = 4
+
+	case "ECX":
+		tamanioEnBytes = 4
+
+	case "EDX":
+		tamanioEnBytes = 4
+
+	case "SI":
+		tamanioEnBytes = 4
+
+	case "DI":
+		tamanioEnBytes = 4
+
+	}
+
+	if len(BtT) == 0 {
+
+		Logger.Log(fmt.Sprintf("No ingresó nada, ingrese un nuevo valor (tamaño máximo %s", Estructura_actualizada.Tamanio)+"): ", log.INFO)
+
+		fmt.Scanf("%s", &Texto)
+
+		VerificacionTamanio(Texto, Estructura_actualizada.Tamanio)
+	}
+
+	if len(BtT) <= tamanioEnBytes {
+		Estructura_actualizada.Texto = Texto
+		return
+	}
+
+	Logger.Log(fmt.Sprintf("Tamaño excedido, ingrese un nuevo valor (tamaño máximo %s", Estructura_actualizada.Tamanio)+"): ", log.INFO)
+
+	fmt.Scanf("%s", &Texto)
+
+	VerificacionTamanio(Texto, Estructura_actualizada.Tamanio)
 
 }
