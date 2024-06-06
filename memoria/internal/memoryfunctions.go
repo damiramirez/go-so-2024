@@ -154,9 +154,10 @@ func AddPage(Pid int) int {
 		//compruebo que el frame este vacio, si lo esta agrego una pagina
 		if global.BitMap[i] == 0 {
 			//asigno a la a la tabla de paginas el valor de i y pongo el bit map ocupado en la pos i
-			global.DictProcess[Pid].PageTable.Pages = append(global.DictProcess[Pid].PageTable.Pages, i)
+			tamTable:=len(global.DictProcess[Pid].PageTable.Pages)
+			global.DictProcess[Pid].PageTable.Pages = append(global.DictProcess[Pid].PageTable.Pages, tamTable)
 			global.BitMap[i] = 1
-
+			global.DictProcess[Pid].PageTable.Pages[tamTable]=i
 			return i
 		}
 
