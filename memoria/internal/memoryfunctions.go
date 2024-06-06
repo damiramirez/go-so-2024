@@ -3,10 +3,8 @@ package internal
 import (
 	"encoding/binary"
 	"fmt"
-
 	"os"
 	"strings"
-
 	"github.com/sisoputnfrba/tp-golang/memoria/global"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 )
@@ -37,7 +35,7 @@ func ReadTxt(Path string) ([]string, error) {
 	return ListInstructions, nil
 }
 
-// se le envia un conteido y una direccion 
+// se le envia un contenido y una direccion para escribir en memoria
 func MemOut(NumFrame int, Offset int, content uint32, Pid int) bool {
 	
 	Slicebytes := EncodeContent(content)
@@ -54,7 +52,7 @@ func MemOut(NumFrame int, Offset int, content uint32, Pid int) bool {
 			MemFrame := NumFrame*global.MemoryConfig.PageSize + Offset + i
 			global.Memory.Spaces[MemFrame] =Slicebytes[i]
 		}else{
-			newFrame := AddPage(len(global.DictProcess[Pid].PageTable.Pages),Pid)
+			newFrame := AddPage(Pid)
 			MemFrame := newFrame*global.MemoryConfig.PageSize + accu 
 			global.Memory.Spaces[MemFrame] =Slicebytes[i]
 			accu ++
@@ -64,7 +62,7 @@ func MemOut(NumFrame int, Offset int, content uint32, Pid int) bool {
 
 }
 
-// le paso un valir y me devuelve un slice de bytes en hexa
+// le paso un valor y me devuelve un slice de bytes en hexa
 func EncodeContent(value uint32) []byte {
 	bytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(bytes, value)
@@ -104,7 +102,7 @@ func PageCheck(PageNumber int, Pid int, Offset int) bool {
 
 	if checkCompletedPage(PageNumber-1, Pid) {
 		global.Logger.Log("estoy dentro de la addpage del else", log.DEBUG)
-		AddPage(PageNumber+1, Pid)
+		AddPage(Pid)
 		return true
 	}
 	return false
@@ -123,8 +121,8 @@ func checkCompletedPage(PageNumber int, Pid int) bool {
 func GetFrame(PageNumber int, Pid int) int {
 	if len(global.DictProcess[Pid].PageTable.Pages) < PageNumber +1 {
 		//agrego pagina
-			frame := AddPage(PageNumber, Pid)
-			global.Logger.Log("estoy dentro de la addpage", log.DEBUG)
+			frame := AddPage( Pid)
+			
 			return frame
 	}
 
@@ -150,13 +148,15 @@ func CheckIfValid(PageNumber int, Pid int) bool {
 }
 
 // devuelve fram asociado a la pagina q se le mando y devuelve el frame
-func AddPage(PageNumber int, Pid int) int {
+func AddPage(Pid int) int {
 	for i := 0; i < len(global.BitMap); i++ {
 
+		//compruebo que el frame este vacio, si lo esta agrego una pagina
 		if global.BitMap[i] == 0 {
 			//asigno a la a la tabla de paginas el valor de i y pongo el bit map ocupado en la pos i
 			global.DictProcess[Pid].PageTable.Pages = append(global.DictProcess[Pid].PageTable.Pages, i)
 			global.BitMap[i] = 1
+
 			return i
 		}
 

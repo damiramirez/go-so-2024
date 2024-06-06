@@ -16,7 +16,6 @@ type Page struct {
 	Pid        int `json:"pid"`
 }
 type Resize struct {
-	Tipo   string `json:"type"`
 	Pid    int    `json:"pid"`
 	Frames int    `json:"frames"`
 }
