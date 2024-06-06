@@ -33,6 +33,11 @@ type Estructura_mov struct {
 	DirectionValue int `json:"direction"`
 }
 
+type Estructura_resize struct {
+	Pid  int `json:"pid"`
+	Size int `json:"size"`
+}
+
 var DictProcess map[int]ListInstructions
 
 func InitGlobal() {

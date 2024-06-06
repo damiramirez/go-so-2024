@@ -18,6 +18,7 @@ func CreateServer() *server.Server {
 			"PUT /process/{pid}": handlers.SendInstruction,
 			"PUT /mov_in":        handlers.Mov_in,
 			"PUT /mov_out":       handlers.Mov_out,
+			"PUT /resize":        handlers.Resize,
 		},
 	}
 	return server.NewServer(configServer)
