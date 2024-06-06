@@ -84,7 +84,7 @@ func Mov_in(w http.ResponseWriter, r *http.Request) {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
 	}
-	global.Logger.Log(fmt.Sprintf("Me llegó ésta instrucción: %+v", estructura), log.INFO)
+	global.Logger.Log(fmt.Sprintf("Me llegó ésta instrucción [MOV_IN]: %+v", estructura), log.INFO)
 
 	// busca en memoria y devuelve el valor solicitado
 
@@ -102,9 +102,9 @@ func Mov_out(w http.ResponseWriter, r *http.Request) {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
 	}
-	global.Logger.Log(fmt.Sprintf("Me llegó ésta instrucción: %+v", estructura), log.INFO)
+	global.Logger.Log(fmt.Sprintf("Me llegó ésta instrucción [MOV_OUT]: %+v", estructura), log.INFO)
 
-	// escribe en memoria
+	// escribe en memoria con los datos que obtuvo del json
 
 	w.WriteHeader(http.StatusNoContent)
 }

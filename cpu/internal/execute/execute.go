@@ -53,9 +53,9 @@ func Execute(pcb *model.PCB, instruction *model.Instruction) int {
 	case "MOV_IN":
 		mov_in(pcb, instruction)
 		result = CONTINUE
-		/*case "MOV_OUT":
+	case "MOV_OUT":
 		mov_out(pcb, instruction)
-		result = CONTINUE*/
+		result = CONTINUE
 	}
 
 	global.Logger.Log(
@@ -152,17 +152,16 @@ func mov_in(pcb *model.PCB, instruction *model.Instruction) {
 	setRegister(dataValue, int(resp.DataValue), pcb)
 }
 
-/*
 func mov_out(pcb *model.PCB, instruction *model.Instruction) {
-	dataValue := instruction.Parameters[1]
+	dataValue := getRegister(instruction.Parameters[1], pcb)
 	directionValue := getRegister(instruction.Parameters[0], pcb)
 
-	global.Estructura_actualizada.DataValue = dataValue
-	global.Estructura_actualizada.DirectionValue = directionValue
+	estructura_mov.DataValue = dataValue
+	estructura_mov.DataValue = directionValue // esta es la dirección que hay que traducir de Lógica a Física
 
 	// put a memoria para que guarde
 
-	_, err := requests.PutHTTPwithBody[global.Estructura_mov, interface{}](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "mov_out", global.Estructura_actualizada)
+	_, err := requests.PutHTTPwithBody[Estructura_mov, interface{}](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "mov_out", estructura_mov)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("NO se pudo enviar a memoria la estructura %s", err.Error()), log.INFO)
 		panic(1)
@@ -170,4 +169,3 @@ func mov_out(pcb *model.PCB, instruction *model.Instruction) {
 	}
 
 }
-*/
