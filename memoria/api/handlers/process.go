@@ -13,6 +13,10 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/serialization"
 )
 
+type Response struct {
+	Respuesta string `json:"respuesta"`
+}
+
 // recibe el codigo q manda kernel y lo guarda en slice de strings
 func CodeReciever(w http.ResponseWriter, r *http.Request) {
 	var pPath internal.ProcessPath
@@ -111,14 +115,17 @@ func Mov_out(w http.ResponseWriter, r *http.Request) {
 
 func Resize(w http.ResponseWriter, r *http.Request) {
 	var estructura global.Estructura_resize
+	var respuesta Response
 	err := serialization.DecodeHTTPBody[*global.Estructura_resize](r, &estructura)
 	if err != nil {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
 	}
-	global.Logger.Log(fmt.Sprintf("Me llegó ésta instrucción [MOV_OUT]: %+v", estructura), log.INFO)
+	global.Logger.Log(fmt.Sprintf("Me llegó ésta instrucción [RESIZE]: %+v", estructura), log.INFO)
 
 	// chequea y hace el resize
 
-	w.WriteHeader(http.StatusNoContent)
+	respuesta.Respuesta = "Out of Memory"
+
+	serialization.EncodeHTTPResponse(w, respuesta, http.StatusOK)
 }

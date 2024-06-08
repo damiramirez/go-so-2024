@@ -29,11 +29,16 @@ type Estructura_resize struct {
 	Size int `json:"size"`
 }
 
+type Response struct {
+	Respuesta string `json:"respuesta"`
+}
+
 var estructura_resize Estructura_resize
+var result = 0
 
 // Ejecuto -> sumo PC en dispatch?
 func Execute(pcb *model.PCB, instruction *model.Instruction) int {
-	result := 0
+
 	switch instruction.Operation {
 	case "SET":
 		set(pcb, instruction)
@@ -180,20 +185,22 @@ func mov_out(pcb *model.PCB, instruction *model.Instruction) {
 }
 
 func resize(pcb *model.PCB, instruction *model.Instruction) {
-	newSize := getRegister(instruction.Parameters[0], pcb)
-
+	newSize, _ := strconv.Atoi(instruction.Parameters[0])
 	estructura_resize.Pid = pcb.PID
 	estructura_resize.Size = newSize
 	// put a memoria para hacer el resize
 
-	resp, err := requests.PutHTTPwithBody[Estructura_resize, interface{}](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "resize", estructura_resize)
+	resp, err := requests.PutHTTPwithBody[Estructura_resize, Response](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "resize", estructura_resize)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("NO se pudo enviar a memoria la estructura %s", err.Error()), log.INFO)
 		panic(1)
 		// TODO: falta que memoria vea si puede escribir o no (?)
 	}
 
-	// if resp.Respuesta = Out of Memory -> result = RETURN_CONTEXT
-	// else result = CONTINUE
+	if resp.Respuesta == "Out of Memory" {
+		result = RETURN_CONTEXT
+		return
+	}
+	result = CONTINUE
 
 }
