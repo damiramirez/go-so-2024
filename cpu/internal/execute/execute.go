@@ -204,3 +204,13 @@ func resize(pcb *model.PCB, instruction *model.Instruction) {
 	result = CONTINUE
 
 }
+
+func copyString(pcb *model.PCB, instruction *model.Instruction) {
+
+	tamanio, _ := strconv.Atoi(instruction.Parameters[0])
+
+	// put a memoria para obtener tamanio bytes de lo que hay en el string apuntado por SI
+
+	// put a memoria para guardar en DI lo que obtuve en el primer put
+
+}

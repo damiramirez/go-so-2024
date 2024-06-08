@@ -21,6 +21,8 @@ type CPURegister struct {
 	EBX int
 	ECX int
 	EDX int
+	SI  int
+	DI  int
 }
 
 type Instruction struct {
