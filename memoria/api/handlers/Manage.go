@@ -21,23 +21,24 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error al decodear el body", http.StatusBadRequest)
 		return
 	}
-
+	
 	//bitMap := global.BitMap
 	tablaPag := global.DictProcess[Process.Pid].PageTable.Pages
 	//Aumento tamaño
 	if len(tablaPag) < Process.Frames {
 		global.Logger.Log(fmt.Sprintf("frames a aumentar %d", Process.Frames-len(tablaPag)), log.DEBUG)
 		for i := 0; i < Process.Frames-len(tablaPag); i++ {
-			
-			
+
 			if internal.AddPage(Process.Pid) == -1 {
 				global.Logger.Log("Error memoria llena", log.DEBUG)
 				http.Error(w, "Out of memory", http.StatusForbidden)
 				//w.WriteHeader(http.StatusForbidden)
 				return
 			}
-		}
-		global.Logger.Log(fmt.Sprintf("se solicito ampliar la memoria del proceso %d con los siguiente frames %d", Process.Pid, Process.Frames), log.DEBUG)
+		}	
+		global.Logger.Log(fmt.Sprintf("PID: %d - Tamaño Actual: %d- Tamaño a Ampliar: %d",Process.Pid,len(tablaPag),Process.Frames ), log.INFO)
+
+		//global.Logger.Log(fmt.Sprintf("se solicito ampliar la memoria del proceso %d con los siguiente frames %d", Process.Pid, Process.Frames), log.DEBUG)
 		// buscar al proceso y ampliar el proceso si la memoria esta llena devolver out of memory
 		global.Logger.Log(fmt.Sprintf("page table %d %+v", Process.Pid, global.DictProcess[Process.Pid].PageTable), log.DEBUG)
 		global.Logger.Log(fmt.Sprintf("Bit Map  %+v", global.BitMap), log.DEBUG)
@@ -46,8 +47,8 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 		//Reduzco tamaño
 	} else if len(global.DictProcess[Process.Pid].PageTable.Pages) > Process.Frames && Process.Frames != 0 {
 		difTam := len(global.DictProcess[Process.Pid].PageTable.Pages) - Process.Frames
-		global.Logger.Log(fmt.Sprintf("se solicito reducir la memoria del proceso %d con los siguiente frames %d", Process.Pid, Process.Frames), log.DEBUG)
-
+		//global.Logger.Log(fmt.Sprintf("se solicito reducir la memoria del proceso %d con los siguiente frames %d", Process.Pid, Process.Frames), log.DEBUG)
+		global.Logger.Log(fmt.Sprintf("PID: %d - Tamaño Actual: %d- Tamaño a Reducir: %d",Process.Pid,len(global.DictProcess[Process.Pid].PageTable.Pages),Process.Frames ), log.INFO)
 		for i := 0; i < difTam; i++ {
 			global.BitMap[global.DictProcess[Process.Pid].PageTable.Pages[len(global.DictProcess[Process.Pid].PageTable.Pages)-1-i]] = 0
 		}
@@ -72,7 +73,6 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 		global.Logger.Log(fmt.Sprintf("page table %d %+v", Process.Pid, global.DictProcess[Process.Pid].PageTable), log.DEBUG)
 
 	}
-
 }
 
 // dice q en marco esta asociado la pagina
@@ -85,8 +85,17 @@ func PageTableAccess(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error al decodear el body", http.StatusBadRequest)
 		return
 	}
+
 	frame := internal.GetFrame(PageNumber.PageNumber, PageNumber.Pid)
-	serialization.EncodeHTTPResponse(w, frame, http.StatusOK)
+	if frame == -1 {
+		global.Logger.Log("Error no existe la pagina", log.DEBUG)
+		http.Error(w, "Invalid page", http.StatusForbidden)
+	} else {
+		//global.Logger.Log(fmt.Sprintf("Se consulto por la pagina %d",frame), log.DEBUG)
+		global.Logger.Log(fmt.Sprintf("PID: %d- Pagina: %d - Marco: %d", PageNumber.Pid, PageNumber.PageNumber,frame), log.INFO)
+
+		serialization.EncodeHTTPResponse(w, frame, http.StatusOK)
+	}
 
 }
 
@@ -101,14 +110,14 @@ func MemoryAccessIn(w http.ResponseWriter, r *http.Request) {
 	}
 	global.Logger.Log(fmt.Sprintf("Me enviaron: %+v", MemoryAccess), log.DEBUG)
 
-	MemoryAccess.Content = internal.MemIn(MemoryAccess.NumFrame, MemoryAccess.NumPage, MemoryAccess.Offset, MemoryAccess.Pid)
+	MemoryAccess.Content = internal.MemIn(MemoryAccess.NumFrame, MemoryAccess.NumPage, MemoryAccess.Offset, MemoryAccess.Pid, MemoryAccess.Largo)
 	serialization.EncodeHTTPResponse(w, MemoryAccess.Content, http.StatusOK)
 
 }
 
 func MemoryAccessOut(w http.ResponseWriter, r *http.Request) {
 
-	global.Logger.Log("ENtrando a memoryAcess", log.DEBUG)
+	global.Logger.Log("Entrando a memoryAcess", log.DEBUG)
 	var MemoryAccess internal.MemAccess
 	err := serialization.DecodeHTTPBody(r, &MemoryAccess)
 
@@ -119,7 +128,7 @@ func MemoryAccessOut(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error al decodear el body", http.StatusBadRequest)
 		return
 	}
-	if internal.MemOut(MemoryAccess.NumFrame, MemoryAccess.Offset, MemoryAccess.Content, MemoryAccess.Pid) {
+	if internal.MemOut(MemoryAccess.NumFrame, MemoryAccess.Offset, MemoryAccess.Content, MemoryAccess.Pid, MemoryAccess.Largo) {
 
 		global.Logger.Log(fmt.Sprintf("page table %d %+v", MemoryAccess.Pid, global.DictProcess[MemoryAccess.Pid].PageTable), log.DEBUG)
 		global.Logger.Log(fmt.Sprintf("Bit Map  %+v", global.BitMap), log.DEBUG)

@@ -20,9 +20,8 @@ func CreateServer() *server.Server {
 			"PUT /framenumber":      handlers.PageTableAccess,
 			"PUT /memIn":            handlers.MemoryAccessIn,  //leer en memoria
 			"PUT /memOut":           handlers.MemoryAccessOut, //escribir en memoria
-			"GET /ping":             func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("msg: Se conecto a Memoria")) },
-			"PUT /stdin_read":       handlers.Stdin_read,
-			"PUT /stdout_write":     handlers.Stdout_write,
+			"PUT /stdin_read":       handlers.Stdin_read, //escribe en memoria
+			"PUT /stdout_write":     handlers.Stdout_write,//lee en memoria
 		},
 	}
 	return server.NewServer(configServer)

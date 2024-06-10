@@ -45,7 +45,7 @@ func Stdout_write(w http.ResponseWriter, r *http.Request) {
 	global.Logger.Log(fmt.Sprintf("Me llegó ésta instrucción: %+v", estructura), log.INFO)
 
 	// busca en memoria y devuelve un valor
-
+	
 	valor := "10A"
 
 	global.ValoraM.Texto = valor

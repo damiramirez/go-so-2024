@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
 	"github.com/sisoputnfrba/tp-golang/memoria/global"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 )
@@ -36,27 +37,32 @@ func ReadTxt(Path string) ([]string, error) {
 }
 
 // se le envia un contenido y una direccion para escribir en memoria
-func MemOut(NumFrame int, Offset int, content uint32, Pid int) bool {
-	
-	Slicebytes := EncodeContent(content)
-	if Offset >= 16 {
+func MemOut(NumFrame int, Offset int, content uint32, Pid int, Largo int) bool {
+	var Slicebytes []byte
+	MemFrame := NumFrame*global.MemoryConfig.PageSize + Offset
+	if Offset >= global.MemoryConfig.PageSize {
 		global.Logger.Log("memoria inaccesible", log.ERROR)
 		return false
 	}
 	global.Logger.Log("El offset esta bien", log.DEBUG)
-	
-	accu :=0
-	for i := 0; i < 4; i++ {
-		if Offset +i< global.MemoryConfig.PageSize {
-			MemFrame := NumFrame*global.MemoryConfig.PageSize + Offset + i
-			global.Memory.Spaces[MemFrame] =Slicebytes[i]
-		}else{
-			newFrame := AddPage(Pid)
-			MemFrame := newFrame*global.MemoryConfig.PageSize + accu 
-			global.Memory.Spaces[MemFrame] =Slicebytes[i]
-			accu ++
+	if Largo == 4 {
+		Slicebytes = EncodeContent(content)
+		for i := 0; i < Largo; i++ {
+
+			MemFrame = NumFrame*global.MemoryConfig.PageSize + Offset + i
+			global.Memory.Spaces[MemFrame] = Slicebytes[i]
+			/*else{
+				newFrame := AddPage(Pid)
+				MemFrame := newFrame*global.MemoryConfig.PageSize + accu
+				global.Memory.Spaces[MemFrame] =Slicebytes[i]
+				accu ++
+			}*/
 		}
+	} else if Largo == 1 {
+		global.Memory.Spaces[MemFrame] = byte(content)
 	}
+	//accu :=0
+
 	return true
 
 }
@@ -64,33 +70,40 @@ func MemOut(NumFrame int, Offset int, content uint32, Pid int) bool {
 // le paso un valor y me devuelve un slice de bytes en hexa
 func EncodeContent(value uint32) []byte {
 	bytes := make([]byte, 4)
-	binary.BigEndian.PutUint32(bytes, value)
+	binary.LittleEndian.PutUint32(bytes, value)
 	return bytes
 }
 
 func DecodeContent(slice []byte) uint32 {
-	return binary.BigEndian.Uint32(slice)
+	return binary.LittleEndian.Uint32(slice)
 }
 
-
-func MemIn(NumFrame int,NumPage int, Offset int, Pid int) uint32 {
+func MemIn(NumFrame int, NumPage int, Offset int, Pid int, Largo int) uint32 {
 	var Content []byte
 	var ContentByte byte
-	accu :=0
-	for i := 0; i < 4; i++ {
-		if Offset +i< global.MemoryConfig.PageSize {
-			MemFrame := NumFrame*global.MemoryConfig.PageSize + Offset + i
-			ContentByte = global.Memory.Spaces[MemFrame]
-			Content = append(Content, ContentByte)
-		}else{
-			newFrame := global.DictProcess[Pid].PageTable.Pages[NumPage +1]
-			MemFrame := newFrame*global.MemoryConfig.PageSize + accu 
-			ContentByte = global.Memory.Spaces[MemFrame]
-			Content = append(Content, ContentByte)
-			accu ++
+
+	if Largo == 4 {
+		accu := 0
+		for i := 0; i < 4; i++ {
+			if Offset+i < global.MemoryConfig.PageSize {
+				MemFrame := NumFrame*global.MemoryConfig.PageSize + Offset + i
+				ContentByte = global.Memory.Spaces[MemFrame]
+				Content = append(Content, ContentByte)
+			} else {
+				newFrame := global.DictProcess[Pid].PageTable.Pages[NumPage+1]
+				MemFrame := newFrame*global.MemoryConfig.PageSize + accu
+				ContentByte = global.Memory.Spaces[MemFrame]
+				Content = append(Content, ContentByte)
+				accu++
+			}
 		}
+		return DecodeContent(Content)
+	} else {
+		MemFrame := NumFrame*global.MemoryConfig.PageSize + Offset
+		ContentByte = global.Memory.Spaces[MemFrame]
+		return uint32(ContentByte)
 	}
-	return DecodeContent(Content)
+
 }
 
 func PageCheck(PageNumber int, Pid int, Offset int) bool {
@@ -118,12 +131,6 @@ func checkCompletedPage(PageNumber int, Pid int) bool {
 }
 
 func GetFrame(PageNumber int, Pid int) int {
-	if len(global.DictProcess[Pid].PageTable.Pages) < PageNumber +1 {
-		//agrego pagina
-			frame := AddPage( Pid)
-			
-			return frame
-	}
 
 	//si es valida esta en la tabla de paginas, devuelvo el frame de la pagina pedida
 	if CheckIfValid(PageNumber, Pid) {
@@ -156,7 +163,7 @@ func AddPage(Pid int) int {
 			//tamTable:=len(global.DictProcess[Pid].PageTable.Pages)
 			global.DictProcess[Pid].PageTable.Pages = append(global.DictProcess[Pid].PageTable.Pages, i)
 			global.BitMap[i] = 1
-			
+
 			return i
 		}
 

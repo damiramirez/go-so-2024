@@ -16,8 +16,8 @@ type Page struct {
 	Pid        int `json:"pid"`
 }
 type Resize struct {
-	Pid    int    `json:"pid"`
-	Frames int    `json:"frames"`
+	Pid    int `json:"pid"`
+	Frames int `json:"frames"`
 }
 
 type MemAccess struct {
@@ -26,4 +26,5 @@ type MemAccess struct {
 	Offset   int    `json:"offset"`
 	Content  uint32 `json:"content"`
 	Pid      int    `json:"pid"`
+	Largo    int    `json:"largo"`
 }
