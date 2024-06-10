@@ -3,7 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-	
+	"strconv"
 	"time"
 
 	global "github.com/sisoputnfrba/tp-golang/memoria/global"
@@ -70,14 +70,17 @@ func SendInstruction(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteProcess(w http.ResponseWriter, r *http.Request){
-	var ProcessDelete internal.ProcessDelete
-	err := serialization.DecodeHTTPBody(r, &ProcessDelete)
-	if err != nil {
-		http.Error(w, "Error al decodear el PC", http.StatusBadRequest)
-		return
+	
+	pid, _ := strconv.Atoi(r.PathValue("pid"))
+	for i := 0; i < len(global.DictProcess[pid].PageTable.Pages); i++ {
+		global.BitMap[global.DictProcess[pid].PageTable.Pages[len(global.DictProcess[pid].PageTable.Pages)-1-i]] = 0
 	}
-	// y elimino las intrucciones de memoria 
-	global.Logger.Log(fmt.Sprintf("se elimino el proceso con el PID : %d ", ProcessDelete.Pid), log.DEBUG)
-	global.DictProcess[ProcessDelete.Pid]=global.ListInstructions{}
-	//elimino frames relacionados al proceso, marco los frames como libres sin eliminarlos 
+	global.DictProcess[pid].PageTable.Pages = global.DictProcess[pid].PageTable.Pages[:0]
+	
+	global.Logger.Log(fmt.Sprintf("se elimino el proceso con el PID : %d ", pid), log.DEBUG)
+	global.DictProcess[pid]=global.ListInstructions{}
+	
+	global.Logger.Log(fmt.Sprintf("page table %d %+v", pid, global.DictProcess[pid].PageTable), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Bit Map  %+v", global.BitMap), log.DEBUG)
+
 }

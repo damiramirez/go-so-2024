@@ -22,18 +22,18 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bitMap := global.BitMap
+	//bitMap := global.BitMap
 	tablaPag := global.DictProcess[Process.Pid].PageTable.Pages
 	//Aumento tamaño
 	if len(tablaPag) < Process.Frames {
-
-		//
-
+		global.Logger.Log(fmt.Sprintf("frames a aumentar %d", Process.Frames-len(tablaPag)), log.DEBUG)
 		for i := 0; i < Process.Frames-len(tablaPag); i++ {
-
+			
+			
 			if internal.AddPage(Process.Pid) == -1 {
 				global.Logger.Log("Error memoria llena", log.DEBUG)
-				http.Error(w, "Out of memory", http.StatusNotFound)
+				http.Error(w, "Out of memory", http.StatusForbidden)
+				//w.WriteHeader(http.StatusForbidden)
 				return
 			}
 		}
@@ -44,23 +44,25 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(http.StatusNoContent)
 		//Reduzco tamaño
-	} else if len(tablaPag) > Process.Frames && Process.Frames != 0 {
-		difTam := len(tablaPag) - Process.Frames
+	} else if len(global.DictProcess[Process.Pid].PageTable.Pages) > Process.Frames && Process.Frames != 0 {
+		difTam := len(global.DictProcess[Process.Pid].PageTable.Pages) - Process.Frames
 		global.Logger.Log(fmt.Sprintf("se solicito reducir la memoria del proceso %d con los siguiente frames %d", Process.Pid, Process.Frames), log.DEBUG)
 
 		for i := 0; i < difTam; i++ {
-			bitMap[tablaPag[len(tablaPag)-1-i]] = 0
+			global.BitMap[global.DictProcess[Process.Pid].PageTable.Pages[len(global.DictProcess[Process.Pid].PageTable.Pages)-1-i]] = 0
 		}
 		//tablaPag=tablaPag[:Process.Frames]
 		global.DictProcess[Process.Pid].PageTable.Pages = global.DictProcess[Process.Pid].PageTable.Pages[:Process.Frames]
+		//global.Logger.Log(fmt.Sprintf("page table %d %+v", Process.Pid, tablaPag), log.DEBUG)
+
 		global.Logger.Log(fmt.Sprintf("page table %d %+v", Process.Pid, global.DictProcess[Process.Pid].PageTable), log.DEBUG)
 		global.Logger.Log(fmt.Sprintf("Bit Map  %+v", global.BitMap), log.DEBUG)
 
 		//Limpio bitmap y tabla de paginas
 	} else if Process.Frames == 0 {
 
-		for i := 0; i < len(tablaPag); i++ {
-			bitMap[tablaPag[len(tablaPag)-1-i]] = 0
+		for i := 0; i < len(global.DictProcess[Process.Pid].PageTable.Pages); i++ {
+			global.BitMap[global.DictProcess[Process.Pid].PageTable.Pages[len(global.DictProcess[Process.Pid].PageTable.Pages)-1-i]] = 0
 		}
 		global.DictProcess[Process.Pid].PageTable.Pages = global.DictProcess[Process.Pid].PageTable.Pages[:0]
 		//tablaPag=tablaPag[:0]
