@@ -24,8 +24,12 @@ func Dispatch(pcb *model.PCB) (*model.PCB, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		exec_result := execute.Execute(pcb, instruction)
+		
+		if !global.Execute {
+			pcb.DisplaceReason="QUANTUM"
+			return pcb,nil
+		}
 		if exec_result == execute.RETURN_CONTEXT {
 			global.Execute = false
 		}
@@ -44,8 +48,6 @@ func DisplaceReason(pcb *model.PCB) {
 		pcb.DisplaceReason = "WAIT"
 	} else if pcb.Instruction.Operation == "SIGNAL"{
 		pcb.DisplaceReason = "SIGNAL"
-	}else {
-		pcb.DisplaceReason = "QUANTUM"
 	}
 
 }

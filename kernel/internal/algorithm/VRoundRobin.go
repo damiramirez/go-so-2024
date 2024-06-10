@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
-	"github.com/sisoputnfrba/tp-golang/kernel/internal/longterm"
 	resource "github.com/sisoputnfrba/tp-golang/kernel/internal/resources"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/utils"
@@ -21,11 +21,12 @@ var updateChan = make(chan *model.PCB)
 var DisplaceList *list.List = list.New()
 var displaceMap map[int]*model.PCB
 var MutexDisplaceList sync.Mutex
+var DisplaceChan = make(chan *model.PCB)
 
 func VirtualRoundRobin() {
 
 	displaceMap = make(map[int]*model.PCB)
-	
+
 	var pcb *model.PCB
 	for {
 		global.Logger.Log("Log antes de SemReadyList", log.DEBUG)
@@ -61,7 +62,7 @@ func VirtualRoundRobin() {
 			}()
 
 			updatePCB = <-updateChan
-			
+
 			//LOG CAMBIO DE ESTADO
 			global.Logger.Log(fmt.Sprintf("Recibi de CPU: %+v", updatePCB), log.DEBUG)
 
@@ -71,42 +72,49 @@ func VirtualRoundRobin() {
 			global.MutexExecuteState.Unlock()
 
 			// EXIT - Agregar a exit
-			if updatePCB.DisplaceReason == "EXIT" {
+			if updatePCB.Instruction.Operation == "EXIT" {
 				// global.Logger.Log(fmt.Sprintf("EXIT - Antes de Interrupt. Semaforo: %d", len(interruptTimer)), log.DEBUG)
 				interruptTimer <- 0
 				// global.Logger.Log(fmt.Sprintf("EXIT - Despues de Interrupt. Semaforo: %d", len(interruptTimer)), log.DEBUG)
 				utils.PCBtoExit(updatePCB)
 			}
-			// Agregar a block
 			if updatePCB.DisplaceReason == "BLOCKED" {
-				// global.Logger.Log(fmt.Sprintf("BLOCKED - Antes de Interrupt. Semaforo: %d", len(interruptTimer)), log.DEBUG)
-				
-				// global.Logger.Log(fmt.Sprintf("en medio de semaforos: %d", len(interruptTimer)), log.DEBUG)
-				// global.Logger.Log(fmt.Sprintf("antes de chan: %d", len(displaceChan)), log.DEBUG)
-				//displaceChan <- updatePCB
-				
-				MutexDisplaceList.Lock()
-				// DisplaceList.PushBack(updatePCB)
-				displaceMap[updatePCB.PID] = updatePCB
-				MutexDisplaceList.Unlock()
-
 				interruptTimer <- 0
+				DisplaceChan <- updatePCB
 
-				// global.Logger.Log(fmt.Sprintf("despues de chan: %d", len(displaceChan)), log.DEBUG)
-				// global.Logger.Log(fmt.Sprintf("BLOCKED - Despues de Interrupt. Semaforo: %d", len(interruptTimer)), log.DEBUG)
 				utils.PCBtoBlock(updatePCB)
-			}
-			if updatePCB.DisplaceReason == "QUANTUM" {
-
-				utils.PCBExectoReady(updatePCB)
+			} else if updatePCB.DisplaceReason == "QUANTUM" && updatePCB.Instruction.Operation != "EXIT" {
+				if updatePCB.Instruction.Operation == "SIGNAL" {
+					resource.Signal(updatePCB)
+				} else if updatePCB.Instruction.Operation == "WAIT" {
+					resource.Wait(updatePCB)
+				} else if strings.Contains(pcb.Instruction.Operation, "IO") {
+					utils.PCBtoBlock(updatePCB)
+				} else {
+					utils.PCBExectoReady(updatePCB)
+				}
 			}
 
 			if updatePCB.DisplaceReason == "WAIT" {
+				
+				interruptTimer <- 0
+
+				global.Logger.Log("antes de displace chan", log.DEBUG)
+				DisplaceChan <-updatePCB
+				global.Logger.Log("despues de displace chan", log.DEBUG)
+
 				resource.Wait(updatePCB)
 			}
 			if updatePCB.DisplaceReason == "SIGNAL" {
+				interruptTimer <- 0
+
+				global.Logger.Log("antes de displace chan", log.DEBUG)
+				DisplaceChan <-updatePCB
+				global.Logger.Log("despues de displace chan", log.DEBUG)
+
 				resource.Signal(updatePCB)
 			}
+
 		}
 
 		<-global.SemExecute
@@ -123,11 +131,8 @@ func VRRDisplaceFunction(interruptTimer chan int, OldPcb *model.PCB) {
 
 	startTime := time.Now()
 
-	
 	select {
 	case <-timer.C:
-		
-		global.Logger.Log(fmt.Sprintf("LISTA DISPLACE: %v", longterm.ConvertListToArray(DisplaceList)), log.DEBUG)
 
 		global.Logger.Log(fmt.Sprintf("PID: %d Displace - Termino timer.C", OldPcb.PID), log.DEBUG)
 		url := fmt.Sprintf("http://%s:%d/%s", global.KernelConfig.IPCPU, global.KernelConfig.PortCPU, "interrupt")
@@ -139,42 +144,33 @@ func VRRDisplaceFunction(interruptTimer chan int, OldPcb *model.PCB) {
 	case <-interruptTimer:
 
 		timer.Stop()
-		global.Logger.Log("antes de displace chan: ", log.DEBUG)
-		global.Logger.Log(fmt.Sprintf("LISTA DISPLACE: %v", longterm.ConvertListToArray(DisplaceList)), log.DEBUG)
 
-
-		pcb := displaceMap[OldPcb.PID]
+		pcb := <-DisplaceChan
 
 		global.Logger.Log(fmt.Sprintf("PCB EN DISPLACE: %+v", pcb), log.DEBUG)
 
-		
-		if pcb.DisplaceReason == "BLOCKED" {
+		// Transformar el tiempo a segundos para redondearlo y despues pasarlo a ms
+		// Asi uso los ms en la PCB
+		elapsedTime := time.Since(startTime)
+		elapsedSeconds := math.Round(elapsedTime.Seconds())
+		elapsedMillisRounded := int64(elapsedSeconds * 1000)
+		global.Logger.Log("estoy dentro de block", log.DEBUG)
+		remainingQuantum := quantumTime - elapsedTime
+		remainingSeconds := math.Round(remainingQuantum.Seconds())
+		remainingMillisRounded := int64(remainingSeconds * 1000)
 
-			// Transformar el tiempo a segundos para redondearlo y despues pasarlo a ms
-			// Asi uso los ms en la PCB
-			elapsedTime := time.Since(startTime)
-			elapsedSeconds := math.Round(elapsedTime.Seconds())
-			elapsedMillisRounded := int64(elapsedSeconds * 1000)
-			global.Logger.Log("estoy dentro de block", log.DEBUG)
-			remainingQuantum := quantumTime - elapsedTime
-			remainingSeconds := math.Round(remainingQuantum.Seconds())
-			remainingMillisRounded := int64(remainingSeconds * 1000)
+		global.Logger.Log(fmt.Sprintf("PID: %d - Rounded ElapsedTime: %d ms", pcb.PID, elapsedMillisRounded), log.DEBUG)
+		global.Logger.Log(fmt.Sprintf("PID: %d - Rounded RemainingTime: %d ms", pcb.PID, remainingMillisRounded), log.DEBUG)
 
-			global.Logger.Log(fmt.Sprintf("PID: %d - Rounded ElapsedTime: %d ms", pcb.PID,elapsedMillisRounded), log.DEBUG)
-			global.Logger.Log(fmt.Sprintf("PID: %d - Rounded RemainingTime: %d ms", pcb.PID, remainingMillisRounded), log.DEBUG)
-
-			if remainingMillisRounded > 0 {
-				pcb.RemainingQuantum = int(remainingMillisRounded)
-			} else {
-				pcb.RemainingQuantum = global.KernelConfig.Quantum
-			}
-
-			global.Logger.Log(fmt.Sprintf("PCB BLOQUEADA: %+v ", pcb), log.DEBUG)
-
-			MutexDisplaceList.Lock()
-			displaceMap[pcb.PID] = pcb
-			MutexDisplaceList.Unlock()
-
+		if remainingMillisRounded > 0 {
+			pcb.RemainingQuantum = int(remainingMillisRounded)
+		} else {
+			pcb.RemainingQuantum = global.KernelConfig.Quantum
 		}
+
+		MutexDisplaceList.Lock()
+		displaceMap[pcb.PID] = pcb
+		MutexDisplaceList.Unlock()
+
 	}
 }

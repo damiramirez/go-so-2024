@@ -21,14 +21,22 @@ func Wait(Pcb *model.PCB) {
 
 		//poner en listar procesos
 		global.Logger.Log(fmt.Sprintf("Bloqueo proceso: %d", Pcb.PID), log.DEBUG)
-	} else {
+	}
+	if Pcb.DisplaceReason=="QUANTUM" {
+		Pcb.RemainingQuantum=global.KernelConfig.Quantum
+		global.MutexReadyState.Lock()
+		global.ReadyState.PushBack(Pcb)
+		global.MutexReadyState.Unlock()
+		global.Logger.Log(fmt.Sprintf("Envio PID %d ultimo a ready", Pcb.PID), log.DEBUG)
+	}else {
 		global.MutexReadyState.Lock()
 		global.ReadyState.PushFront(Pcb)
 		global.MutexReadyState.Unlock()
 
 		global.Logger.Log(fmt.Sprintf("Envio PID %d primero a Ready", Pcb.PID), log.DEBUG)
-		global.SemReadyList <- struct{}{}
+		
 	}
+	global.SemReadyList <- struct{}{}
 }
 
 func Signal(PcbExec *model.PCB) {
@@ -55,14 +63,21 @@ func Signal(PcbExec *model.PCB) {
 	if value != -1 {
 		resource.PidList = removeAt(resource.PidList, value)
 	}
+	if PcbExec.DisplaceReason=="QUANTUM" {
+		PcbExec.RemainingQuantum=global.KernelConfig.Quantum
+		global.MutexReadyState.Lock()
+		global.ReadyState.PushBack(PcbExec)
+		global.MutexReadyState.Unlock()
+		global.Logger.Log(fmt.Sprintf("Envio PID %d ultimo a ready", PcbExec.PID), log.DEBUG)
+	}else {
+		global.MutexReadyState.Lock()
+		global.ReadyState.PushFront(PcbExec)
+		global.MutexReadyState.Unlock()
 
-	global.Logger.Log(fmt.Sprintf("PIDs consumiendo instancia %s: %+v", resource.Name, resource.PidList), log.DEBUG)
-	global.MutexReadyState.Lock()
-	global.ReadyState.PushFront(PcbExec)
-	global.MutexReadyState.Unlock()
-
+		global.Logger.Log(fmt.Sprintf("Envio PID %d primero a Ready", PcbExec.PID), log.DEBUG)
+		
+	}
 	global.SemReadyList <- struct{}{}
-	global.Logger.Log(fmt.Sprintf("Envio PID %d primero a Ready", PcbExec.PID), log.DEBUG)
 }
 
 func checkInArray(resourcesIdds []int, pid int) int {

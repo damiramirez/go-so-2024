@@ -120,6 +120,9 @@ func PCBtoExit(pcb *model.PCB) {
 }
 
 func PCBtoBlock(pcb *model.PCB) {
+	if pcb.DisplaceReason=="QUANTUM" {
+		pcb.RemainingQuantum=global.KernelConfig.Quantum
+	}
 	pcb.State = "BLOCK"
 	global.MutexBlockState.Lock()
 	global.BlockedState.PushBack(pcb)
@@ -146,6 +149,9 @@ func PCBReadytoExec() *model.PCB {
 }
 
 func PCBExectoReady(pcb *model.PCB) {
+
+
+
 	//se guarda en ready
 	pcb.State = "READY"
 	//LOG CAMBIO DE ESTADO
