@@ -20,11 +20,19 @@ type Resize struct {
 	Frames int `json:"frames"`
 }
 
-type MemAccess struct {
+/*type MemAccess struct {
 	NumFrame int    `json:"numframe"`
 	NumPage  int    `json:"numpage"`
 	Offset   int    `json:"offset"`
 	Content  uint32 `json:"content"`
 	Pid      int    `json:"pid"`
 	Largo    int    `json:"largo"`
+}*/
+
+type MemStruct struct {
+	Pid       int   `json:"pid"`
+	Content   int  `json:"content"`
+	Length    int   `json:"length"`
+	NumFrames []int `json:"numframe"`
+	Offset    int   `json:"offset"`
 }

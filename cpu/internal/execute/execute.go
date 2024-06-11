@@ -205,7 +205,7 @@ func resize(pcb *model.PCB, instruction *model.Instruction) {
 
 }
 
-func copyString(pcb *model.PCB, instruction *model.Instruction) {
+/*func copyString(pcb *model.PCB, instruction *model.Instruction) {
 
 	tamanio, _ := strconv.Atoi(instruction.Parameters[0])
 
@@ -213,4 +213,4 @@ func copyString(pcb *model.PCB, instruction *model.Instruction) {
 
 	// put a memoria para guardar en DI lo que obtuve en el primer put
 
-}
+}*/
