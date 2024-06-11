@@ -51,14 +51,15 @@ func Stdin_read(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.INFO)
 
-	global.Logger.Log(fmt.Sprintf("Ingrese un valor (tamaño máximo %s", estructura.Tamanio)+"): ", log.INFO)
+	global.Logger.Log(fmt.Sprintf("Ingrese un valor (tamaño máximo %d", estructura.Tamanio)+"): ", log.INFO)
 
 	global.Estructura_actualizada.Direccion = estructura.Direccion
-	global.Estructura_actualizada.Tamanio = estructura.Tamanio
 
 	fmt.Scanf("%s", &global.Texto)
 
-	global.VerificacionTamanio(global.Texto, global.Estructura_actualizada.Tamanio)
+	global.VerificacionTamanio(global.Texto, estructura.Tamanio)
+
+	global.Estructura_actualizada.Tamanio = len(global.Texto)
 
 	global.Logger.Log(fmt.Sprintf("Estructura actualizada para mandar a memoria: %+v", global.Estructura_actualizada), log.INFO)
 
