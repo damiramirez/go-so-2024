@@ -25,9 +25,10 @@ func Dispatch(pcb *model.PCB) (*model.PCB, error) {
 			return nil, err
 		}
 		exec_result := execute.Execute(pcb, instruction)
-		
+
 		if !global.Execute {
 			pcb.DisplaceReason="QUANTUM"
+			global.Logger.Log(fmt.Sprintf("PCB Actualizada %+v", pcb), log.DEBUG)
 			return pcb,nil
 		}
 		if exec_result == execute.RETURN_CONTEXT {

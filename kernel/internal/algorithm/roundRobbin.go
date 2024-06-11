@@ -3,6 +3,7 @@ package algorithm
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
@@ -15,6 +16,7 @@ import (
 
 func RoundRobbin() {
 	global.Logger.Log(fmt.Sprintf("Semaforo de SemReadyList INICIO: %d", len(global.SemReadyList)), log.DEBUG)
+	displaceMap = make(map[int]*model.PCB)
 
 	for {
 
@@ -35,7 +37,7 @@ func RoundRobbin() {
 			updateChan := make(chan *model.PCB)
 			InterruptTimer := make(chan int, 1)
 
-			go DisplaceFunction(InterruptTimer)
+			go DisplaceFunction(InterruptTimer, pcb)
 
 			go func() {
 				global.SemInterrupt <- 0
@@ -53,28 +55,45 @@ func RoundRobbin() {
 			global.ExecuteState.Remove(global.ExecuteState.Front())
 			global.MutexExecuteState.Unlock()
 
-			// EXIT - Agregar a exit
-			if updatePCB.DisplaceReason == "EXIT" {
-				global.Logger.Log(fmt.Sprintf("EXIT - Antes de Interrupt. Semaforo: %d", len(InterruptTimer)), log.DEBUG)
+			if updatePCB.Instruction.Operation == "EXIT" {
+				// global.Logger.Log(fmt.Sprintf("EXIT - Antes de Interrupt. Semaforo: %d", len(interruptTimer)), log.DEBUG)
 				InterruptTimer <- 0
-				global.Logger.Log(fmt.Sprintf("EXIT - Despues de Interrupt. Semaforo: %d", len(InterruptTimer)), log.DEBUG)
+				// global.Logger.Log(fmt.Sprintf("EXIT - Despues de Interrupt. Semaforo: %d", len(InterruptTimer)), log.DEBUG)
 				utils.PCBtoExit(updatePCB)
 			}
-			// Agregar a block
 			if updatePCB.DisplaceReason == "BLOCKED" {
-				global.Logger.Log(fmt.Sprintf("BLOCKED - Antes de Interrupt. Semaforo: %d", len(InterruptTimer)), log.DEBUG)
 				InterruptTimer <- 0
-				global.Logger.Log(fmt.Sprintf("BLOCKED - Despues de Interrupt. Semaforo: %d", len(InterruptTimer)), log.DEBUG)
+				DisplaceChan <- updatePCB
 				utils.PCBtoBlock(updatePCB)
-			}
-			if updatePCB.DisplaceReason == "QUANTUM" {
-				utils.PCBExectoReady(updatePCB)
+			} else if updatePCB.DisplaceReason == "QUANTUM" && updatePCB.Instruction.Operation != "EXIT" {
+				if updatePCB.Instruction.Operation == "SIGNAL" {
+					resource.Signal(updatePCB)
+				} else if updatePCB.Instruction.Operation == "WAIT" {
+					resource.Wait(updatePCB)
+				} else if strings.Contains(updatePCB.Instruction.Operation, "IO") {
+					utils.PCBtoBlock(updatePCB)
+				} else {
+					utils.PCBExectoReady(updatePCB)
+				}
 			}
 
 			if updatePCB.DisplaceReason == "WAIT" {
+				
+				InterruptTimer <- 0
+
+				global.Logger.Log("antes de displace chan", log.DEBUG)
+				DisplaceChan <-updatePCB
+				global.Logger.Log("despues de displace chan", log.DEBUG)
+
 				resource.Wait(updatePCB)
 			}
 			if updatePCB.DisplaceReason == "SIGNAL" {
+				InterruptTimer <- 0
+
+				global.Logger.Log("antes de displace chan", log.DEBUG)
+				DisplaceChan <-updatePCB
+				global.Logger.Log("despues de displace chan", log.DEBUG)
+
 				resource.Signal(updatePCB)
 			}
 		}
@@ -83,25 +102,51 @@ func RoundRobbin() {
 	}
 }
 
-func DisplaceFunction(InterruptTimer chan int) {
+func DisplaceFunction(InterruptTimer chan int, OldPcb *model.PCB) {
+
 
 	<-global.SemInterrupt
+	global.Logger.Log(fmt.Sprintf("pcb antes de select: %+v", OldPcb), log.DEBUG)
 
-	quantumTime := time.Duration(global.KernelConfig.Quantum)
-	timer := time.NewTimer(quantumTime * time.Millisecond)
-	
+
+	quantumTime := time.Duration(OldPcb.RemainingQuantum) * time.Millisecond
+
+	timer := time.NewTimer(quantumTime)
+
 	defer timer.Stop()
+
+	startTime := time.Now()
 
 	select {
 	case <-timer.C:
-		global.Logger.Log("Displace - Termino timer.C", log.DEBUG)
+
+		global.Logger.Log(fmt.Sprintf("PID: %d Displace - Termino timer.C", OldPcb.PID), log.DEBUG)
 		url := fmt.Sprintf("http://%s:%d/%s", global.KernelConfig.IPCPU, global.KernelConfig.PortCPU, "interrupt")
 		_, err := http.Get(url)
 		if err != nil {
+			global.Logger.Log(fmt.Sprintf("Error al enviar la interrupción: %v", err), log.ERROR)
 			return
 		}
 	case <-InterruptTimer:
-		global.Logger.Log(fmt.Sprintf("Displace - Interrupt: Semaforo: %d", len(InterruptTimer)), log.DEBUG)
+
 		timer.Stop()
+
+		pcb := <-DisplaceChan
+		// Transformar el tiempo a segundos para redondearlo y despues pasarlo a ms
+		// Asi uso los ms en la PCB
+
+		if pcb.Instruction.Operation=="WAIT"||pcb.Instruction.Operation=="SIGNAL" {
+			
+		remainingMillisRounded:=utils.TimeCalc(startTime,quantumTime,pcb)
+		
+
+		if remainingMillisRounded > 0 {
+			pcb.RemainingQuantum = remainingMillisRounded
+		} else {
+			pcb.RemainingQuantum = global.KernelConfig.Quantum
+		}
+	}
 }
+
 }
+

@@ -3,7 +3,6 @@ package algorithm
 import (
 	"container/list"
 	"fmt"
-	"math"
 	"net/http"
 	"strings"
 	"sync"
@@ -88,7 +87,7 @@ func VirtualRoundRobin() {
 					resource.Signal(updatePCB)
 				} else if updatePCB.Instruction.Operation == "WAIT" {
 					resource.Wait(updatePCB)
-				} else if strings.Contains(pcb.Instruction.Operation, "IO") {
+				} else if strings.Contains(updatePCB.Instruction.Operation, "IO") {
 					utils.PCBtoBlock(updatePCB)
 				} else {
 					utils.PCBExectoReady(updatePCB)
@@ -151,19 +150,10 @@ func VRRDisplaceFunction(interruptTimer chan int, OldPcb *model.PCB) {
 
 		// Transformar el tiempo a segundos para redondearlo y despues pasarlo a ms
 		// Asi uso los ms en la PCB
-		elapsedTime := time.Since(startTime)
-		elapsedSeconds := math.Round(elapsedTime.Seconds())
-		elapsedMillisRounded := int64(elapsedSeconds * 1000)
-		global.Logger.Log("estoy dentro de block", log.DEBUG)
-		remainingQuantum := quantumTime - elapsedTime
-		remainingSeconds := math.Round(remainingQuantum.Seconds())
-		remainingMillisRounded := int64(remainingSeconds * 1000)
-
-		global.Logger.Log(fmt.Sprintf("PID: %d - Rounded ElapsedTime: %d ms", pcb.PID, elapsedMillisRounded), log.DEBUG)
-		global.Logger.Log(fmt.Sprintf("PID: %d - Rounded RemainingTime: %d ms", pcb.PID, remainingMillisRounded), log.DEBUG)
+		remainingMillisRounded:=utils.TimeCalc(startTime,quantumTime,pcb)
 
 		if remainingMillisRounded > 0 {
-			pcb.RemainingQuantum = int(remainingMillisRounded)
+			pcb.RemainingQuantum = remainingMillisRounded
 		} else {
 			pcb.RemainingQuantum = global.KernelConfig.Quantum
 		}
