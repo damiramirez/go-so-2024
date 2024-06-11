@@ -123,6 +123,7 @@ func VirtualRoundRobin() {
 func VRRDisplaceFunction(interruptTimer chan int, OldPcb *model.PCB) {
 
 	<-global.SemInterrupt
+	
 	quantumTime := time.Duration(OldPcb.RemainingQuantum) * time.Millisecond
 	timer := time.NewTimer(quantumTime)
 

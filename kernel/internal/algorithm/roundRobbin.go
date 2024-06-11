@@ -78,11 +78,11 @@ func RoundRobbin() {
 			}
 
 			if updatePCB.DisplaceReason == "WAIT" {
-				
+
 				InterruptTimer <- 0
 
 				global.Logger.Log("antes de displace chan", log.DEBUG)
-				DisplaceChan <-updatePCB
+				DisplaceChan <- updatePCB
 				global.Logger.Log("despues de displace chan", log.DEBUG)
 
 				resource.Wait(updatePCB)
@@ -91,7 +91,7 @@ func RoundRobbin() {
 				InterruptTimer <- 0
 
 				global.Logger.Log("antes de displace chan", log.DEBUG)
-				DisplaceChan <-updatePCB
+				DisplaceChan <- updatePCB
 				global.Logger.Log("despues de displace chan", log.DEBUG)
 
 				resource.Signal(updatePCB)
@@ -104,10 +104,8 @@ func RoundRobbin() {
 
 func DisplaceFunction(InterruptTimer chan int, OldPcb *model.PCB) {
 
-
 	<-global.SemInterrupt
 	global.Logger.Log(fmt.Sprintf("pcb antes de select: %+v", OldPcb), log.DEBUG)
-
 
 	quantumTime := time.Duration(OldPcb.RemainingQuantum) * time.Millisecond
 
@@ -135,18 +133,16 @@ func DisplaceFunction(InterruptTimer chan int, OldPcb *model.PCB) {
 		// Transformar el tiempo a segundos para redondearlo y despues pasarlo a ms
 		// Asi uso los ms en la PCB
 
-		if pcb.Instruction.Operation=="WAIT"||pcb.Instruction.Operation=="SIGNAL" {
-			
-		remainingMillisRounded:=utils.TimeCalc(startTime,quantumTime,pcb)
-		
+		if pcb.Instruction.Operation == "WAIT" || pcb.Instruction.Operation == "SIGNAL" {
 
-		if remainingMillisRounded > 0 {
-			pcb.RemainingQuantum = remainingMillisRounded
-		} else {
-			pcb.RemainingQuantum = global.KernelConfig.Quantum
+			remainingMillisRounded := utils.TimeCalc(startTime, quantumTime, pcb)
+
+			if remainingMillisRounded > 0 {
+				pcb.RemainingQuantum = remainingMillisRounded
+			} else {
+				pcb.RemainingQuantum = global.KernelConfig.Quantum
+			}
 		}
 	}
-}
 
 }
-
