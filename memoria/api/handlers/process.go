@@ -12,6 +12,10 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/serialization"
 )
 
+type Response struct {
+	Respuesta string `json:"respuesta"`
+}
+
 // recibe el codigo q manda kernel y lo guarda en slice de strings
 func CodeReciever(w http.ResponseWriter, r *http.Request) {
 	//recibo pid y path del archivo con instrucciones
@@ -85,4 +89,53 @@ func DeleteProcess(w http.ResponseWriter, r *http.Request) {
 	global.Logger.Log(fmt.Sprintf("page table %d %+v", pid, global.DictProcess[pid].PageTable), log.DEBUG)
 	global.Logger.Log(fmt.Sprintf("Bit Map  %+v", global.BitMap), log.DEBUG)
 
+}
+
+func Mov_in(w http.ResponseWriter, r *http.Request) {
+	var estructura global.Estructura_mov
+	err := serialization.DecodeHTTPBody[*global.Estructura_mov](r, &estructura)
+	if err != nil {
+		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
+		http.Error(w, "Error al decodear", http.StatusBadRequest)
+	}
+	global.Logger.Log(fmt.Sprintf("Me llegó ésta instrucción [MOV_IN]: %+v", estructura), log.INFO)
+
+	// busca en memoria y devuelve el valor solicitado
+
+	valor := 10
+
+	estructura.DataValue = valor
+
+	serialization.EncodeHTTPResponse(w, estructura, http.StatusOK)
+}
+
+func Mov_out(w http.ResponseWriter, r *http.Request) {
+	var estructura global.Estructura_mov
+	err := serialization.DecodeHTTPBody[*global.Estructura_mov](r, &estructura)
+	if err != nil {
+		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
+		http.Error(w, "Error al decodear", http.StatusBadRequest)
+	}
+	global.Logger.Log(fmt.Sprintf("Me llegó ésta instrucción [MOV_OUT]: %+v", estructura), log.INFO)
+
+	// escribe en memoria con los datos que obtuvo del json
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func Resize(w http.ResponseWriter, r *http.Request) {
+	var estructura global.Estructura_resize
+	var respuesta Response
+	err := serialization.DecodeHTTPBody[*global.Estructura_resize](r, &estructura)
+	if err != nil {
+		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
+		http.Error(w, "Error al decodear", http.StatusBadRequest)
+	}
+	global.Logger.Log(fmt.Sprintf("Me llegó ésta instrucción [RESIZE]: %+v", estructura), log.INFO)
+
+	// chequea y hace el resize
+
+	respuesta.Respuesta = "Out of Memory"
+
+	serialization.EncodeHTTPResponse(w, respuesta, http.StatusOK)
 }

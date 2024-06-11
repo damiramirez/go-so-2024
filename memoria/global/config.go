@@ -33,6 +33,16 @@ type ListInstructions struct {
 	PageTable    *PageTable
 }
 
+type Estructura_mov struct {
+	DataValue      int `json:"data"`
+	DirectionValue int `json:"direction"`
+}
+
+type Estructura_resize struct {
+	Pid  int `json:"pid"`
+	Size int `json:"size"`
+}
+
 var DictProcess map[int]ListInstructions
 
 type MemoryST struct {
