@@ -80,8 +80,8 @@ func VirtualRoundRobin() {
 			if updatePCB.DisplaceReason == "BLOCKED" {
 				interruptTimer <- 0
 				DisplaceChan <- updatePCB
-
 				utils.PCBtoBlock(updatePCB)
+
 			} else if updatePCB.DisplaceReason == "QUANTUM" && updatePCB.Instruction.Operation != "EXIT" {
 				if updatePCB.Instruction.Operation == "SIGNAL" {
 					resource.Signal(updatePCB)
