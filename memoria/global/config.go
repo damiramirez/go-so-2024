@@ -2,9 +2,10 @@ package global
 
 import (
 	"fmt"
+	"os"
+
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
-	"os"
 )
 
 const MEMORYLOG = "./memoria.log"
@@ -18,17 +19,59 @@ type Config struct {
 	InstructionsPath string `json:"instructions_path"`
 	DelayResponse    int    `json:"delay_response"`
 }
+type ValoraMandar struct {
+	Texto string `json:"texto"`
+}
+
+var ValoraM ValoraMandar
 
 var MemoryConfig *Config
 var Logger *log.LoggerStruct
 
-type ProcessInstructions struct {
+type ListInstructions struct {
 	Instructions []string
+	PageTable    *PageTable
 }
-type ListInstructions ProcessInstructions
 
 var DictProcess map[int]ListInstructions
 
+type MemoryST struct {
+	Spaces []byte
+}
+type PageTable struct {
+	Pages       []int
+}
+
+var Memory *MemoryST
+
+func NewMemory() *MemoryST {
+
+	ByteArray := make([]byte, MemoryConfig.MemorySize)
+	mem := MemoryST{Spaces: ByteArray}
+	return &mem
+}
+
+
+var PTable *PageTable
+
+func NewPageTable() *PageTable {
+	//inicializo las 16 paginas en -1
+	Slice:=make([]int,0)
+	
+	//le asigno al "struct" pagetable el array con las paginas
+	pagetable := PageTable{Pages: Slice}
+
+	return &pagetable
+}
+
+func NewBitMap()[]int{
+	NumPages:=MemoryConfig.MemorySize/MemoryConfig.PageSize
+	Array := make([]int, NumPages)
+	
+	return Array
+}
+
+var BitMap []int
 func InitGlobal() {
 	args := os.Args[1:]
 	if len(args) != 1 {
@@ -40,4 +83,6 @@ func InitGlobal() {
 	Logger = log.ConfigureLogger(MEMORYLOG, env)
 	MemoryConfig = config.LoadConfiguration[Config]("./config/config.json")
 	DictProcess = map[int]ListInstructions{}
+	Memory = NewMemory()
+	BitMap = NewBitMap()
 }
