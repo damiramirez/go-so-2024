@@ -56,7 +56,7 @@ func ProcessToIO(pcb *model.PCB) {
 	}
 	if !CheckIfExist(ioStruct.Name) || !CheckIfIsValid(ioStruct.Name, ioStruct.Instruccion) {
 		moveToExit(pcb)
-		return
+		return 
 	}
 	global.IoMap[ioStruct.Name].Sem <- 0
 	_, err := requests.PutHTTPwithBody[IOStruct, interface{}](global.KernelConfig.IPIo, global.IoMap[ioStruct.Name].Port, ioStruct.Instruccion, ioStruct)

@@ -6,5 +6,5 @@
   "port_memory": 8002,
   "number_felling_tlb": 32,
   "algorithm_tlb": "FIFO",
-  "page_size":16
+  "page_size":32
 }

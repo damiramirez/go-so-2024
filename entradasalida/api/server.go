@@ -13,7 +13,7 @@ func CreateServer() *server.Server {
 	configServer := server.Config{
 		Port: global.IOConfig.Port,
 		Handlers: map[string]http.HandlerFunc{
-			"PUT /sleep":        handlers.Sleep,
+			"PUT /IO_GEN_SLEEP":        handlers.Sleep,
 			"PUT /stdin_read":   handlers.Stdin_read,
 			"PUT /stdout_write": handlers.Stdout_write,
 		},

@@ -16,11 +16,10 @@ func TimeCalc(startTime time.Time,quantumTime time.Duration,pcb *model.PCB) int{
 	elapsedMillisRounded := int64(elapsedSeconds * 1000)
 	global.Logger.Log("estoy dentro de block", log.DEBUG)
 	remainingQuantum := quantumTime - elapsedTime
-	remainingSeconds := math.Round(remainingQuantum.Seconds())
-	remainingMillisRounded := int64(remainingSeconds * 1000)
+	remainingMilis := remainingQuantum.Milliseconds()
 
 	global.Logger.Log(fmt.Sprintf("PID: %d - Rounded ElapsedTime: %d ms", pcb.PID, elapsedMillisRounded), log.DEBUG)
-	global.Logger.Log(fmt.Sprintf("PID: %d - Rounded RemainingTime: %d ms", pcb.PID, remainingMillisRounded), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("PID: %d - Rounded RemainingTime: %d ms", pcb.PID, remainingMilis), log.DEBUG)
 
-	return int(remainingMillisRounded)
+	return int(remainingMilis)
 }

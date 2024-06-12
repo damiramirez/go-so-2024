@@ -18,13 +18,11 @@ import (
 
 var updateChan = make(chan *model.PCB)
 var DisplaceList *list.List = list.New()
-var displaceMap map[int]*model.PCB
 var MutexDisplaceList sync.Mutex
 var DisplaceChan = make(chan *model.PCB)
 
 func VirtualRoundRobin() {
 
-	displaceMap = make(map[int]*model.PCB)
 
 	var pcb *model.PCB
 	for {
@@ -74,6 +72,7 @@ func VirtualRoundRobin() {
 			if updatePCB.Instruction.Operation == "EXIT" {
 				// global.Logger.Log(fmt.Sprintf("EXIT - Antes de Interrupt. Semaforo: %d", len(interruptTimer)), log.DEBUG)
 				interruptTimer <- 0
+				DisplaceChan <-updatePCB
 				// global.Logger.Log(fmt.Sprintf("EXIT - Despues de Interrupt. Semaforo: %d", len(interruptTimer)), log.DEBUG)
 				utils.PCBtoExit(updatePCB)
 			}
@@ -147,6 +146,9 @@ func VRRDisplaceFunction(interruptTimer chan int, OldPcb *model.PCB) {
 
 		pcb := <-DisplaceChan
 
+		if pcb.Instruction.Operation=="EXIT" {
+			return
+		}
 		global.Logger.Log(fmt.Sprintf("PCB EN DISPLACE: %+v", pcb), log.DEBUG)
 
 		// Transformar el tiempo a segundos para redondearlo y despues pasarlo a ms
@@ -159,9 +161,6 @@ func VRRDisplaceFunction(interruptTimer chan int, OldPcb *model.PCB) {
 			pcb.RemainingQuantum = global.KernelConfig.Quantum
 		}
 
-		MutexDisplaceList.Lock()
-		displaceMap[pcb.PID] = pcb
-		MutexDisplaceList.Unlock()
-
+	
 	}
 }

@@ -24,9 +24,10 @@ func Dispatch(pcb *model.PCB) (*model.PCB, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		exec_result := execute.Execute(pcb, instruction)
 
-		if !global.Execute {
+		if !global.Execute{
 			pcb.DisplaceReason="QUANTUM"
 			global.Logger.Log(fmt.Sprintf("PCB Actualizada %+v", pcb), log.DEBUG)
 			return pcb,nil
@@ -51,8 +52,6 @@ func DisplaceReason(pcb *model.PCB) {
 		pcb.DisplaceReason = "SIGNAL"
 	} else if pcb.Instruction.Operation == "RESIZE" {
 		pcb.DisplaceReason = "FAILED RESIZE"
-	} else {
-		pcb.DisplaceReason = "QUANTUM"
-	}
+	} 
 
 }
