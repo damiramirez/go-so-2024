@@ -98,7 +98,7 @@ func InitIODevice(name string) *IODevice {
 
 	dispositivo := IODevice{Name: name, Type: IOConfig.Type, Port: IOConfig.Port}
 
-	Logger.Log(fmt.Sprintf("Nuevo IO inicializado: %+v", dispositivo), log.INFO)
+	Logger.Log(fmt.Sprintf("Nuevo IO inicializado: %+v", dispositivo), log.DEBUG)
 
 	return &dispositivo
 
@@ -108,7 +108,7 @@ func AvisoKernelIOExistente() {
 
 	_, err := requests.PutHTTPwithBody[IODevice, interface{}](IOConfig.IPKernel, IOConfig.PortKernel, "newio", *Dispositivo)
 	if err != nil {
-		Logger.Log(fmt.Sprintf("NO se pudo enviar al kernel el IODevice %s", err.Error()), log.INFO)
+		Logger.Log(fmt.Sprintf("NO se pudo enviar al kernel el IODevice %s", err.Error()), log.ERROR)
 		panic(1)
 		// TODO: kernel falta que entienda el mensaje (hacer el endpoint) y nos envíe la respuesta que está todo ok
 	}
