@@ -100,6 +100,7 @@ func BlockToReady(pcb *model.PCB) {
 	global.BlockedState.Remove(global.BlockedState.Front())
 	global.MutexBlockState.Unlock()
 
+	
 	pcb.State = "READY"
 
 	if global.KernelConfig.PlanningAlgorithm == "VRR" && pcb.RemainingQuantum > 0 {
@@ -115,6 +116,10 @@ func BlockToReady(pcb *model.PCB) {
 		global.MutexReadyState.Unlock()
 		global.Logger.Log(fmt.Sprintf("PID: %d - Bloqueado normal", pcb.PID), log.DEBUG)
 
+	}
+
+	if pcb.DisplaceReason=="QUANTUM" {
+		pcb.RemainingQuantum=global.KernelConfig.Quantum
 	}
 
 }

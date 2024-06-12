@@ -8,7 +8,7 @@ import (
 	internal "github.com/sisoputnfrba/tp-golang/cpu/internal/dispatch"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 	"github.com/sisoputnfrba/tp-golang/utils/model"
-	
+
 	"github.com/sisoputnfrba/tp-golang/utils/serialization"
 )
 
@@ -17,6 +17,9 @@ type PCB struct {
 	Pc  int `json:"pc"`
 }
 
+type InterruptReason struct {
+	Reason string `json:"reason"`
+}
 
 func Dispatch(w http.ResponseWriter, r *http.Request) {
 	pcb := &model.PCB{}
@@ -33,9 +36,22 @@ func Dispatch(w http.ResponseWriter, r *http.Request) {
 }
 
 func Interrupt(w http.ResponseWriter, r *http.Request) {
-	global.Logger.Log("entramos a interrupt", log.DEBUG)
+	interruptReason := InterruptReason{}
+
+	err := serialization.DecodeHTTPBody(r, &interruptReason)
+	if err != nil {
+		http.Error(w, "Error al decodear PCB", http.StatusBadRequest)
+		global.Logger.Log(fmt.Sprintf("Error al decodear PCB: %v", err), log.ERROR)
+		return
+	}
+
+	global.Logger.Log("Interrumpimos por "+interruptReason.Reason, log.DEBUG)
+
+
 	global.ExecuteMutex.Lock()
 	global.Execute = false
+	global.InterruptReason = interruptReason.Reason
 	global.ExecuteMutex.Unlock()
-	w.WriteHeader(http.StatusOK)
+
+	w.WriteHeader(http.StatusNoContent)
 }

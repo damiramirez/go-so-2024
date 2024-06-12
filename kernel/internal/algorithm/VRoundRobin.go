@@ -136,9 +136,8 @@ func VRRDisplaceFunction(interruptTimer chan int, OldPcb *model.PCB) {
 
 	select {
 	case <-timer.C:
-
 		global.Logger.Log(fmt.Sprintf("PID: %d Displace - Termino timer.C", OldPcb.PID), log.DEBUG)
-		utils.InterruptCPU()
+		utils.InterruptCPU("QUANTUM")
 	case <-interruptTimer:
 
 		timer.Stop()
@@ -159,7 +158,5 @@ func VRRDisplaceFunction(interruptTimer chan int, OldPcb *model.PCB) {
 		} else {
 			pcb.RemainingQuantum = global.KernelConfig.Quantum
 		}
-
-	
 	}
 }

@@ -3,7 +3,6 @@ package utils
 import (
 	"container/list"
 	"fmt"
-	"net/http"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
 	"github.com/sisoputnfrba/tp-golang/kernel/internal/block"
@@ -99,7 +98,7 @@ func RemoveProcessByPID(pid int) bool {
 			if pcb.PID == pid {
 
 				if pcb.State == "EXEC" {
-					InterruptCPU()
+					InterruptCPU("REMOVED")
 				} else {
 					queue.Remove(e)
 				}
@@ -139,9 +138,11 @@ func PCBtoExit(pcb *model.PCB) {
 }
 
 func PCBtoBlock(pcb *model.PCB) {
-	if pcb.DisplaceReason=="QUANTUM" {
-		pcb.RemainingQuantum=global.KernelConfig.Quantum
-	}
+	global.Logger.Log(fmt.Sprintf("Remaining quantum: %d", pcb.RemainingQuantum), log.DEBUG)
+
+	// if pcb.DisplaceReason=="QUANTUM" {
+	// 	pcb.RemainingQuantum=global.KernelConfig.Quantum
+	// }
 	pcb.State = "BLOCK"
 	global.MutexBlockState.Lock()
 	global.BlockedState.PushBack(pcb)
@@ -271,12 +272,20 @@ func removeAtString(slice []string, index int) []string {
 	return append(slice[:index], slice[index+1:]...)
 }
 
-func InterruptCPU() error {
-	url := fmt.Sprintf("http://%s:%d/%s", global.KernelConfig.IPCPU, global.KernelConfig.PortCPU, "interrupt")
-	_, err := http.Get(url)
+func InterruptCPU(reason string) error {
+
+	interruptReason := InterruptReason{
+		Reason: reason,
+	}
+
+	global.Logger.Log(fmt.Sprintf("Reason Struct: %+v", interruptReason), log.DEBUG)
+
+	_, err := requests.PutHTTPwithBody[InterruptReason, interface{}](global.KernelConfig.IPCPU, global.KernelConfig.PortCPU, "interrupt", interruptReason)
+
 	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al enviar la interrupción: %v", err), log.ERROR)
+		global.Logger.Log(fmt.Sprintf("Error al enviar la interrupción: %+v", err), log.ERROR)
 		return err
 	}
+	
 	return nil
 }

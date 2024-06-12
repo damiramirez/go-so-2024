@@ -16,6 +16,7 @@ func Dispatch(pcb *model.PCB) (*model.PCB, error) {
 
 	global.ExecuteMutex.Lock()
 	global.Execute = true
+	global.InterruptReason = ""
 	global.ExecuteMutex.Unlock()
 
 	for global.Execute {
@@ -27,8 +28,9 @@ func Dispatch(pcb *model.PCB) (*model.PCB, error) {
 
 		exec_result := execute.Execute(pcb, instruction)
 
-		if !global.Execute{
-			pcb.DisplaceReason="QUANTUM"
+		if !global.Execute {
+			pcb.DisplaceReason = global.InterruptReason
+			pcb.RemainingQuantum = 0
 			global.Logger.Log(fmt.Sprintf("PCB Actualizada %+v", pcb), log.DEBUG)
 			return pcb,nil
 		}

@@ -24,6 +24,7 @@ type Config struct {
 
 var CPUConfig *Config
 var Execute bool
+var InterruptReason string
 var Logger *log.LoggerStruct
 
 // mutex

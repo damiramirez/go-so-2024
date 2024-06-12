@@ -14,7 +14,7 @@ func CreateServer() *server.Server {
 		Port: global.CPUConfig.Port,
 		Handlers: map[string]http.HandlerFunc{
 			"PUT /dispatch":  handlers.Dispatch,
-			"GET /interrupt": handlers.Interrupt,
+			"PUT /interrupt": handlers.Interrupt,
 		},
 	}
 	return server.NewServer(configServer)
