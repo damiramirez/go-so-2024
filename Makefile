@@ -12,7 +12,7 @@ entradasalida:
 	@cd entradasalida && mkdir -p bin && go build -o bin/entradasalida && ./bin/entradasalida $(ENV) $(N) $(P)
 
 kernel:
-	@cd kernel && mkdir -p bin && go build -o bin/kernel && ./bin/kernel $(ENV)
+	@cd kernel && mkdir -p bin && go build -o bin/kernel && ./bin/kernel $(ENV) $(CONFIG)
 
 fmt:
 	cd cpu && go fmt ./...

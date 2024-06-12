@@ -1,7 +1,7 @@
 {
-  "port": 8007,
-  "type": "STDOUT",
-  "unit_work_time": 5000,
+  "port": 8005,
+  "type": "STDIN",
+  "unit_work_time": 250,
   "ip_kernel": "127.0.0.1",
   "port_kernel": 8001,
   "ip_memory": "127.0.0.1",

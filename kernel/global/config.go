@@ -80,14 +80,15 @@ var PIDResourceMap map[int][]string
 
 func InitGlobal() {
 	args := os.Args[1:]
-	if len(args) != 1 {
-		fmt.Println("Uso: programa <go run `modulo`.go dev|prod>")
+	if len(args) != 2 {
+		fmt.Println("ARGS: ENV=dev|prod CONFIG=config_path")
 		os.Exit(1)
 	}
 	env := args[0]
+	configFile := args[1]
 
 	Logger = log.ConfigureLogger(KERNELLOG, env)
-	KernelConfig = config.LoadConfiguration[Config]("./config/config.json")
+	KernelConfig = config.LoadConfiguration[Config](configFile)
 
 	NewState = list.New()
 	ReadyState = list.New()
