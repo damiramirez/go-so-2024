@@ -2,7 +2,6 @@ package algorithm
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
@@ -119,12 +118,7 @@ func DisplaceFunction(InterruptTimer chan int, OldPcb *model.PCB) {
 	case <-timer.C:
 
 		global.Logger.Log(fmt.Sprintf("PID: %d Displace - Termino timer.C", OldPcb.PID), log.DEBUG)
-		url := fmt.Sprintf("http://%s:%d/%s", global.KernelConfig.IPCPU, global.KernelConfig.PortCPU, "interrupt")
-		_, err := http.Get(url)
-		if err != nil {
-			global.Logger.Log(fmt.Sprintf("Error al enviar la interrupción: %v", err), log.ERROR)
-			return
-		}
+		utils.InterruptCPU()
 	case <-InterruptTimer:
 
 		timer.Stop()

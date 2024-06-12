@@ -3,6 +3,7 @@ package utils
 import (
 	"container/list"
 	"fmt"
+	"net/http"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
 	"github.com/sisoputnfrba/tp-golang/kernel/internal/block"
@@ -96,7 +97,12 @@ func RemoveProcessByPID(pid int) bool {
 			pcb := e.Value.(*model.PCB)
 
 			if pcb.PID == pid {
-				queue.Remove(e)
+
+				if pcb.State == "EXEC" {
+					InterruptCPU()
+				} else {
+					queue.Remove(e)
+				}
 				freeResource(pcb)
 				PCBtoExit(pcb)
 				return true
@@ -162,9 +168,6 @@ func PCBReadytoExec() *model.PCB {
 }
 
 func PCBExectoReady(pcb *model.PCB) {
-
-
-
 	//se guarda en ready
 	pcb.State = "READY"
 	//LOG CAMBIO DE ESTADO
@@ -266,4 +269,14 @@ func checkResourcePID(resourceName []string, name string) int {
 
 func removeAtString(slice []string, index int) []string {
 	return append(slice[:index], slice[index+1:]...)
+}
+
+func InterruptCPU() error {
+	url := fmt.Sprintf("http://%s:%d/%s", global.KernelConfig.IPCPU, global.KernelConfig.PortCPU, "interrupt")
+	_, err := http.Get(url)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al enviar la interrupción: %v", err), log.ERROR)
+		return err
+	}
+	return nil
 }

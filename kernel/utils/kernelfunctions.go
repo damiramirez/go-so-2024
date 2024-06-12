@@ -23,3 +23,4 @@ func TimeCalc(startTime time.Time,quantumTime time.Duration,pcb *model.PCB) int{
 
 	return int(remainingMilis)
 }
+

@@ -3,7 +3,6 @@ package algorithm
 import (
 	"container/list"
 	"fmt"
-	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -70,10 +69,8 @@ func VirtualRoundRobin() {
 
 			// EXIT - Agregar a exit
 			if updatePCB.Instruction.Operation == "EXIT" {
-				// global.Logger.Log(fmt.Sprintf("EXIT - Antes de Interrupt. Semaforo: %d", len(interruptTimer)), log.DEBUG)
 				interruptTimer <- 0
 				DisplaceChan <-updatePCB
-				// global.Logger.Log(fmt.Sprintf("EXIT - Despues de Interrupt. Semaforo: %d", len(interruptTimer)), log.DEBUG)
 				utils.PCBtoExit(updatePCB)
 				global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: SUCCESS ", pcb.PID), log.INFO)
 			}
@@ -135,12 +132,7 @@ func VRRDisplaceFunction(interruptTimer chan int, OldPcb *model.PCB) {
 	case <-timer.C:
 
 		global.Logger.Log(fmt.Sprintf("PID: %d Displace - Termino timer.C", OldPcb.PID), log.DEBUG)
-		url := fmt.Sprintf("http://%s:%d/%s", global.KernelConfig.IPCPU, global.KernelConfig.PortCPU, "interrupt")
-		_, err := http.Get(url)
-		if err != nil {
-			global.Logger.Log(fmt.Sprintf("Error al enviar la interrupción: %v", err), log.ERROR)
-			return
-		}
+		utils.InterruptCPU()
 	case <-interruptTimer:
 
 		timer.Stop()
