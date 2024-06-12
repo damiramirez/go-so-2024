@@ -11,15 +11,18 @@ ENV=$1
 
 # Ruta de la carpeta a la que quieres cambiar
 target_directory="/home/utnso/tp-2024-1c-sudoers"
-kernel_config="/home/utnso/tp-2024-1c-sudoers/kernel/config/config_io.json"
+
 monitor_config="/home/utnso/tp-2024-1c-sudoers/entradasalida/config/config_io_monitor.json"
 generic_config="/home/utnso/tp-2024-1c-sudoers/entradasalida/config/config_io_generica.json"
 keyboard_config="/home/utnso/tp-2024-1c-sudoers/entradasalida/config/config_io_teclado.json"
+kernel_config="/home/utnso/tp-2024-1c-sudoers/kernel/config/config_io.json"
+cpu_config="/home/utnso/tp-2024-1c-sudoers/cpu/config/config_io.json"
+memory_config="/home/utnso/tp-2024-1c-sudoers/memoria/config/config_io.json"
 
 commands=(
-    "cd $target_directory && make kernel ENV=$ENV CONFIG=$kernel_config && exec bash"
-    "cd $target_directory && make cpu ENV=$ENV && exec bash"
-    "cd $target_directory && make memoria ENV=$ENV && exec bash"
+    "cd $target_directory && make kernel ENV=$ENV C=$kernel_config && exec bash"
+    "cd $target_directory && make cpu ENV=$ENV C=$cpu_config && exec bash"
+    "cd $target_directory && make memoria ENV=$ENV C=$memory_config && exec bash"
 )
 
 # Abrir cada comando en una nueva ventana de terminator
