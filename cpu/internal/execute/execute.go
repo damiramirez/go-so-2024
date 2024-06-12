@@ -139,8 +139,6 @@ func getRegister(register string, pcb *model.PCB) int {
 
 func setRegister(register string, value int, pcb *model.PCB) {
 	switch register {
-	case "PC":
-		pcb.PC = value
 	case "AX":
 		pcb.Registers.AX = value
 	case "BX":
@@ -149,14 +147,6 @@ func setRegister(register string, value int, pcb *model.PCB) {
 		pcb.Registers.CX = value
 	case "DX":
 		pcb.Registers.DX = value
-	case "EAX":
-		pcb.Registers.EAX = value
-	case "EBX":
-		pcb.Registers.EBX = value
-	case "ECX":
-		pcb.Registers.ECX = value
-	case "EDX":
-		pcb.Registers.EDX = value
 	}
 }
 
@@ -212,5 +202,15 @@ func resize(pcb *model.PCB, instruction *model.Instruction) {
 		return
 	}
 	result = CONTINUE
+
+}
+
+func copyString(pcb *model.PCB, instruction *model.Instruction) {
+
+	tamanio, _ := strconv.Atoi(instruction.Parameters[0])
+
+	// put a memoria para obtener tamanio bytes de lo que hay en el string apuntado por SI
+
+	// put a memoria para guardar en DI lo que obtuve en el primer put
 
 }

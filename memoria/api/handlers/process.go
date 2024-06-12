@@ -122,3 +122,20 @@ func Mov_out(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func Resize(w http.ResponseWriter, r *http.Request) {
+	var estructura global.Estructura_resize
+	var respuesta Response
+	err := serialization.DecodeHTTPBody[*global.Estructura_resize](r, &estructura)
+	if err != nil {
+		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
+		http.Error(w, "Error al decodear", http.StatusBadRequest)
+	}
+	global.Logger.Log(fmt.Sprintf("Me llegó ésta instrucción [RESIZE]: %+v", estructura), log.INFO)
+
+	// chequea y hace el resize
+
+	respuesta.Respuesta = "Out of Memory"
+
+	serialization.EncodeHTTPResponse(w, respuesta, http.StatusOK)
+}

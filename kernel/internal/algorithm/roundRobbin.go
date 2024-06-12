@@ -16,6 +16,7 @@ import (
 
 func RoundRobbin() {
 	global.Logger.Log(fmt.Sprintf("Semaforo de SemReadyList INICIO: %d", len(global.SemReadyList)), log.DEBUG)
+	displaceMap = make(map[int]*model.PCB)
 
 	for {
 
@@ -55,8 +56,9 @@ func RoundRobbin() {
 			global.MutexExecuteState.Unlock()
 
 			if updatePCB.Instruction.Operation == "EXIT" {
+				// global.Logger.Log(fmt.Sprintf("EXIT - Antes de Interrupt. Semaforo: %d", len(interruptTimer)), log.DEBUG)
 				InterruptTimer <- 0
-				// DisplaceChan <- updatePCB
+				// global.Logger.Log(fmt.Sprintf("EXIT - Despues de Interrupt. Semaforo: %d", len(InterruptTimer)), log.DEBUG)
 				utils.PCBtoExit(updatePCB)
 			}
 			if updatePCB.DisplaceReason == "BLOCKED" {
@@ -76,13 +78,22 @@ func RoundRobbin() {
 			}
 
 			if updatePCB.DisplaceReason == "WAIT" {
+
 				InterruptTimer <- 0
+
+				global.Logger.Log("antes de displace chan", log.DEBUG)
 				DisplaceChan <- updatePCB
+				global.Logger.Log("despues de displace chan", log.DEBUG)
+
 				resource.Wait(updatePCB)
 			}
 			if updatePCB.DisplaceReason == "SIGNAL" {
 				InterruptTimer <- 0
+
+				global.Logger.Log("antes de displace chan", log.DEBUG)
 				DisplaceChan <- updatePCB
+				global.Logger.Log("despues de displace chan", log.DEBUG)
+
 				resource.Signal(updatePCB)
 			}
 		}
