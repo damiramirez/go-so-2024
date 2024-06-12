@@ -16,8 +16,8 @@ type estructura_read struct {
 	Tamanio   string
 }
 
-
-func Stdin_read(w http.ResponseWriter, r *http.Request) {
+//LEE DE MEMORIA
+func Stdout_write(w http.ResponseWriter, r *http.Request) {
 	var MemoryAccessIO internal.MemStdIO
 	err := serialization.DecodeHTTPBody(r, &MemoryAccessIO)
 	if err != nil {
@@ -26,7 +26,7 @@ func Stdin_read(w http.ResponseWriter, r *http.Request) {
 	}
 	global.Logger.Log(fmt.Sprintf("Me llegó ésta mensaje: %+v", MemoryAccessIO), log.INFO)
 
-	// escribe en memoriavar Content []byte
+	
 	var Content []byte
 	var ContentByte byte
 
@@ -50,11 +50,12 @@ func Stdin_read(w http.ResponseWriter, r *http.Request) {
 		global.Logger.Log(fmt.Sprintf("Memoria  %+v", global.Memory), log.DEBUG)
 
 		str:=string(Content)
-	serialization.EncodeHTTPResponse(w, str, 200)
-	w.WriteHeader(http.StatusNoContent)
+		serialization.EncodeHTTPResponse(w, str, 200)
+	
 }
 
-func Stdout_write(w http.ResponseWriter, r *http.Request) {
+//ESCRIBE EN MEMORIA
+func Stdin_read(w http.ResponseWriter, r *http.Request) {
 	//var estructura estructura_write
 	var MemoryAccessIO internal.MemStdIO
 	err := serialization.DecodeHTTPBody(r, &MemoryAccessIO)
@@ -81,7 +82,7 @@ func Stdout_write(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	
-	str:=string(byteArray)
+	str:="lo pude escribir"
 	global.Logger.Log(fmt.Sprintf("page table %d %+v", MemoryAccessIO.Pid, global.DictProcess[MemoryAccessIO.Pid].PageTable), log.DEBUG)
 	global.Logger.Log(fmt.Sprintf("Bit Map  %+v", global.BitMap), log.DEBUG)
 	global.Logger.Log(fmt.Sprintf("Memoria  %+v", global.Memory), log.DEBUG)
