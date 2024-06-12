@@ -23,8 +23,7 @@ func CreateServer() *server.Server {
 			"PUT /stdin_read":       handlers.Stdin_read, //escribe en memoria
 			"PUT /stdout_write":     handlers.Stdout_write,//lee en memoria
 			"PUT /mov_in":        handlers.Mov_in,
-			"PUT /mov_out":       handlers.Mov_out,
-			"PUT /resize":        handlers.Resize,
+
 		},
 	}
 	return server.NewServer(configServer)

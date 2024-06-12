@@ -18,17 +18,14 @@ import (
 
 var updateChan = make(chan *model.PCB)
 var DisplaceList *list.List = list.New()
-var displaceMap map[int]*model.PCB
 var MutexDisplaceList sync.Mutex
 var DisplaceChan = make(chan *model.PCB)
 
 func VirtualRoundRobin() {
 
-	displaceMap = make(map[int]*model.PCB)
 
 	var pcb *model.PCB
 	for {
-		global.Logger.Log("Log antes de SemReadyList", log.DEBUG)
 		<-global.SemReadyList
 		global.SemExecute <- 0
 
@@ -41,9 +38,8 @@ func VirtualRoundRobin() {
 		if global.ReadyState.Len() != 0 || global.ReadyPlus.Len() != 0 {
 
 			if global.ReadyPlus.Len() != 0 {
-				global.Logger.Log(fmt.Sprintf("PCB a execute: %+v", global.ReadyPlus.Front().Value), log.DEBUG)
+				global.Logger.Log(fmt.Sprintf("PCB a execute de Ready+: %+v", global.ReadyPlus.Front().Value), log.DEBUG)
 				pcb = utils.VrrPCBtoEXEC()
-
 			} else {
 				global.Logger.Log(fmt.Sprintf("PCB a execute: %+v", global.ReadyState.Front().Value), log.DEBUG)
 				pcb = utils.PCBReadytoExec()
@@ -72,9 +68,8 @@ func VirtualRoundRobin() {
 
 			// EXIT - Agregar a exit
 			if updatePCB.Instruction.Operation == "EXIT" {
-				// global.Logger.Log(fmt.Sprintf("EXIT - Antes de Interrupt. Semaforo: %d", len(interruptTimer)), log.DEBUG)
 				interruptTimer <- 0
-				// global.Logger.Log(fmt.Sprintf("EXIT - Despues de Interrupt. Semaforo: %d", len(interruptTimer)), log.DEBUG)
+				DisplaceChan <- updatePCB
 				utils.PCBtoExit(updatePCB)
 			}
 			if updatePCB.DisplaceReason == "BLOCKED" {
@@ -95,22 +90,13 @@ func VirtualRoundRobin() {
 			}
 
 			if updatePCB.DisplaceReason == "WAIT" {
-				
 				interruptTimer <- 0
-
-				global.Logger.Log("antes de displace chan", log.DEBUG)
 				DisplaceChan <-updatePCB
-				global.Logger.Log("despues de displace chan", log.DEBUG)
-
 				resource.Wait(updatePCB)
 			}
 			if updatePCB.DisplaceReason == "SIGNAL" {
 				interruptTimer <- 0
-
-				global.Logger.Log("antes de displace chan", log.DEBUG)
 				DisplaceChan <-updatePCB
-				global.Logger.Log("despues de displace chan", log.DEBUG)
-
 				resource.Signal(updatePCB)
 			}
 
@@ -130,6 +116,8 @@ func VRRDisplaceFunction(interruptTimer chan int, OldPcb *model.PCB) {
 	defer timer.Stop()
 
 	startTime := time.Now()
+	global.Logger.Log(fmt.Sprintf("PID %d: Displace function arranca en %+v", OldPcb.PID, startTime), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("PID %d: QuantumTime %d", OldPcb.PID, quantumTime), log.DEBUG)
 
 	select {
 	case <-timer.C:
@@ -147,6 +135,12 @@ func VRRDisplaceFunction(interruptTimer chan int, OldPcb *model.PCB) {
 
 		pcb := <-DisplaceChan
 
+		if pcb.Instruction.Operation == "EXIT" {
+			global.Logger.Log(fmt.Sprintf("PCB EXIT EN DISPLACE: %+v", pcb), log.DEBUG)
+			return
+		}
+
+		global.Logger.Log(fmt.Sprintf("OLDPCB EN DISPLACE: %+v", OldPcb), log.DEBUG)
 		global.Logger.Log(fmt.Sprintf("PCB EN DISPLACE: %+v", pcb), log.DEBUG)
 
 		// Transformar el tiempo a segundos para redondearlo y despues pasarlo a ms
@@ -158,10 +152,6 @@ func VRRDisplaceFunction(interruptTimer chan int, OldPcb *model.PCB) {
 		} else {
 			pcb.RemainingQuantum = global.KernelConfig.Quantum
 		}
-
-		MutexDisplaceList.Lock()
-		displaceMap[pcb.PID] = pcb
-		MutexDisplaceList.Unlock()
-
+		global.Logger.Log(fmt.Sprintf("PCB DESPUES DE DISPLACE: %+v", pcb), log.DEBUG)
 	}
 }
