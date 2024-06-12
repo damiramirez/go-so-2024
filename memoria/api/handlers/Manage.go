@@ -108,7 +108,7 @@ func MemoryAccessIn(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error al decodear el body", http.StatusBadRequest)
 		return
 	}
-	global.Logger.Log(fmt.Sprintf("Me enviaron: %+v", MemoryAccess), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("MOVIN: Me enviaron: %+v", MemoryAccess), log.DEBUG)
 
 	MemoryAccess.Content = internal.MemIn(MemoryAccess.NumFrames, MemoryAccess.Offset, MemoryAccess.Pid, MemoryAccess.Length)
 	serialization.EncodeHTTPResponse(w, MemoryAccess.Content, http.StatusOK)
@@ -121,13 +121,14 @@ func MemoryAccessOut(w http.ResponseWriter, r *http.Request) {
 	var MemoryAccess internal.MemStruct
 	err := serialization.DecodeHTTPBody(r, &MemoryAccess)
 
-	global.Logger.Log(fmt.Sprintf("Me enviaron: %+v", MemoryAccess), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("MOVOUT: Me enviaron: %+v", MemoryAccess), log.DEBUG)
 
 	if err != nil {
 		global.Logger.Log("Error al decodear el body: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear el body", http.StatusBadRequest)
 		return
 	}
+
 	if internal.MemOut(MemoryAccess.NumFrames, MemoryAccess.Offset, MemoryAccess.Content, MemoryAccess.Pid, MemoryAccess.Length) {
 
 		global.Logger.Log(fmt.Sprintf("page table %d %+v", MemoryAccess.Pid, global.DictProcess[MemoryAccess.Pid].PageTable), log.DEBUG)

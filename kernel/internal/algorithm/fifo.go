@@ -52,6 +52,11 @@ func Fifo() {
 				global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: SUCCESS ", pcb.PID), log.INFO)
 			}
 
+			if updatePCB.DisplaceReason == "FAILED RESIZE" {
+				utils.PCBtoExit(updatePCB)
+				global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: OUT_OF_MEMORY", pcb.PID), log.INFO)
+			}
+
 			// Agregar a block
 			if updatePCB.DisplaceReason == "BLOCKED" {
 				utils.PCBtoBlock(updatePCB)

@@ -14,7 +14,7 @@ import (
 type MemStruct struct{
 	Pid int `json:"pid"`
 	Content any `json:"content"`
-	Length int `json:"largo"`
+	Length int `json:"length"`
 	NumFrames []int `json:"numframe"`
 	Offset  int `json:"offset"`
 }
@@ -22,7 +22,6 @@ type MemStruct struct{
 type GetFrame struct{
 	Pid int`json:"pid"`
 	Page_Number int	`json:"page_number"`
-
 }
 
 func AdressConverter(LogAdress int) (int, int) {
@@ -52,9 +51,10 @@ func CreateAdress(Register string,LogAdress int,Pid int,Content any)MemStruct{
 	global.Logger.Log(fmt.Sprintf("Paginas necesarias %d", int(NumPages)), log.DEBUG)
 
 	for i := 0; i < int(NumPages); i++ {
-		Page.Page_Number=+i
+		global.Logger.Log(fmt.Sprintf("Busco a memoria %+v", Page), log.DEBUG)
 		frame,_:=requests.PutHTTPwithBody[GetFrame,int](global.CPUConfig.IPMemory,global.CPUConfig.PortMemory,"framenumber",Page)
-		global.Logger.Log(fmt.Sprintf("PID: %d - OBTENER MARCO - Página: %d - Marco: %d",Pid,Page_Number,*frame),log.INFO)
+		global.Logger.Log(fmt.Sprintf("PID: %d - OBTENER MARCO - Página: %d - Marco: %d",Pid,Page.Page_Number,*frame),log.INFO)
+		Page.Page_Number=+1
 		Adresses.NumFrames = append(Adresses.NumFrames, *frame)
 	}
 

@@ -64,7 +64,7 @@ func MemOut(NumFrames []int, Offset int, content int, Pid int, Largo int) bool {
 			}
 		}
 	} else if Largo == 1 {
-		global.Memory.Spaces[NumFrames[0]+Offset] = byte(content)
+		global.Memory.Spaces[NumFrames[0]*global.MemoryConfig.PageSize+Offset] = byte(content)
 	}
 	//accu :=0
 

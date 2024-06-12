@@ -2,6 +2,7 @@ package execute
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 
 	"github.com/sisoputnfrba/tp-golang/cpu/global"
@@ -162,13 +163,13 @@ func mov_in(pcb *model.PCB, instruction *model.Instruction) {
 	
 	// put a memoria para que devuelva el valor solicitado
 
-	resp, err := requests.PutHTTPwithBody[internal.MemStruct, int](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "mov_in", SendStruct)
+	resp, err := requests.PutHTTPwithBody[internal.MemStruct, int](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "memIn", SendStruct)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("NO se pudo enviar a memoria la estructura %s", err.Error()), log.INFO)
 		panic(1)
 		// TODO: falta que memoria vea si puede escribir o no (?)
 	}
-	global.Logger.Log(fmt.Sprintf("Resp %+v", resp), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Resp %+v", *resp), log.DEBUG)
 	setRegister(dataValue, *resp, pcb)
 	global.Logger.Log(fmt.Sprintf("PID: %d - Acción: LEER - Dirección Física: %d %d - Valor: %d",pcb.PID,SendStruct.NumFrames[0],SendStruct.Offset,*resp),log.INFO)
 }
@@ -197,9 +198,14 @@ func mov_out(pcb *model.PCB, instruction *model.Instruction) {
 
 func resize(pcb *model.PCB, instruction *model.Instruction) int{
 	newSize, _ := strconv.Atoi(instruction.Parameters[0])
+
+	ceilSize := math.Ceil(float64(newSize) / float64(global.CPUConfig.Page_size))
+
+	global.Logger.Log(fmt.Sprintf("Tamanio %f - Valor: %d", (float64(newSize) / float64(global.CPUConfig.Page_size)), int(ceilSize)), log.DEBUG)
+
 	estructura_resize := Estructura_resize{
 		Pid: pcb.PID,
-		NumFrames: newSize / global.CPUConfig.Page_size,
+		NumFrames: int(ceilSize),
 	}
 	
 	global.Logger.Log(fmt.Sprintf("Struct a resize: %+v", estructura_resize), log.DEBUG)
@@ -207,13 +213,11 @@ func resize(pcb *model.PCB, instruction *model.Instruction) int{
 	_, err := requests.PutHTTPwithBody[Estructura_resize, interface{}](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "resize", estructura_resize)
 	// global.Logger.Log(fmt.Sprintf("STATUS CODE DSP RESIZE: %d", resp.StatusCode), log.DEBUG)
 	if err != nil {
-		global.Logger.Log(fmt.Sprintf("OUT OF MEMORY %s", err.Error()), log.INFO)
+		global.Logger.Log("OUT OF MEMORY", log.INFO)
 		
 		return RETURN_CONTEXT
 		// TODO: falta que memoria vea si puede escribir o no (?)
 	}
-
-	global.Logger.Log("DESPUES DEL RESIZE %s", log.INFO)
 
 	return CONTINUE
 }
