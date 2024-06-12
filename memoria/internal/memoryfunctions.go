@@ -37,29 +37,34 @@ func ReadTxt(Path string) ([]string, error) {
 }
 
 // se le envia un contenido y una direccion para escribir en memoria
-func MemOut(NumFrame int, Offset int, content uint32, Pid int, Largo int) bool {
+func MemOut(NumFrames []int, Offset int, content int, Pid int, Largo int) bool {
 	var Slicebytes []byte
-	MemFrame := NumFrame*global.MemoryConfig.PageSize + Offset
+	accu:=0
+	global.Logger.Log(fmt.Sprintf("largo %d",Largo), log.DEBUG)
+	
+	//MemFrame := NumFrames[0]*global.MemoryConfig.PageSize + Offset
 	if Offset >= global.MemoryConfig.PageSize {
 		global.Logger.Log("memoria inaccesible", log.ERROR)
 		return false
 	}
 	global.Logger.Log("El offset esta bien", log.DEBUG)
 	if Largo == 4 {
-		Slicebytes = EncodeContent(content)
+		Slicebytes = EncodeContent(uint32(content))
+		global.Logger.Log(fmt.Sprintf("largo %+v",Slicebytes), log.DEBUG)
 		for i := 0; i < Largo; i++ {
-
-			MemFrame = NumFrame*global.MemoryConfig.PageSize + Offset + i
-			global.Memory.Spaces[MemFrame] = Slicebytes[i]
-			/*else{
-				newFrame := AddPage(Pid)
-				MemFrame := newFrame*global.MemoryConfig.PageSize + accu
-				global.Memory.Spaces[MemFrame] =Slicebytes[i]
-				accu ++
-			}*/
+			if i+Offset < global.MemoryConfig.PageSize {
+				MemFrame := NumFrames[0]*global.MemoryConfig.PageSize + Offset + i
+				global.Memory.Spaces[MemFrame] = Slicebytes[i]
+				
+			} else {
+				//newFrame := AddPage(Pid)
+				MemFrame := NumFrames[1]*global.MemoryConfig.PageSize + accu
+				global.Memory.Spaces[MemFrame] = Slicebytes[i]
+				accu++
+			}
 		}
 	} else if Largo == 1 {
-		global.Memory.Spaces[MemFrame] = byte(content)
+		global.Memory.Spaces[NumFrames[0]+Offset] = byte(content)
 	}
 	//accu :=0
 
@@ -78,7 +83,7 @@ func DecodeContent(slice []byte) uint32 {
 	return binary.LittleEndian.Uint32(slice)
 }
 
-func MemIn(NumFrame int, NumPage int, Offset int, Pid int, Largo int) uint32 {
+func MemIn(NumFrame []int, Offset int, Pid int, Largo int) int {
 	var Content []byte
 	var ContentByte byte
 
@@ -86,22 +91,22 @@ func MemIn(NumFrame int, NumPage int, Offset int, Pid int, Largo int) uint32 {
 		accu := 0
 		for i := 0; i < 4; i++ {
 			if Offset+i < global.MemoryConfig.PageSize {
-				MemFrame := NumFrame*global.MemoryConfig.PageSize + Offset + i
+				MemFrame := NumFrame[0]*global.MemoryConfig.PageSize + Offset + i
 				ContentByte = global.Memory.Spaces[MemFrame]
 				Content = append(Content, ContentByte)
 			} else {
-				newFrame := global.DictProcess[Pid].PageTable.Pages[NumPage+1]
-				MemFrame := newFrame*global.MemoryConfig.PageSize + accu
+				//newFrame := global.DictProcess[Pid].PageTable.Pages[NumPage+1]
+				MemFrame := NumFrame[1]*global.MemoryConfig.PageSize + accu
 				ContentByte = global.Memory.Spaces[MemFrame]
 				Content = append(Content, ContentByte)
 				accu++
 			}
 		}
-		return DecodeContent(Content)
+		return int(DecodeContent(Content))
 	} else {
-		MemFrame := NumFrame*global.MemoryConfig.PageSize + Offset
+		MemFrame := NumFrame[0]*global.MemoryConfig.PageSize + Offset
 		ContentByte = global.Memory.Spaces[MemFrame]
-		return uint32(ContentByte)
+		return int(ContentByte)
 	}
 
 }
