@@ -22,6 +22,10 @@ func FindProcessInList(pid int) *model.PCB {
 		global.ExitState,
 	}
 
+	for _, resource := range global.ResourceMap{
+		queues = append(queues, resource.BlockedList)
+	}
+
 	for _, queue := range queues {
 		pcb := findProcess(pid, queue)
 		if pcb != nil {
@@ -54,6 +58,10 @@ func GetAllProcess() []ProcessState {
 		global.ExitState,
 	}
 
+	for _, resource := range global.ResourceMap{
+		queues = append(queues, resource.BlockedList)
+	}
+
 	for _, queue := range queues {
 		for e := queue.Front(); e != nil; e = e.Next() {
 			pcb := e.Value.(*model.PCB)
@@ -78,13 +86,19 @@ func RemoveProcessByPID(pid int) bool {
 		global.ExitState,
 	}
 
+	for _, resource := range global.ResourceMap{
+		queues = append(queues, resource.BlockedList)
+	}
+	
+
 	for _, queue := range queues {
 		for e := queue.Front(); e != nil; e = e.Next() {
 			pcb := e.Value.(*model.PCB)
 
 			if pcb.PID == pid {
 				queue.Remove(e)
-				<-global.SemMulti
+				freeResource(pcb)
+				PCBtoExit(pcb)
 				return true
 			}
 		}
@@ -115,7 +129,6 @@ func PCBtoExit(pcb *model.PCB) {
 
 	//LOG CAMBIO DE ESTADO
 	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
-	global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: SUCCESS ", pcb.PID), log.INFO)
 	<-global.SemMulti
 }
 
@@ -207,3 +220,50 @@ func VrrPCBtoEXEC()*model.PCB{
 	return pcb
 }
 
+func freeResource(pcb *model.PCB) {
+	listResourceNamesPIDS := global.PIDResourceMap[pcb.PID]
+
+	if len(listResourceNamesPIDS) == 0 {
+		return
+	}
+	// [RA, RB, RA]
+
+	for _, resourceName := range listResourceNamesPIDS{
+		actualResource := global.ResourceMap[resourceName]
+		actualResource.Count++
+		index := checkResourcePID(listResourceNamesPIDS, resourceName)
+		global.PIDResourceMap[pcb.PID] = removeAtString(global.PIDResourceMap[pcb.PID], index)
+
+		if actualResource.BlockedList.Len() > 0 {
+			actualResource.MutexList.Lock()
+			PCBBlock := actualResource.BlockedList.Front().Value.(*model.PCB)
+			actualResource.BlockedList.Remove(actualResource.BlockedList.Front())
+			PCBBlock.State = "Ready"
+			actualResource.MutexList.Unlock()
+	
+			global.MutexReadyState.Lock()
+			global.ReadyState.PushBack(PCBBlock)
+			global.MutexReadyState.Unlock()
+	
+			global.Logger.Log(fmt.Sprintf("Envio PID %d al fondo de ready", PCBBlock.PID), log.DEBUG)
+			global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: BLOCK - Estado Actual: READY", PCBBlock.PID), log.INFO)
+
+			global.SemReadyList <- struct{}{}
+		}
+		
+		global.Logger.Log(fmt.Sprintf("RECURSO: %+v", actualResource), log.DEBUG)
+	}
+}
+
+func checkResourcePID(resourceName []string, name string) int {
+	for i, value := range resourceName {
+		if value == name {
+			return i
+		}
+	}
+	return -1
+}
+
+func removeAtString(slice []string, index int) []string {
+	return append(slice[:index], slice[index+1:]...)
+}

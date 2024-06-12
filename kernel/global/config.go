@@ -75,6 +75,8 @@ var SemReadyPlus chan struct{}
 // MAPs
 var IoMap map[string]IoDevice
 var ResourceMap map[string]*Resource
+var PIDResourceMap map[int][]string
+
 
 func InitGlobal() {
 	args := os.Args[1:]
@@ -106,6 +108,7 @@ func InitGlobal() {
 	SemNewList = make(chan struct{}, 20)
 	ResourceMap = CreateResourceMap()
 	IoMap = map[string]IoDevice{}
+	PIDResourceMap = map[int][]string{}
 
 	WorkingPlani = false
 }

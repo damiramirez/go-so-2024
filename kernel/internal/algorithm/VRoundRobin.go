@@ -75,6 +75,7 @@ func VirtualRoundRobin() {
 				DisplaceChan <-updatePCB
 				// global.Logger.Log(fmt.Sprintf("EXIT - Despues de Interrupt. Semaforo: %d", len(interruptTimer)), log.DEBUG)
 				utils.PCBtoExit(updatePCB)
+				global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: SUCCESS ", pcb.PID), log.INFO)
 			}
 			if updatePCB.DisplaceReason == "BLOCKED" {
 				interruptTimer <- 0

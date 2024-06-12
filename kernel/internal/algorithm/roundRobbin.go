@@ -59,6 +59,7 @@ func RoundRobbin() {
 				InterruptTimer <- 0
 				//DisplaceChan <-updatePCB
 				utils.PCBtoExit(updatePCB)
+				global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: SUCCESS ", pcb.PID), log.INFO)
 			}
 			if updatePCB.DisplaceReason == "BLOCKED" {
 				InterruptTimer <- 0

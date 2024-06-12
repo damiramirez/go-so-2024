@@ -12,6 +12,8 @@ procesos=(
     "$SCRIPT_DIR/proceso2.txt"
     "$SCRIPT_DIR/proceso3.txt"
     "$SCRIPT_DIR/proceso4.txt"
+    # "$SCRIPT_DIR/proceso5.txt"
+    # "$SCRIPT_DIR/proceso6.txt"
 )
 
 # Crear cada proceso usando la API

@@ -49,6 +49,7 @@ func Fifo() {
 			// EXIT - Agregar a exit
 			if updatePCB.DisplaceReason == "EXIT" {
 				utils.PCBtoExit(updatePCB)
+				global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: SUCCESS ", pcb.PID), log.INFO)
 			}
 
 			// Agregar a block
