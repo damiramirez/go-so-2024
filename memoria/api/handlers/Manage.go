@@ -42,8 +42,8 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 		// buscar al proceso y ampliar el proceso si la memoria esta llena devolver out of memory
 		global.Logger.Log(fmt.Sprintf("page table %d %+v", Process.Pid, global.DictProcess[Process.Pid].PageTable), log.DEBUG)
 		global.Logger.Log(fmt.Sprintf("Bit Map  %+v", global.BitMap), log.DEBUG)
-
 		w.WriteHeader(http.StatusNoContent)
+		return
 		//Reduzco tamaño
 	} else if len(global.DictProcess[Process.Pid].PageTable.Pages) > Process.Frames && Process.Frames != 0 {
 		difTam := len(global.DictProcess[Process.Pid].PageTable.Pages) - Process.Frames

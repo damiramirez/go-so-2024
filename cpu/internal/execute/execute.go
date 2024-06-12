@@ -9,7 +9,6 @@ import (
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 	"github.com/sisoputnfrba/tp-golang/utils/model"
 	"github.com/sisoputnfrba/tp-golang/utils/requests"
-
 )
 
 // TODO: IO_GEN_SLEEP
@@ -22,14 +21,13 @@ const (
 
 type Estructura_resize struct {
 	Pid  int `json:"pid"`
-	NumFrames int `json:"size"`
+	NumFrames int `json:"frames"`
 }
 
 type Response struct {
 	Respuesta string `json:"respuesta"`
 }
 
-var estructura_resize Estructura_resize
 var result = 0
 
 // Ejecuto -> sumo PC en dispatch?
@@ -65,7 +63,7 @@ func Execute(pcb *model.PCB, instruction *model.Instruction) int {
 		mov_out(pcb, instruction)
 		result = CONTINUE
 	case "RESIZE":
-		resize(pcb, instruction)
+		result = resize(pcb, instruction)
 	}
 
 	global.Logger.Log(
@@ -176,13 +174,19 @@ func mov_in(pcb *model.PCB, instruction *model.Instruction) {
 }
 
 func mov_out(pcb *model.PCB, instruction *model.Instruction) {
-	dataValue := instruction.Parameters[1]
+	// Dato a escribir
+	dataRegister := instruction.Parameters[1]
+	dataValue := getRegister(dataRegister,pcb)
+	global.Logger.Log(fmt.Sprintf("Registro %s - Valor: %d", dataRegister, dataValue), log.DEBUG)
+	// Direccion donde quiero escribir
 	LogAdress:=getRegister(instruction.Parameters[0],pcb)
-	SendStruct:=internal.CreateAdress(dataValue,LogAdress,pcb.PID,getRegister(dataValue,pcb))
 
+	SendStruct:=internal.CreateAdress(dataRegister, LogAdress, pcb.PID, dataValue)
+
+	global.Logger.Log(fmt.Sprintf("Struct de direccion creada %+v", SendStruct), log.DEBUG)
 	// put a memoria para que guarde
 
-	_, err := requests.PutHTTPwithBody[internal.MemStruct, interface{}](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "mov_out",SendStruct)
+	_, err := requests.PutHTTPwithBody[internal.MemStruct, interface{}](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "memOut",SendStruct)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("NO se pudo enviar a memoria la estructura %s", err.Error()), log.INFO)
 		panic(1)
@@ -191,22 +195,27 @@ func mov_out(pcb *model.PCB, instruction *model.Instruction) {
 	global.Logger.Log(fmt.Sprintf("PID: %d - Acción: ESCRIBIR - Dirección Física: %d %d - Valor: %d",pcb.PID,SendStruct.NumFrames[0],SendStruct.Offset,SendStruct.Content),log.INFO)
 }
 
-func resize(pcb *model.PCB, instruction *model.Instruction) {
+func resize(pcb *model.PCB, instruction *model.Instruction) int{
 	newSize, _ := strconv.Atoi(instruction.Parameters[0])
-	estructura_resize.Pid = pcb.PID
-	estructura_resize.NumFrames = newSize/global.CPUConfig.Page_size
-	// put a memoria para hacer el resize
+	estructura_resize := Estructura_resize{
+		Pid: pcb.PID,
+		NumFrames: newSize / global.CPUConfig.Page_size,
+	}
+	
+	global.Logger.Log(fmt.Sprintf("Struct a resize: %+v", estructura_resize), log.DEBUG)
 
-	_, err := requests.PutHTTPwithBody[Estructura_resize, Response](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "resize", estructura_resize)
+	_, err := requests.PutHTTPwithBody[Estructura_resize, interface{}](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "resize", estructura_resize)
+	// global.Logger.Log(fmt.Sprintf("STATUS CODE DSP RESIZE: %d", resp.StatusCode), log.DEBUG)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("OUT OF MEMORY %s", err.Error()), log.INFO)
-		result = RETURN_CONTEXT
-		return
+		
+		return RETURN_CONTEXT
 		// TODO: falta que memoria vea si puede escribir o no (?)
 	}
 
-	result = CONTINUE
+	global.Logger.Log("DESPUES DEL RESIZE %s", log.INFO)
 
+	return CONTINUE
 }
 
 /*func copyString(pcb *model.PCB, instruction *model.Instruction) {
