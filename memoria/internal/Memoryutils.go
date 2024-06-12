@@ -31,8 +31,16 @@ type Resize struct {
 
 type MemStruct struct {
 	Pid       int   `json:"pid"`
-	Content   int  `json:"content"`
+	Content   int   `json:"content"`
 	Length    int   `json:"length"`
 	NumFrames []int `json:"numframe"`
 	Offset    int   `json:"offset"`
+}
+
+type MemStdIO struct {
+	Pid       int    `json:"pid"`
+	Content   string `json:"content"`
+	Length    int    `json:"length"`
+	NumFrames []int  `json:"numframe"`
+	Offset    int    `json:"offset"`
 }

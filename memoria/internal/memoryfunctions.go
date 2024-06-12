@@ -41,7 +41,7 @@ func MemOut(NumFrames []int, Offset int, content int, Pid int, Largo int) bool {
 	var Slicebytes []byte
 	accu:=0
 	global.Logger.Log(fmt.Sprintf("largo %d",Largo), log.DEBUG)
-	global.Logger.Log(fmt.Sprintf("largo %v+",Largo), log.DEBUG)
+	
 	//MemFrame := NumFrames[0]*global.MemoryConfig.PageSize + Offset
 	if Offset >= global.MemoryConfig.PageSize {
 		global.Logger.Log("memoria inaccesible", log.ERROR)
