@@ -129,13 +129,16 @@ func MemoryAccessOut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if internal.MemOut(MemoryAccess.NumFrames, MemoryAccess.Offset, MemoryAccess.Content, MemoryAccess.Pid, MemoryAccess.Length) {
-
+		
 		global.Logger.Log(fmt.Sprintf("page table %d %+v", MemoryAccess.Pid, global.DictProcess[MemoryAccess.Pid].PageTable), log.DEBUG)
 		global.Logger.Log(fmt.Sprintf("Bit Map  %+v", global.BitMap), log.DEBUG)
-		global.Logger.Log(fmt.Sprintf("Memoria  %+v", global.Memory), log.DEBUG)
+		
+		internal.PrintMemoryTable(global.Memory.Spaces,global.MemoryConfig.PageSize)
+		//global.Logger.Log(fmt.Sprintf(" %s", ), log.DEBUG)
 		w.WriteHeader(http.StatusNoContent)
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
+		
 	}
 
 }

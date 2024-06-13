@@ -10,11 +10,6 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/serialization"
 )
 
-type estructura_read struct {
-	Texto     string
-	Direccion string
-	Tamanio   string
-}
 
 //LEE DE MEMORIA
 func Stdout_write(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +42,7 @@ func Stdout_write(w http.ResponseWriter, r *http.Request) {
 		}
 		global.Logger.Log(fmt.Sprintf("page table %d %+v", MemoryAccessIO.Pid, global.DictProcess[MemoryAccessIO.Pid].PageTable), log.DEBUG)
 		global.Logger.Log(fmt.Sprintf("Bit Map  %+v", global.BitMap), log.DEBUG)
-		global.Logger.Log(fmt.Sprintf("Memoria  %+v", global.Memory), log.DEBUG)
+		//global.Logger.Log(fmt.Sprintf("Memoria  %+v", global.Memory), log.DEBUG)
 
 		str:=string(Content)
 		serialization.EncodeHTTPResponse(w, str, 200)
@@ -85,7 +80,8 @@ func Stdin_read(w http.ResponseWriter, r *http.Request) {
 	str:="lo pude escribir"
 	global.Logger.Log(fmt.Sprintf("page table %d %+v", MemoryAccessIO.Pid, global.DictProcess[MemoryAccessIO.Pid].PageTable), log.DEBUG)
 	global.Logger.Log(fmt.Sprintf("Bit Map  %+v", global.BitMap), log.DEBUG)
-	global.Logger.Log(fmt.Sprintf("Memoria  %+v", global.Memory), log.DEBUG)
+	internal.PrintMemoryTable(global.Memory.Spaces,global.MemoryConfig.PageSize)
+	//global.Logger.Log(fmt.Sprintf("Memoria  %+v", global.Memory), log.DEBUG)
 
 	
 
