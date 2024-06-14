@@ -10,7 +10,7 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/model"
 )
 
-func TimeCalc(startTime time.Time,quantumTime time.Duration,pcb *model.PCB) int{
+func TimeCalc(startTime time.Time, quantumTime time.Duration, pcb *model.PCB) int {
 	elapsedTime := time.Since(startTime)
 	elapsedSeconds := math.Round(elapsedTime.Seconds())
 	elapsedMillisRounded := int64(elapsedSeconds * 1000)
@@ -23,4 +23,3 @@ func TimeCalc(startTime time.Time,quantumTime time.Duration,pcb *model.PCB) int{
 
 	return int(remainingMilis)
 }
-

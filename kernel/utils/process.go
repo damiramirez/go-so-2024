@@ -22,7 +22,7 @@ func FindProcessInList(pid int) *model.PCB {
 		global.ExitState,
 	}
 
-	for _, resource := range global.ResourceMap{
+	for _, resource := range global.ResourceMap {
 		queues = append(queues, resource.BlockedList)
 	}
 
@@ -58,7 +58,7 @@ func GetAllProcess() []ProcessState {
 		global.ExitState,
 	}
 
-	for _, resource := range global.ResourceMap{
+	for _, resource := range global.ResourceMap {
 		queues = append(queues, resource.BlockedList)
 	}
 
@@ -86,10 +86,9 @@ func RemoveProcessByPID(pid int) bool {
 		global.ExitState,
 	}
 
-	for _, resource := range global.ResourceMap{
+	for _, resource := range global.ResourceMap {
 		queues = append(queues, resource.BlockedList)
 	}
-	
 
 	for _, queue := range queues {
 		for e := queue.Front(); e != nil; e = e.Next() {
@@ -178,8 +177,8 @@ func PCBExectoReady(pcb *model.PCB) {
 
 	//LOG FIN DE QUANTUM
 	global.Logger.Log(fmt.Sprintf("PID: %d - Desalojado por fin de Quantum ", pcb.PID), log.INFO)
-	pcb.RemainingQuantum=global.KernelConfig.Quantum
-	
+	pcb.RemainingQuantum = global.KernelConfig.Quantum
+
 	global.MutexReadyState.Lock()
 	global.ReadyState.PushBack(pcb)
 	global.MutexReadyState.Unlock()
@@ -189,8 +188,7 @@ func PCBExectoReady(pcb *model.PCB) {
 	global.SemReadyList <- struct{}{}
 }
 
-
-func PCBExectoReadyVRR(pcb *model.PCB){
+func PCBExectoReadyVRR(pcb *model.PCB) {
 	//se guarda en ready
 	pcb.State = "READY"
 	//LOG CAMBIO DE ESTADO
@@ -211,7 +209,7 @@ func PCBExectoReadyVRR(pcb *model.PCB){
 	global.SemReadyList <- struct{}{}
 }
 
-func VrrPCBtoEXEC()*model.PCB{
+func VrrPCBtoEXEC() *model.PCB {
 	global.MutexReadyPlus.Lock()
 	pcb := global.ReadyPlus.Front().Value.(*model.PCB)
 	global.ReadyPlus.Remove(global.ReadyPlus.Front())
@@ -232,7 +230,7 @@ func freeResource(pcb *model.PCB) {
 	}
 	// [RA, RB, RA]
 
-	for _, resourceName := range listResourceNamesPIDS{
+	for _, resourceName := range listResourceNamesPIDS {
 		actualResource := global.ResourceMap[resourceName]
 		actualResource.Count++
 		index := checkResourcePID(listResourceNamesPIDS, resourceName)
@@ -244,17 +242,17 @@ func freeResource(pcb *model.PCB) {
 			actualResource.BlockedList.Remove(actualResource.BlockedList.Front())
 			PCBBlock.State = "Ready"
 			actualResource.MutexList.Unlock()
-	
+
 			global.MutexReadyState.Lock()
 			global.ReadyState.PushBack(PCBBlock)
 			global.MutexReadyState.Unlock()
-	
+
 			global.Logger.Log(fmt.Sprintf("Envio PID %d al fondo de ready", PCBBlock.PID), log.DEBUG)
 			global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: BLOCK - Estado Actual: READY", PCBBlock.PID), log.INFO)
 
 			global.SemReadyList <- struct{}{}
 		}
-		
+
 		global.Logger.Log(fmt.Sprintf("RECURSO: %+v", actualResource), log.DEBUG)
 	}
 }
@@ -286,6 +284,6 @@ func InterruptCPU(reason string) error {
 		global.Logger.Log(fmt.Sprintf("Error al enviar la interrupción: %+v", err), log.ERROR)
 		return err
 	}
-	
+
 	return nil
 }

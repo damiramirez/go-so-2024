@@ -11,55 +11,54 @@ import (
 
 // handlers "github.com/sisoputnfrba/tp-golang/cpu/api/handlers"
 
-type MemStruct struct{
-	Pid int `json:"pid"`
-	Content any `json:"content"`
-	Length int `json:"length"`
+type MemStruct struct {
+	Pid       int   `json:"pid"`
+	Content   any   `json:"content"`
+	Length    int   `json:"length"`
 	NumFrames []int `json:"numframe"`
-	Offset  int `json:"offset"`
+	Offset    int   `json:"offset"`
 }
 
-type GetFrame struct{
-	Pid int`json:"pid"`
-	Page_Number int	`json:"page_number"`
+type GetFrame struct {
+	Pid         int `json:"pid"`
+	Page_Number int `json:"page_number"`
 }
 
 func AdressConverter(LogAdress int) (int, int) {
-	Page_Size:=global.CPUConfig.Page_size
+	Page_Size := global.CPUConfig.Page_size
 
 	Page_Number := LogAdress / Page_Size
 	offset := LogAdress - (Page_Number * Page_Size)
-	
+
 	return Page_Number, offset
 }
 
-func CreateAdress(size int,LogAdress int,Pid int,Content any)MemStruct{
-	Page_Number,Offset:=AdressConverter(LogAdress)
+func CreateAdress(size int, LogAdress int, Pid int, Content any) MemStruct {
+	Page_Number, Offset := AdressConverter(LogAdress)
 
 	global.Logger.Log(fmt.Sprintf("Numero de pagina %d - Offset: %d", Page_Number, Offset), log.DEBUG)
 
-	
-	Adresses :=MemStruct{Pid: Pid,Content: Content,Length: size,Offset: Offset}
+	Adresses := MemStruct{Pid: Pid, Content: Content, Length: size, Offset: Offset}
 
-	Page:=GetFrame{Pid: Pid,Page_Number: Page_Number}
+	Page := GetFrame{Pid: Pid, Page_Number: Page_Number}
 
-	NumPages:=math.Ceil(float64(Offset+size)/float64(global.CPUConfig.Page_size))
+	NumPages := math.Ceil(float64(Offset+size) / float64(global.CPUConfig.Page_size))
 
 	global.Logger.Log(fmt.Sprintf("Paginas necesarias %d", int(NumPages)), log.DEBUG)
 
 	for i := 0; i < int(NumPages); i++ {
 		global.Logger.Log(fmt.Sprintf("Busco a memoria %+v", Page), log.DEBUG)
-		frame,_:=requests.PutHTTPwithBody[GetFrame,int](global.CPUConfig.IPMemory,global.CPUConfig.PortMemory,"framenumber",Page)
-		global.Logger.Log(fmt.Sprintf("PID: %d - OBTENER MARCO - Página: %d - Marco: %d",Pid,Page.Page_Number,*frame),log.INFO)
-		Page.Page_Number=+1
+		frame, _ := requests.PutHTTPwithBody[GetFrame, int](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "framenumber", Page)
+		global.Logger.Log(fmt.Sprintf("PID: %d - OBTENER MARCO - Página: %d - Marco: %d", Pid, Page.Page_Number, *frame), log.INFO)
+		Page.Page_Number = +1
 		Adresses.NumFrames = append(Adresses.NumFrames, *frame)
 	}
 
 	return Adresses
 }
 
-func GetLength(Register string)int{
-	switch Register{
+func GetLength(Register string) int {
+	switch Register {
 	case "AX", "BX", "CX", "DX":
 		return 1
 	case "EAX", "EBX", "ECX", "EDX", "SI", "SD":
@@ -69,6 +68,5 @@ func GetLength(Register string)int{
 }
 
 func TLBcreator() {
-
 
 }

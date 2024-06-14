@@ -15,7 +15,6 @@ import (
 
 func RoundRobbin() {
 	global.Logger.Log(fmt.Sprintf("Semaforo de SemReadyList INICIO: %d", len(global.SemReadyList)), log.DEBUG)
-	
 
 	for {
 

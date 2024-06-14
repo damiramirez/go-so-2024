@@ -19,9 +19,8 @@ const (
 	RETURN_CONTEXT = 1
 )
 
-
 type Estructura_resize struct {
-	Pid  int `json:"pid"`
+	Pid       int `json:"pid"`
 	NumFrames int `json:"frames"`
 }
 
@@ -34,8 +33,8 @@ type CopyStringStruct struct {
 	Length        int   `json:"length"`
 	NumFramesFrom []int `json:"numframeRead"`
 	OffsetRead    int   `json:"offsetRead"`
-	NumFramesTo []int `json:"numframeCopy"`
-	OffsetTo    int   `json:"offsetCopy"`
+	NumFramesTo   []int `json:"numframeCopy"`
+	OffsetTo      int   `json:"offsetCopy"`
 }
 
 var result = 0
@@ -56,14 +55,6 @@ func Execute(pcb *model.PCB, instruction *model.Instruction) int {
 	case "JNZ":
 		jnz(pcb, instruction)
 		result = CONTINUE
-	case "IO_GEN_SLEEP":
-		result = RETURN_CONTEXT
-	case "IO_STDIN_READ":
-		result = RETURN_CONTEXT
-	case "IO_STDOUT_WRITE":
-		result = RETURN_CONTEXT
-	case "EXIT":
-		result = RETURN_CONTEXT
 	case "WAIT":
 		result = RETURN_CONTEXT
 	case "SIGNAL":
@@ -78,6 +69,14 @@ func Execute(pcb *model.PCB, instruction *model.Instruction) int {
 		result = resize(pcb, instruction)
 	case "COPY_STRING":
 		result = copyString(pcb, instruction)
+	case "IO_GEN_SLEEP":
+		result = RETURN_CONTEXT
+	case "IO_STDIN_READ":
+		result = RETURN_CONTEXT
+	case "IO_STDOUT_WRITE":
+		result = RETURN_CONTEXT
+	case "EXIT":
+		result = RETURN_CONTEXT
 	}
 
 	global.Logger.Log(
@@ -178,11 +177,11 @@ func setRegister(register string, value int, pcb *model.PCB) {
 
 func mov_in(pcb *model.PCB, instruction *model.Instruction) {
 	dataValue := instruction.Parameters[0]
-	LogAdress:=getRegister(instruction.Parameters[1],pcb)
+	LogAdress := getRegister(instruction.Parameters[1], pcb)
 
 	size := internal.GetLength(dataValue)
-	SendStruct:=internal.CreateAdress(size,LogAdress,pcb.PID,getRegister(dataValue,pcb))
-	
+	SendStruct := internal.CreateAdress(size, LogAdress, pcb.PID, getRegister(dataValue, pcb))
+
 	// put a memoria para que devuelva el valor solicitado
 
 	resp, err := requests.PutHTTPwithBody[internal.MemStruct, int](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "memIn", SendStruct)
@@ -193,51 +192,51 @@ func mov_in(pcb *model.PCB, instruction *model.Instruction) {
 	}
 	global.Logger.Log(fmt.Sprintf("Resp %+v", *resp), log.DEBUG)
 	setRegister(dataValue, *resp, pcb)
-	global.Logger.Log(fmt.Sprintf("PID: %d - Acción: LEER - Dirección Física: %d %d - Valor: %d",pcb.PID,SendStruct.NumFrames[0],SendStruct.Offset,*resp),log.INFO)
+	global.Logger.Log(fmt.Sprintf("PID: %d - Acción: LEER - Dirección Física: %d %d - Valor: %d", pcb.PID, SendStruct.NumFrames[0], SendStruct.Offset, *resp), log.INFO)
 }
 
 func mov_out(pcb *model.PCB, instruction *model.Instruction) {
 	// Dato a escribir
 	dataRegister := instruction.Parameters[1]
-	dataValue := getRegister(dataRegister,pcb)
+	dataValue := getRegister(dataRegister, pcb)
 	global.Logger.Log(fmt.Sprintf("Registro %s - Valor: %d", dataRegister, dataValue), log.DEBUG)
 	// Direccion donde quiero escribir
-	LogAdress:=getRegister(instruction.Parameters[0],pcb)
+	LogAdress := getRegister(instruction.Parameters[0], pcb)
 
 	size := internal.GetLength(dataRegister)
-	SendStruct:=internal.CreateAdress(size, LogAdress, pcb.PID, dataValue)
+	SendStruct := internal.CreateAdress(size, LogAdress, pcb.PID, dataValue)
 
 	global.Logger.Log(fmt.Sprintf("Struct de direccion creada %+v", SendStruct), log.DEBUG)
 	// put a memoria para que guarde
 
-	_, err := requests.PutHTTPwithBody[internal.MemStruct, interface{}](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "memOut",SendStruct)
+	_, err := requests.PutHTTPwithBody[internal.MemStruct, interface{}](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "memOut", SendStruct)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("NO se pudo enviar a memoria la estructura %s", err.Error()), log.INFO)
 		panic(1)
 		// TODO: falta que memoria vea si puede escribir o no (?)
 	}
-	global.Logger.Log(fmt.Sprintf("PID: %d - Acción: ESCRIBIR - Dirección Física: %d %d - Valor: %d",pcb.PID,SendStruct.NumFrames[0],SendStruct.Offset,SendStruct.Content),log.INFO)
+	global.Logger.Log(fmt.Sprintf("PID: %d - Acción: ESCRIBIR - Dirección Física: %d %d - Valor: %d", pcb.PID, SendStruct.NumFrames[0], SendStruct.Offset, SendStruct.Content), log.INFO)
 }
 
-func resize(pcb *model.PCB, instruction *model.Instruction) int{
+func resize(pcb *model.PCB, instruction *model.Instruction) int {
 	newSize, _ := strconv.Atoi(instruction.Parameters[0])
 
 	ceilSize := math.Ceil(float64(newSize) / float64(global.CPUConfig.Page_size))
 
-	global.Logger.Log(fmt.Sprintf("Tamanio %f - Valor: %d", (float64(newSize) / float64(global.CPUConfig.Page_size)), int(ceilSize)), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Tamanio %f - Valor: %d", (float64(newSize)/float64(global.CPUConfig.Page_size)), int(ceilSize)), log.DEBUG)
 
 	estructura_resize := Estructura_resize{
-		Pid: pcb.PID,
+		Pid:       pcb.PID,
 		NumFrames: int(ceilSize),
 	}
-	
+
 	global.Logger.Log(fmt.Sprintf("Struct a resize: %+v", estructura_resize), log.DEBUG)
 
 	_, err := requests.PutHTTPwithBody[Estructura_resize, interface{}](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "resize", estructura_resize)
 	// global.Logger.Log(fmt.Sprintf("STATUS CODE DSP RESIZE: %d", resp.StatusCode), log.DEBUG)
 	if err != nil {
 		global.Logger.Log("OUT OF MEMORY", log.INFO)
-		
+
 		return RETURN_CONTEXT
 		// TODO: falta que memoria vea si puede escribir o no (?)
 	}
@@ -259,14 +258,13 @@ func copyString(pcb *model.PCB, instruction *model.Instruction) int {
 	global.Logger.Log(fmt.Sprintf("SI - Frames: %+v - Offset: %d", SIPhysicalAddress.NumFrames, SIPhysicalAddress.Offset), log.DEBUG)
 	global.Logger.Log(fmt.Sprintf("DI - Frames: %+v - Offset: %d", DIPhysicalAddress.NumFrames, DIPhysicalAddress.Offset), log.DEBUG)
 
-
 	copyString := CopyStringStruct{
-		Pid: pcb.PID,
-		Length: size,
+		Pid:           pcb.PID,
+		Length:        size,
 		NumFramesFrom: SIPhysicalAddress.NumFrames,
-		OffsetRead: SIPhysicalAddress.Offset,
-		NumFramesTo: DIPhysicalAddress.NumFrames,
-		OffsetTo: DIPhysicalAddress.Offset,
+		OffsetRead:    SIPhysicalAddress.Offset,
+		NumFramesTo:   DIPhysicalAddress.NumFrames,
+		OffsetTo:      DIPhysicalAddress.Offset,
 	}
 
 	global.Logger.Log(fmt.Sprintf("Struct a memoria: %+v", copyString), log.DEBUG)

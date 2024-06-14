@@ -22,7 +22,6 @@ var DisplaceChan = make(chan *model.PCB)
 
 func VirtualRoundRobin() {
 
-
 	var pcb *model.PCB
 	for {
 		global.Logger.Log("Log antes de SemReadyList", log.DEBUG)
@@ -70,7 +69,7 @@ func VirtualRoundRobin() {
 			// EXIT - Agregar a exit
 			if updatePCB.Instruction.Operation == "EXIT" {
 				interruptTimer <- 0
-				DisplaceChan <-updatePCB
+				DisplaceChan <- updatePCB
 				utils.PCBtoExit(updatePCB)
 				global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: SUCCESS ", pcb.PID), log.INFO)
 			}
@@ -98,11 +97,11 @@ func VirtualRoundRobin() {
 			}
 
 			if updatePCB.DisplaceReason == "WAIT" {
-				
+
 				interruptTimer <- 0
 
 				global.Logger.Log("antes de displace chan", log.DEBUG)
-				DisplaceChan <-updatePCB
+				DisplaceChan <- updatePCB
 				global.Logger.Log("despues de displace chan", log.DEBUG)
 
 				resource.Wait(updatePCB)
@@ -111,7 +110,7 @@ func VirtualRoundRobin() {
 				interruptTimer <- 0
 
 				global.Logger.Log("antes de displace chan", log.DEBUG)
-				DisplaceChan <-updatePCB
+				DisplaceChan <- updatePCB
 				global.Logger.Log("despues de displace chan", log.DEBUG)
 
 				resource.Signal(updatePCB)
@@ -126,7 +125,7 @@ func VirtualRoundRobin() {
 func VRRDisplaceFunction(interruptTimer chan int, OldPcb *model.PCB) {
 
 	<-global.SemInterrupt
-	
+
 	quantumTime := time.Duration(OldPcb.RemainingQuantum) * time.Millisecond
 	timer := time.NewTimer(quantumTime)
 
@@ -144,14 +143,14 @@ func VRRDisplaceFunction(interruptTimer chan int, OldPcb *model.PCB) {
 
 		pcb := <-DisplaceChan
 
-		if pcb.Instruction.Operation=="EXIT" {
+		if pcb.Instruction.Operation == "EXIT" {
 			return
 		}
 		global.Logger.Log(fmt.Sprintf("PCB EN DISPLACE: %+v", pcb), log.DEBUG)
 
 		// Transformar el tiempo a segundos para redondearlo y despues pasarlo a ms
 		// Asi uso los ms en la PCB
-		remainingMillisRounded:=utils.TimeCalc(startTime,quantumTime,pcb)
+		remainingMillisRounded := utils.TimeCalc(startTime, quantumTime, pcb)
 
 		if remainingMillisRounded > 0 {
 			pcb.RemainingQuantum = remainingMillisRounded

@@ -71,12 +71,10 @@ var SemNewList chan struct{}
 var SemStopPlani chan struct{}
 var SemReadyPlus chan struct{}
 
-
 // MAPs
 var IoMap map[string]IoDevice
 var ResourceMap map[string]*Resource
 var PIDResourceMap map[int][]string
-
 
 func InitGlobal() {
 	args := os.Args[1:]
@@ -95,15 +93,13 @@ func InitGlobal() {
 	BlockedState = list.New()
 	ExecuteState = list.New()
 	ExitState = list.New()
-	ReadyPlus=list.New()
-
+	ReadyPlus = list.New()
 
 	SemStopPlani = make(chan struct{})
 	SemMulti = make(chan int, KernelConfig.Multiprogramming)
 	SemExecute = make(chan int, 1)
 	SemInterrupt = make(chan int)
 	SemReadyList = make(chan struct{}, KernelConfig.Multiprogramming)
-	
 
 	// Revisar el size
 	SemNewList = make(chan struct{}, 20)

@@ -13,7 +13,7 @@ func InitShortTermPlani() {
 	case "RR":
 		algorithm.RoundRobbin()
 	case "VRR":
- 		algorithm.VirtualRoundRobin()
+		algorithm.VirtualRoundRobin()
 	}
 
 }

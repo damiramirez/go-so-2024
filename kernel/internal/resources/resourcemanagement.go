@@ -17,7 +17,7 @@ func Wait(Pcb *model.PCB) {
 	global.PIDResourceMap[Pcb.PID] = append(global.PIDResourceMap[Pcb.PID], resource.Name)
 
 	global.Logger.Log(fmt.Sprintf("Recurso: %s - Cantidad instancias: %d", resource.Name, resource.Count), log.DEBUG)
-	
+
 	if resource.Count < 0 {
 		resource.MutexList.Lock()
 		Pcb.State = "BLOCKED"
@@ -28,19 +28,19 @@ func Wait(Pcb *model.PCB) {
 
 		//poner en listar procesos
 		global.Logger.Log(fmt.Sprintf("Bloqueo proceso: %d", Pcb.PID), log.DEBUG)
-	} else if Pcb.DisplaceReason=="QUANTUM" {
-		Pcb.RemainingQuantum=global.KernelConfig.Quantum
+	} else if Pcb.DisplaceReason == "QUANTUM" {
+		Pcb.RemainingQuantum = global.KernelConfig.Quantum
 		global.MutexReadyState.Lock()
 		global.ReadyState.PushBack(Pcb)
 		global.MutexReadyState.Unlock()
 		global.Logger.Log(fmt.Sprintf("Envio PID %d ultimo a ready", Pcb.PID), log.DEBUG)
-	}else {
+	} else {
 		global.MutexReadyState.Lock()
 		global.ReadyState.PushFront(Pcb)
 		global.MutexReadyState.Unlock()
 
 		global.Logger.Log(fmt.Sprintf("Envio PID %d primero a Ready", Pcb.PID), log.DEBUG)
-		
+
 	}
 	global.SemReadyList <- struct{}{}
 }
@@ -73,7 +73,7 @@ func Signal(PcbExec *model.PCB) {
 		// resource.PidList = removeAt(resource.PidList, value)
 		global.PIDResourceMap[PcbExec.PID] = removeAtString(global.PIDResourceMap[PcbExec.PID], value)
 	}
-	if PcbExec.DisplaceReason=="QUANTUM" {
+	if PcbExec.DisplaceReason == "QUANTUM" {
 		// PcbExec.RemainingQuantum=global.KernelConfig.Quantum
 		// global.MutexReadyState.Lock()
 		// global.ReadyState.PushBack(PcbExec)
@@ -82,13 +82,13 @@ func Signal(PcbExec *model.PCB) {
 
 		utils.PCBExectoReady(PcbExec)
 
-	}else {
+	} else {
 		global.MutexReadyState.Lock()
 		global.ReadyState.PushFront(PcbExec)
 		global.MutexReadyState.Unlock()
 
 		global.Logger.Log(fmt.Sprintf("Envio PID %d primero a Ready", PcbExec.PID), log.DEBUG)
-		
+
 		global.SemReadyList <- struct{}{}
 	}
 	// global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: READY", PcbExec.PID), log.INFO)

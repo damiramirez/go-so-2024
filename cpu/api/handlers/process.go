@@ -47,7 +47,6 @@ func Interrupt(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log("Interrumpimos por "+interruptReason.Reason, log.DEBUG)
 
-
 	global.ExecuteMutex.Lock()
 	global.Execute = false
 	global.InterruptReason = interruptReason.Reason

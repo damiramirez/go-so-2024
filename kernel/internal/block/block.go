@@ -56,7 +56,7 @@ func ProcessToIO(pcb *model.PCB) {
 	}
 	if !CheckIfExist(ioStruct.Name) || !CheckIfIsValid(ioStruct.Name, ioStruct.Instruccion) {
 		moveToExit(pcb)
-		return 
+		return
 	}
 	global.IoMap[ioStruct.Name].Sem <- 0
 	_, err := requests.PutHTTPwithBody[IOStruct, interface{}](global.KernelConfig.IPIo, global.IoMap[ioStruct.Name].Port, ioStruct.Instruccion, ioStruct)
@@ -100,7 +100,6 @@ func BlockToReady(pcb *model.PCB) {
 	global.BlockedState.Remove(global.BlockedState.Front())
 	global.MutexBlockState.Unlock()
 
-	
 	pcb.State = "READY"
 
 	if global.KernelConfig.PlanningAlgorithm == "VRR" && pcb.RemainingQuantum > 0 {
@@ -118,8 +117,8 @@ func BlockToReady(pcb *model.PCB) {
 
 	}
 
-	if pcb.DisplaceReason=="QUANTUM" {
-		pcb.RemainingQuantum=global.KernelConfig.Quantum
+	if pcb.DisplaceReason == "QUANTUM" {
+		pcb.RemainingQuantum = global.KernelConfig.Quantum
 	}
 
 }
