@@ -20,9 +20,13 @@ var acceptedInstructions = map[string][]string{
 	"DIALFS": {"IO_FS_CREATE", "IO_FS_DELETE", "IO_FS_TRUNCATE", "IO_FS_WRITE", "IO_FS_READ"},
 }
 
-// MAP de IOs "conectadas"
-// nombre - puerto - tipo
-// implemnetar checktype y chequear para distintas ios
+type IOGen struct {
+	Name        string `json:"nombre"`
+	Instruccion string `json:"instruccion"`
+	Time        int    `json:"tiempo"`
+	Pid         int    `json:"pid"`
+}
+
 func CheckIfExist(name string) bool {
 	_, Ioexist := global.IoMap[name]
 	return Ioexist
@@ -38,28 +42,22 @@ func CheckIfIsValid(name, instruccion string) bool {
 }
 
 func ProcessToIO(pcb *model.PCB) {
-	type IOStruct struct {
-		Name        string `json:"nombre"`
-		Instruccion string `json:"instruccion"`
-		Time        int    `json:"tiempo"`
-		Pid         int    `json:"pid"`
-	}
-
 	time, _ := strconv.Atoi(pcb.Instruction.Parameters[1])
 	global.Logger.Log(fmt.Sprintf("Proceso bloqueado %+v", pcb), log.DEBUG)
 
-	ioStruct := IOStruct{
+	ioStruct := IOGen{
 		Name:        pcb.Instruction.Parameters[0],
 		Instruccion: pcb.Instruction.Operation,
 		Time:        time,
 		Pid:         pcb.PID,
 	}
+
 	if !CheckIfExist(ioStruct.Name) || !CheckIfIsValid(ioStruct.Name, ioStruct.Instruccion) {
 		moveToExit(pcb)
 		return
 	}
 	global.IoMap[ioStruct.Name].Sem <- 0
-	_, err := requests.PutHTTPwithBody[IOStruct, interface{}](global.KernelConfig.IPIo, global.IoMap[ioStruct.Name].Port, ioStruct.Instruccion, ioStruct)
+	_, err := requests.PutHTTPwithBody[IOGen, interface{}](global.KernelConfig.IPIo, global.IoMap[ioStruct.Name].Port, ioStruct.Instruccion, ioStruct)
 	if err != nil {
 		global.Logger.Log("Se desconecto IO:"+err.Error(), log.DEBUG)
 		delete(global.IoMap, ioStruct.Name)
@@ -76,7 +74,6 @@ func ProcessToIO(pcb *model.PCB) {
 	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: BLOCK - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
 	global.Logger.Log(fmt.Sprintf("Cola Ready : %v, Cola Ready+ : %v", arrayReady, arrayPlus), log.INFO)
 	global.SemReadyList <- struct{}{}
-
 }
 
 func moveToExit(pcb *model.PCB) {
@@ -120,5 +117,4 @@ func BlockToReady(pcb *model.PCB) {
 	if pcb.DisplaceReason == "QUANTUM" {
 		pcb.RemainingQuantum = global.KernelConfig.Quantum
 	}
-
 }

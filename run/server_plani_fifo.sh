@@ -31,3 +31,5 @@ done
 sleep 1
 
 terminator -e "cd $target_directory && make entradasalida ENV=$ENV N=SLP1 P=$io_config && exec bash"
+
+./run_plani.sh

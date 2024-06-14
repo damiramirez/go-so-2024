@@ -33,3 +33,5 @@ sleep 1
 
 # Ejecutar el comando adicional en una nueva ventana de terminator
 terminator -e "cd $target_directory && make entradasalida ENV=$ENV N=ESPERA P=$io_config && exec bash"
+
+./run_deadlock.sh

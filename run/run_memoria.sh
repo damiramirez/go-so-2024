@@ -2,6 +2,14 @@
 
 echo "MEMORIA TEST"
 
+if [ -z "$1" ]; then
+    echo "Uso: $0 <dev|prod>"
+    exit 1
+fi
+
+# Asignar el parámetro a la variable ENV
+PROCESS=$1
+
 # Obtener la ruta del directorio donde se encuentra el script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 PROCESOS_DIR="$SCRIPT_DIR/../procesos"
@@ -11,10 +19,7 @@ KERNEL_URL="http://localhost:8001"
 
 # Lista de archivos de procesos, relativos al script
 procesos=(
-    "$PROCESOS_DIR/MEMORIA_1.txt"
-    "$PROCESOS_DIR/MEMORIA_2.txt"
-    "$PROCESOS_DIR/MEMORIA_3.txt"
-    "$PROCESOS_DIR/MEMORIA_4.txt"
+    "$PROCESOS_DIR/MEMORIA_$PROCESS.txt"
 )
 
 # Crear cada proceso usando la API

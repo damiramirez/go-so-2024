@@ -8,6 +8,7 @@ import (
 
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
+	"github.com/sisoputnfrba/tp-golang/utils/model"
 )
 
 const KERNELLOG = "./kernel.log"
@@ -24,19 +25,6 @@ type Config struct {
 	Resources         []string `json:"resources"`
 	ResourceInstances []int    `json:"resource_instances"`
 	Multiprogramming  int      `json:"multiprogramming"`
-}
-type IoDevice struct {
-	Port int    `json:"port"`
-	Name string `json:"name"`
-	Type string `json:"type"`
-	Sem  chan int
-}
-type Resource struct {
-	Name        string
-	Count       int
-	BlockedList *list.List
-	MutexList   sync.Mutex
-	PidList     []int
 }
 
 var KernelConfig *Config
@@ -72,8 +60,8 @@ var SemStopPlani chan struct{}
 var SemReadyPlus chan struct{}
 
 // MAPs
-var IoMap map[string]IoDevice
-var ResourceMap map[string]*Resource
+var IoMap map[string]model.IoDevice
+var ResourceMap map[string]*model.Resource
 var PIDResourceMap map[int][]string
 
 func InitGlobal() {
@@ -104,7 +92,7 @@ func InitGlobal() {
 	// Revisar el size
 	SemNewList = make(chan struct{}, 20)
 	ResourceMap = CreateResourceMap()
-	IoMap = map[string]IoDevice{}
+	IoMap = map[string]model.IoDevice{}
 	PIDResourceMap = map[int][]string{}
 
 	WorkingPlani = false
@@ -116,10 +104,10 @@ func GetNextPID() int {
 	return actualPID
 }
 
-func CreateResourceMap() map[string]*Resource {
-	ResourceMap = map[string]*Resource{}
+func CreateResourceMap() map[string]*model.Resource {
+	ResourceMap = map[string]*model.Resource{}
 	for i := 0; i < len(KernelConfig.Resources); i++ {
-		ResourceMap[KernelConfig.Resources[i]] = &Resource{
+		ResourceMap[KernelConfig.Resources[i]] = &model.Resource{
 			Name:        KernelConfig.Resources[i],
 			Count:       KernelConfig.ResourceInstances[i],
 			PidList:     make([]int, 0),

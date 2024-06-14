@@ -72,6 +72,7 @@ func Execute(pcb *model.PCB, instruction *model.Instruction) int {
 	case "IO_GEN_SLEEP":
 		result = RETURN_CONTEXT
 	case "IO_STDIN_READ":
+		ioStdinRead(pcb, instruction)
 		result = RETURN_CONTEXT
 	case "IO_STDOUT_WRITE":
 		result = RETURN_CONTEXT
@@ -276,4 +277,27 @@ func copyString(pcb *model.PCB, instruction *model.Instruction) int {
 	}
 
 	return CONTINUE
+}
+
+// IO_STDIN_READ Int2 EAX AX
+// 							 Interfaz, Registro Dirección, Registro Tamaño
+func ioStdinRead(pcb *model.PCB, instruction *model.Instruction) {
+
+	interfaceName := instruction.Parameters[0]
+	logicAddress := getRegister(instruction.Parameters[1], pcb)
+	size := getRegister(instruction.Parameters[2], pcb)
+
+	physicalAddress := internal.CreateAdress(size, logicAddress, pcb.PID, "")
+
+	ioSTD := 	model.IOSTD{
+		Pid: pcb.PID,
+		Name: interfaceName,
+		Length: size,
+		NumFrames: physicalAddress.NumFrames,
+		Offset: physicalAddress.Offset,
+	}
+
+	global.Logger.Log(fmt.Sprintf("ioSTD: %+v", ioSTD), log.DEBUG)
+
+	// TODO: Agregar struct a PCB? Hacer 2 requests?
 }

@@ -9,6 +9,11 @@ fi
 # Asignar el parámetro a la variable ENV
 ENV=$1
 
+if [ -z "$2" ]; then
+    echo "Uso: $0 PROCESO/MEMORIA_X"
+    exit 1
+fi
+
 # Ruta de la carpeta a la que quieres cambiar
 target_directory="/home/utnso/tp-2024-1c-sudoers"
 kernel_config="/home/utnso/tp-2024-1c-sudoers/kernel/config/config_memoria_tlb.json"
@@ -32,3 +37,5 @@ done
 sleep 1
 
 terminator -e "cd $target_directory && make entradasalida ENV=$ENV N=SLP1 P=$io_config && exec bash"
+
+./run_memoria.sh $2
