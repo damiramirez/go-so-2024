@@ -97,7 +97,13 @@ func ProcessToIO(pcb *model.PCB) {
 	arrayPlus := longterm.ConvertListToArray(global.ReadyPlus)
 
 	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: BLOCK - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
-	global.Logger.Log(fmt.Sprintf("Cola Ready : %v, Cola Ready+ : %v", arrayReady, arrayPlus), log.INFO)
+
+	if global.KernelConfig.PlanningAlgorithm == "VRR" {
+		global.Logger.Log(fmt.Sprintf("Cola Ready : %v, Cola Ready+ : %v", arrayReady, arrayPlus), log.INFO)
+	} else {
+		global.Logger.Log(fmt.Sprintf("Cola Ready : %v", arrayReady), log.INFO)
+	}
+
 	global.SemReadyList <- struct{}{}
 }
 
@@ -130,13 +136,12 @@ func BlockToReady(pcb *model.PCB) {
 		global.MutexReadyPlus.Unlock()
 
 		global.Logger.Log(fmt.Sprintf("PID: %d - Bloqueado a Ready Plus", pcb.PID), log.DEBUG)
-
+		
 	} else {
 		global.MutexReadyState.Lock()
 		global.ReadyState.PushBack(pcb)
 		global.MutexReadyState.Unlock()
 		global.Logger.Log(fmt.Sprintf("PID: %d - Bloqueado normal", pcb.PID), log.DEBUG)
-
 	}
 
 	if pcb.DisplaceReason == "QUANTUM" {

@@ -71,6 +71,8 @@ func Execute(pcb *model.PCB, instruction *model.Instruction) int {
 		result = copyString(pcb, instruction)
 	case "IO_GEN_SLEEP":
 		result = RETURN_CONTEXT
+		
+	// FUNCION STDIN == STDOUT => Hacer solo una?
 	case "IO_STDIN_READ":
 		ioStdinRead(pcb, instruction)
 		result = RETURN_CONTEXT
@@ -311,21 +313,25 @@ func ioStdinRead(pcb *model.PCB, instruction *model.Instruction) {
 // IO_STDOUT_WRITE (Interfaz, Registro Dirección, Registro Tamaño)
 func ioStdoutWrite(pcb *model.PCB, instruction *model.Instruction) {
 
-	interfaceName := instruction.Parameters[0]
+	// interfaceName := instruction.Parameters[0]
 	logicAddress := getRegister(instruction.Parameters[1], pcb)
 	size := getRegister(instruction.Parameters[2], pcb)
 
 	physicalAddress := internal.CreateAdress(size, logicAddress, pcb.PID, "")
 
-	ioSTD := 	model.IOSTD{
-		Pid: pcb.PID,
-		Name: interfaceName,
-		Length: size,
-		NumFrames: physicalAddress.NumFrames,
-		Offset: physicalAddress.Offset,
-	}
+	instruction.NumFrames = physicalAddress.NumFrames
+	instruction.Offset = physicalAddress.Offset
+	instruction.Size = size
 
-	global.Logger.Log(fmt.Sprintf("ioSTD: %+v", ioSTD), log.DEBUG)
+	// ioSTD := 	model.IOSTD{
+	// 	Pid: pcb.PID,
+	// 	Name: interfaceName,
+	// 	Length: size,
+	// 	NumFrames: physicalAddress.NumFrames,
+	// 	Offset: physicalAddress.Offset,
+	// }
+
+	// global.Logger.Log(fmt.Sprintf("ioSTD: %+v", ioSTD), log.DEBUG)
 
 	// TODO: Agregar struct a PCB? Hacer 2 requests?
 }

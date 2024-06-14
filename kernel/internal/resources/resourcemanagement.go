@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
+	"github.com/sisoputnfrba/tp-golang/kernel/internal/longterm"
 	"github.com/sisoputnfrba/tp-golang/kernel/utils"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 	"github.com/sisoputnfrba/tp-golang/utils/model"
@@ -33,14 +34,20 @@ func Wait(Pcb *model.PCB) {
 		global.MutexReadyState.Lock()
 		global.ReadyState.PushBack(Pcb)
 		global.MutexReadyState.Unlock()
-		global.Logger.Log(fmt.Sprintf("Envio PID %d ultimo a ready", Pcb.PID), log.DEBUG)
+		global.Logger.Log(fmt.Sprintf("Envio PID %d ultimo a Ready", Pcb.PID), log.DEBUG)
+
+		array := longterm.ConvertListToArray(global.ReadyState)
+		global.Logger.Log(fmt.Sprintf("Cola Ready : %v", array), log.INFO)
+	
 	} else {
 		global.MutexReadyState.Lock()
 		global.ReadyState.PushFront(Pcb)
 		global.MutexReadyState.Unlock()
-
 		global.Logger.Log(fmt.Sprintf("Envio PID %d primero a Ready", Pcb.PID), log.DEBUG)
 
+		array := longterm.ConvertListToArray(global.ReadyState)
+		global.Logger.Log(fmt.Sprintf("Cola Ready : %v", array), log.INFO)
+		
 	}
 	global.SemReadyList <- struct{}{}
 }
@@ -63,6 +70,10 @@ func Signal(PcbExec *model.PCB) {
 
 		global.Logger.Log(fmt.Sprintf("Envio PID %d al fondo de ready", PCBBlock.PID), log.DEBUG)
 		global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: BLOCK - Estado Actual: READY", PCBBlock.PID), log.INFO)
+
+		array := longterm.ConvertListToArray(global.ReadyState)
+		global.Logger.Log(fmt.Sprintf("Cola Ready : %v", array), log.INFO)
+
 		global.SemReadyList <- struct{}{}
 	}
 
@@ -88,6 +99,9 @@ func Signal(PcbExec *model.PCB) {
 		global.MutexReadyState.Unlock()
 
 		global.Logger.Log(fmt.Sprintf("Envio PID %d primero a Ready", PcbExec.PID), log.DEBUG)
+
+		array := longterm.ConvertListToArray(global.ReadyState)
+		global.Logger.Log(fmt.Sprintf("Cola Ready : %v", array), log.INFO)
 
 		global.SemReadyList <- struct{}{}
 	}
