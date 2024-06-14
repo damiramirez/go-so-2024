@@ -180,7 +180,8 @@ func mov_in(pcb *model.PCB, instruction *model.Instruction) {
 	dataValue := instruction.Parameters[0]
 	LogAdress:=getRegister(instruction.Parameters[1],pcb)
 
-	SendStruct:=internal.CreateAdress(dataValue,LogAdress,pcb.PID,getRegister(dataValue,pcb))
+	size := internal.GetLength(dataValue)
+	SendStruct:=internal.CreateAdress(size,LogAdress,pcb.PID,getRegister(dataValue,pcb))
 	
 	// put a memoria para que devuelva el valor solicitado
 
@@ -203,7 +204,8 @@ func mov_out(pcb *model.PCB, instruction *model.Instruction) {
 	// Direccion donde quiero escribir
 	LogAdress:=getRegister(instruction.Parameters[0],pcb)
 
-	SendStruct:=internal.CreateAdress(dataRegister, LogAdress, pcb.PID, dataValue)
+	size := internal.GetLength(dataRegister)
+	SendStruct:=internal.CreateAdress(size, LogAdress, pcb.PID, dataValue)
 
 	global.Logger.Log(fmt.Sprintf("Struct de direccion creada %+v", SendStruct), log.DEBUG)
 	// put a memoria para que guarde
@@ -251,8 +253,8 @@ func copyString(pcb *model.PCB, instruction *model.Instruction) int {
 
 	global.Logger.Log(fmt.Sprintf("Tam: %d, From: %d to %d", size, copyFrom, copyTo), log.DEBUG)
 
-	SIPhysicalAddress := internal.CreateAdress("SI", copyFrom, pcb.PID, "")
-	DIPhysicalAddress := internal.CreateAdress("DI", copyTo, pcb.PID, "")
+	SIPhysicalAddress := internal.CreateAdress(size, copyFrom, pcb.PID, "")
+	DIPhysicalAddress := internal.CreateAdress(size, copyTo, pcb.PID, "")
 
 	global.Logger.Log(fmt.Sprintf("SI - Frames: %+v - Offset: %d", SIPhysicalAddress.NumFrames, SIPhysicalAddress.Offset), log.DEBUG)
 	global.Logger.Log(fmt.Sprintf("DI - Frames: %+v - Offset: %d", DIPhysicalAddress.NumFrames, DIPhysicalAddress.Offset), log.DEBUG)

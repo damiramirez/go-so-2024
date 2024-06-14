@@ -33,20 +33,17 @@ func AdressConverter(LogAdress int) (int, int) {
 	return Page_Number, offset
 }
 
-func CreateAdress(Register string,LogAdress int,Pid int,Content any)MemStruct{
+func CreateAdress(size int,LogAdress int,Pid int,Content any)MemStruct{
 	Page_Number,Offset:=AdressConverter(LogAdress)
 
 	global.Logger.Log(fmt.Sprintf("Numero de pagina %d - Offset: %d", Page_Number, Offset), log.DEBUG)
 
-	Length:=getLength(Register)
-
-	global.Logger.Log(fmt.Sprintf("Registro %s - Longitud %d", Register, Length), log.DEBUG)
 	
-	Adresses :=MemStruct{Pid: Pid,Content: Content,Length: Length,Offset: Offset}
+	Adresses :=MemStruct{Pid: Pid,Content: Content,Length: size,Offset: Offset}
 
 	Page:=GetFrame{Pid: Pid,Page_Number: Page_Number}
 
-	NumPages:=math.Ceil(float64(Offset+Length)/float64(global.CPUConfig.Page_size))
+	NumPages:=math.Ceil(float64(Offset+size)/float64(global.CPUConfig.Page_size))
 
 	global.Logger.Log(fmt.Sprintf("Paginas necesarias %d", int(NumPages)), log.DEBUG)
 
@@ -59,14 +56,14 @@ func CreateAdress(Register string,LogAdress int,Pid int,Content any)MemStruct{
 	}
 
 	return Adresses
-	//Adresses.Adress[0].Length=(Offset+Lenght)-global.CPUConfig.Page_size
 }
-func getLength(Register string)int{
+
+func GetLength(Register string)int{
 	switch Register{
 	case "AX", "BX", "CX", "DX":
 		return 1
 	case "EAX", "EBX", "ECX", "EDX", "SI", "SD":
-		return 4	
+		return 4
 	}
 	return -1
 }
