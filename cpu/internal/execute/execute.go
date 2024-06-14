@@ -29,6 +29,15 @@ type Response struct {
 	Respuesta string `json:"respuesta"`
 }
 
+type CopyStringStruct struct {
+	Pid           int   `json:"pid"`
+	Length        int   `json:"length"`
+	NumFramesFrom []int `json:"numframeRead"`
+	OffsetRead    int   `json:"offsetRead"`
+	NumFramesTo []int `json:"numframeCopy"`
+	OffsetTo    int   `json:"offsetCopy"`
+}
+
 var result = 0
 
 // Ejecuto -> sumo PC en dispatch?
@@ -51,6 +60,8 @@ func Execute(pcb *model.PCB, instruction *model.Instruction) int {
 		result = RETURN_CONTEXT
 	case "IO_STDIN_READ":
 		result = RETURN_CONTEXT
+	case "IO_STDOUT_WRITE":
+		result = RETURN_CONTEXT
 	case "EXIT":
 		result = RETURN_CONTEXT
 	case "WAIT":
@@ -65,6 +76,8 @@ func Execute(pcb *model.PCB, instruction *model.Instruction) int {
 		result = CONTINUE
 	case "RESIZE":
 		result = resize(pcb, instruction)
+	case "COPY_STRING":
+		result = copyString(pcb, instruction)
 	}
 
 	global.Logger.Log(
@@ -127,6 +140,10 @@ func getRegister(register string, pcb *model.PCB) int {
 		return pcb.Registers.ECX
 	case "EDX":
 		return pcb.Registers.EDX
+	case "SI":
+		return pcb.Registers.SI
+	case "DI":
+		return pcb.Registers.DI
 	default:
 		return -1
 	}
@@ -150,6 +167,10 @@ func setRegister(register string, value int, pcb *model.PCB) {
 		pcb.Registers.ECX = value
 	case "EDX":
 		pcb.Registers.EDX = value
+	case "SI":
+		pcb.Registers.SI = value
+	case "DI":
+		pcb.Registers.DI = value
 	case "PC":
 		pcb.PC = value
 	}
@@ -222,12 +243,37 @@ func resize(pcb *model.PCB, instruction *model.Instruction) int{
 	return CONTINUE
 }
 
-/*func copyString(pcb *model.PCB, instruction *model.Instruction) {
+func copyString(pcb *model.PCB, instruction *model.Instruction) int {
 
-	tamanio, _ := strconv.Atoi(instruction.Parameters[0])
+	size, _ := strconv.Atoi(instruction.Parameters[0])
+	copyFrom := getRegister("SI", pcb)
+	copyTo := getRegister("DI", pcb)
 
-	// put a memoria para obtener tamanio bytes de lo que hay en el string apuntado por SI
+	global.Logger.Log(fmt.Sprintf("Tam: %d, From: %d to %d", size, copyFrom, copyTo), log.DEBUG)
 
-	// put a memoria para guardar en DI lo que obtuve en el primer put
+	SIPhysicalAddress := internal.CreateAdress("SI", copyFrom, pcb.PID, "")
+	DIPhysicalAddress := internal.CreateAdress("DI", copyTo, pcb.PID, "")
 
-}*/
+	global.Logger.Log(fmt.Sprintf("SI - Frames: %+v - Offset: %d", SIPhysicalAddress.NumFrames, SIPhysicalAddress.Offset), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("DI - Frames: %+v - Offset: %d", DIPhysicalAddress.NumFrames, DIPhysicalAddress.Offset), log.DEBUG)
+
+
+	copyString := CopyStringStruct{
+		Pid: pcb.PID,
+		Length: size,
+		NumFramesFrom: SIPhysicalAddress.NumFrames,
+		OffsetRead: SIPhysicalAddress.Offset,
+		NumFramesTo: DIPhysicalAddress.NumFrames,
+		OffsetTo: DIPhysicalAddress.Offset,
+	}
+
+	global.Logger.Log(fmt.Sprintf("Struct a memoria: %+v", copyString), log.DEBUG)
+
+	_, err := requests.PutHTTPwithBody[CopyStringStruct, any](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "copy_string", copyString)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al enviar la estructura copyString a memoria: %s", err.Error()), log.INFO)
+		return RETURN_CONTEXT
+	}
+
+	return CONTINUE
+}

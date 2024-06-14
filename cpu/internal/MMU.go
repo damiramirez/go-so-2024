@@ -65,7 +65,7 @@ func getLength(Register string)int{
 	switch Register{
 	case "AX", "BX", "CX", "DX":
 		return 1
-	case "EAX", "EBX", "ECX", "EDX":
+	case "EAX", "EBX", "ECX", "EDX", "SI", "SD":
 		return 4	
 	}
 	return -1
