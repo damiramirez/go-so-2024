@@ -175,14 +175,14 @@ func AddPage(Pid int) int {
 	}
 	return -1
 }
-
+/*
 func IsWritten(Pid int, Offset int) bool {
 	if len(global.DictProcess[Pid].PageTable.Pages) == 0 || Offset > global.MemoryConfig.PageSize {
 		return false
 	} else {
 		return true
 	}
-}
+}*/
 
 /*func stringsToBytes(strings []string) []byte {
     var bytesSlice []byte

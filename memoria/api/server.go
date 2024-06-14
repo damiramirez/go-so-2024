@@ -20,8 +20,9 @@ func CreateServer() *server.Server {
 			"PUT /framenumber":      handlers.PageTableAccess,
 			"PUT /memIn":            handlers.MemoryAccessIn,  //LEE en memoria
 			"PUT /memOut":           handlers.MemoryAccessOut, //ESCRIBE en memoria
-			"PUT /stdin_read":       handlers.Stdin_read, //ESCRIBE en memoria
-			"PUT /stdout_write":     handlers.Stdout_write,//LEE en memoria
+			"PUT /stdin_read":       handlers.Stdin_read,      //ESCRIBE en memoria
+			"PUT /stdout_write":     handlers.Stdout_write,    //LEE en memoria
+			"PUT /copy_string":      handlers.Copy_string,		//LEE Y PEGA EN LA DIRECCION INDICADA
 		},
 	}
 	return server.NewServer(configServer)

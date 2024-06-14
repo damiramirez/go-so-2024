@@ -142,3 +142,82 @@ func MemoryAccessOut(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+
+func Copy_string(w http.ResponseWriter, r *http.Request){
+	var MemoryCopy internal.MemCopyString
+	err := serialization.DecodeHTTPBody(r, &MemoryCopy)
+	if err != nil {
+		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
+		http.Error(w, "Error al decodear", http.StatusBadRequest)
+	}
+	global.Logger.Log(fmt.Sprintf("Me llegó este mensaje : %+v", MemoryCopy), log.DEBUG)
+
+
+	//LEE
+	var Content []byte
+	var ContentByte byte
+
+		j:=1
+		accu := 0
+		for i := 0; i < MemoryCopy.Length; i++ {
+			if MemoryCopy.OffsetRead+i < global.MemoryConfig.PageSize {
+				MemFrame := MemoryCopy.NumFramesRead[0]*global.MemoryConfig.PageSize + MemoryCopy.OffsetRead + i
+				ContentByte = global.Memory.Spaces[MemFrame]
+				Content = append(Content, ContentByte)
+			} else {
+				if accu>=global.MemoryConfig.PageSize {
+					accu=0
+					j++
+				}
+				//newFrame := global.DictProcess[Pid].PageTable.Pages[NumPage+1]
+				MemFrame := MemoryCopy.NumFramesRead[j]*global.MemoryConfig.PageSize + accu
+				ContentByte = global.Memory.Spaces[MemFrame]
+				Content = append(Content, ContentByte)
+				accu++
+			}
+		}
+		global.Logger.Log(fmt.Sprintf("page table %d %+v", MemoryCopy.Pid, global.DictProcess[MemoryCopy.Pid].PageTable), log.DEBUG)
+		global.Logger.Log(fmt.Sprintf("Bit Map  %+v", global.BitMap), log.DEBUG)
+		//global.Logger.Log(fmt.Sprintf("Memoria  %+v", global.Memory), log.DEBUG)
+
+		str:=string(Content)
+		global.Logger.Log(fmt.Sprintf("Se leyó el string %s y se procedera a copiar en la direccion indicada", str), log.DEBUG)
+
+		//ESCRIBIR
+		
+		global.Logger.Log(fmt.Sprintf("largo de lo que quiero copiar %d",len(Content)), log.DEBUG)
+	accu1:=0
+	//cantDeFrames:=len(MemoryAccessIO.NumFrames)
+	largoCopiar:=len(Content)
+	k:=1
+		for s := 0; s < largoCopiar; s++ {
+			
+			if s+MemoryCopy.OffsetCopy < global.MemoryConfig.PageSize {
+				MemFrame1 := MemoryCopy.NumFramesCopy[0]*global.MemoryConfig.PageSize + MemoryCopy.OffsetCopy + s
+				global.Memory.Spaces[MemFrame1] = Content[s]
+				
+			} else {
+				if accu1>=global.MemoryConfig.PageSize {
+					accu1=0
+					k++
+				}
+				//newFrame := AddPage(Pid)
+				MemFrame1 := MemoryCopy.NumFramesCopy[k]*global.MemoryConfig.PageSize + accu1
+				global.Memory.Spaces[MemFrame1] = Content[s]
+				accu1++
+			}
+		}
+
+		internal.PrintMemoryTable(global.Memory.Spaces,global.MemoryConfig.PageSize)
+
+		str2:="lo pude copiar"
+
+	serialization.EncodeHTTPResponse(w, str2, 200)
+	if err != nil {
+		http.Error(w, "Error encodeando respuesta", http.StatusInternalServerError)
+		return
+	}
+
+
+}

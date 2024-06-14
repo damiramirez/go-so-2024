@@ -25,7 +25,7 @@ func Stdout_write(w http.ResponseWriter, r *http.Request) {
 	var Content []byte
 	var ContentByte byte
 
-	
+		j:=1
 		accu := 0
 		for i := 0; i < MemoryAccessIO.Length; i++ {
 			if MemoryAccessIO.Offset+i < global.MemoryConfig.PageSize {
@@ -33,8 +33,12 @@ func Stdout_write(w http.ResponseWriter, r *http.Request) {
 				ContentByte = global.Memory.Spaces[MemFrame]
 				Content = append(Content, ContentByte)
 			} else {
+				if accu>=global.MemoryConfig.PageSize {
+					accu=0
+					j++
+				}
 				//newFrame := global.DictProcess[Pid].PageTable.Pages[NumPage+1]
-				MemFrame := MemoryAccessIO.NumFrames[1]*global.MemoryConfig.PageSize + accu
+				MemFrame := MemoryAccessIO.NumFrames[j]*global.MemoryConfig.PageSize + accu
 				ContentByte = global.Memory.Spaces[MemFrame]
 				Content = append(Content, ContentByte)
 				accu++
@@ -63,15 +67,21 @@ func Stdin_read(w http.ResponseWriter, r *http.Request) {
 	byteArray := []byte(MemoryAccessIO.Content)
 	global.Logger.Log(fmt.Sprintf("largo %+v",len(byteArray)), log.DEBUG)
 	accu:=0
-	
+	//cantDeFrames:=len(MemoryAccessIO.NumFrames)
+	j:=1
 		for i := 0; i < MemoryAccessIO.Length; i++ {
+			
 			if i+MemoryAccessIO.Offset < global.MemoryConfig.PageSize {
 				MemFrame := MemoryAccessIO.NumFrames[0]*global.MemoryConfig.PageSize + MemoryAccessIO.Offset + i
 				global.Memory.Spaces[MemFrame] = byteArray[i]
 				
 			} else {
+				if accu>=global.MemoryConfig.PageSize {
+					accu=0
+					j++
+				}
 				//newFrame := AddPage(Pid)
-				MemFrame := MemoryAccessIO.NumFrames[1]*global.MemoryConfig.PageSize + accu
+				MemFrame := MemoryAccessIO.NumFrames[j]*global.MemoryConfig.PageSize + accu
 				global.Memory.Spaces[MemFrame] = byteArray[i]
 				accu++
 			}
