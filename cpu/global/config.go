@@ -5,6 +5,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/sisoputnfrba/tp-golang/cpu/internal/tlb"
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 )
@@ -26,6 +27,7 @@ var CPUConfig *Config
 var Execute bool
 var InterruptReason string
 var Logger *log.LoggerStruct
+var Tlb *tlb.TLB
 
 // mutex
 var ExecuteMutex sync.Mutex
@@ -41,4 +43,5 @@ func InitGlobal() {
 
 	Logger = log.ConfigureLogger(CPULOG, env)
 	CPUConfig = config.LoadConfiguration[Config](configFile)
+	Tlb = tlb.NewTLB(CPUConfig.NumberFellingTLB,CPUConfig.AlgorithmTLB)
 }

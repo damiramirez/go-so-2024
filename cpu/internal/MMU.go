@@ -19,43 +19,65 @@ type MemStruct struct {
 	Offset    int   `json:"offset"`
 }
 
-type GetFrame struct {
+type Frame struct {
 	Pid         int `json:"pid"`
-	Page_Number int `json:"page_number"`
+	PageNumber int `json:"page_number"`
 }
 
-func AdressConverter(LogAdress int) (int, int) {
-	Page_Size := global.CPUConfig.Page_size
+func translateAddress(logicalAddress int) (int, int) {
+	pageSize := global.CPUConfig.Page_size
 
-	Page_Number := LogAdress / Page_Size
-	offset := LogAdress - (Page_Number * Page_Size)
+	pageNumber := logicalAddress / pageSize
+	offset := logicalAddress - (pageNumber * pageSize)
 
-	return Page_Number, offset
+	return pageNumber, offset
 }
 
-func CreateAdress(size int, LogAdress int, Pid int, Content any) MemStruct {
-	Page_Number, Offset := AdressConverter(LogAdress)
+func CreateAdress(size int, logicalAddress int, pid int, Content any) MemStruct {
+	pageNumber, offset := translateAddress(logicalAddress)
 
-	global.Logger.Log(fmt.Sprintf("Numero de pagina %d - Offset: %d", Page_Number, Offset), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Numero de pagina %d - Offset: %d", pageNumber, offset), log.DEBUG)
 
-	Adresses := MemStruct{Pid: Pid, Content: Content, Length: size, Offset: Offset}
+	address := MemStruct{Pid: pid, Content: Content, Length: size, Offset: offset}
 
-	Page := GetFrame{Pid: Pid, Page_Number: Page_Number}
+	frame, hit := global.Tlb.Search(pid, pageNumber)
+	if hit {
+			global.Logger.Log(fmt.Sprintf("TLB HIT: PID %d, Página %d -> Marco %d", pid, pageNumber, frame), log.INFO)
+	} else {
+			global.Logger.Log(fmt.Sprintf("TLB Miss: PID %d, Página %d", pid, pageNumber), log.INFO)
+			frame = consultMemory(pid, pageNumber)
+			global.Tlb.AddEntry(pid, pageNumber, frame)
+	}
+	address.NumFrames = append(address.NumFrames, frame)
 
-	NumPages := math.Ceil(float64(Offset+size) / float64(global.CPUConfig.Page_size))
+	numPages := math.Ceil(float64(offset + size) / float64(global.CPUConfig.Page_size))
+	global.Logger.Log(fmt.Sprintf("Paginas necesarias %d", int(numPages)), log.DEBUG)
 
-	global.Logger.Log(fmt.Sprintf("Paginas necesarias %d", int(NumPages)), log.DEBUG)
-
-	for i := 0; i < int(NumPages); i++ {
-		global.Logger.Log(fmt.Sprintf("Busco a memoria %+v", Page), log.DEBUG)
-		frame, _ := requests.PutHTTPwithBody[GetFrame, int](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "framenumber", Page)
-		global.Logger.Log(fmt.Sprintf("PID: %d - OBTENER MARCO - Página: %d - Marco: %d", Pid, Page.Page_Number, *frame), log.INFO)
-		Page.Page_Number = +1
-		Adresses.NumFrames = append(Adresses.NumFrames, *frame)
+	for i := 1; i < int(numPages); i++ {
+			pageNumber++
+			frame, hit = global.Tlb.Search(pid, pageNumber)
+			if hit {
+					global.Logger.Log(fmt.Sprintf("TLB Hit: PID %d, Página %d -> Marco %d", pid, pageNumber, frame), log.INFO)
+			} else {
+					global.Logger.Log(fmt.Sprintf("TLB Miss: PID %d, Página %d", pid, pageNumber), log.INFO)
+					frame = consultMemory(pid, pageNumber)
+					global.Tlb.AddEntry(pid, pageNumber, frame)
+			}
+			address.NumFrames = append(address.NumFrames, frame)
 	}
 
-	return Adresses
+	global.Logger.Log(fmt.Sprintf("TLB DSP DEL TRANSLATE: %+v", global.Tlb), log.DEBUG)
+
+	return address
 }
+
+func consultMemory(pid, pageNumber int) int {
+	Page := Frame{Pid: pid, PageNumber: pageNumber}
+	frame, _ := requests.PutHTTPwithBody[Frame, int](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "framenumber", Page)
+	global.Logger.Log(fmt.Sprintf("PID: %d - OBTENER MARCO - Página: %d - Marco: %d", pid, pageNumber, *frame), log.INFO)
+	return *frame
+}
+
 
 func GetLength(Register string) int {
 	switch Register {
@@ -65,8 +87,4 @@ func GetLength(Register string) int {
 		return 4
 	}
 	return -1
-}
-
-func TLBcreator() {
-
 }

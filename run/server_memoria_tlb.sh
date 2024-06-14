@@ -14,10 +14,15 @@ if [ -z "$2" ]; then
     exit 1
 fi
 
+if [ -z "$3" ]; then
+    echo "Uso: $0 <fifo|lru>"
+    exit 1
+fi
+
 # Ruta de la carpeta a la que quieres cambiar
 target_directory="/home/utnso/tp-2024-1c-sudoers"
 kernel_config="/home/utnso/tp-2024-1c-sudoers/kernel/config/config_memoria_tlb.json"
-cpu_config="/home/utnso/tp-2024-1c-sudoers/cpu/config/config_memoria_tlb.json"
+cpu_config="/home/utnso/tp-2024-1c-sudoers/cpu/config/config_memoria_tlb_$3.json"
 memory_config="/home/utnso/tp-2024-1c-sudoers/memoria/config/config_memoria_tlb.json"
 io_config="/home/utnso/tp-2024-1c-sudoers/entradasalida/config/config_memoria_tlb.json"
 
