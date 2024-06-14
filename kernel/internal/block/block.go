@@ -20,11 +20,41 @@ var acceptedInstructions = map[string][]string{
 	"DIALFS": {"IO_FS_CREATE", "IO_FS_DELETE", "IO_FS_TRUNCATE", "IO_FS_WRITE", "IO_FS_READ"},
 }
 
+type IO interface {
+	GetName() string
+	GetInstruction() string
+}
+
 type IOGen struct {
 	Name        string `json:"nombre"`
-	Instruccion string `json:"instruccion"`
+	Instruction string `json:"instruccion"`
 	Time        int    `json:"tiempo"`
 	Pid         int    `json:"pid"`
+}
+
+func (io IOGen) GetName() string {
+	return io.Name
+}
+
+func (io IOGen) GetInstruction() string {
+	return io.Instruction
+}
+
+type IOStd struct {
+	Pid       int    `json:"pid"`
+	Instruction string `json:"instruccion"`
+	Name      string `json:"name"`
+	Length    int    `json:"length"`
+	NumFrames []int  `json:"numframe"`
+	Offset    int    `json:"offset"`
+}
+
+func (io IOStd) GetName() string {
+	return io.Name
+}
+
+func (io IOStd) GetInstruction() string {
+	return io.Instruction
 }
 
 func CheckIfExist(name string) bool {
@@ -42,29 +72,24 @@ func CheckIfIsValid(name, instruccion string) bool {
 }
 
 func ProcessToIO(pcb *model.PCB) {
-	time, _ := strconv.Atoi(pcb.Instruction.Parameters[1])
+	// time, _ := strconv.Atoi(pcb.Instruction.Parameters[1])
 	global.Logger.Log(fmt.Sprintf("Proceso bloqueado %+v", pcb), log.DEBUG)
 
-	ioStruct := IOGen{
-		Name:        pcb.Instruction.Parameters[0],
-		Instruccion: pcb.Instruction.Operation,
-		Time:        time,
-		Pid:         pcb.PID,
-	}
+	io := factoryIO(pcb)
 
-	if !CheckIfExist(ioStruct.Name) || !CheckIfIsValid(ioStruct.Name, ioStruct.Instruccion) {
+	if !CheckIfExist(io.GetName()) || !CheckIfIsValid(io.GetName(), io.GetInstruction()) {
 		moveToExit(pcb)
 		return
 	}
-	global.IoMap[ioStruct.Name].Sem <- 0
-	_, err := requests.PutHTTPwithBody[IOGen, interface{}](global.KernelConfig.IPIo, global.IoMap[ioStruct.Name].Port, ioStruct.Instruccion, ioStruct)
+	global.IoMap[io.GetName()].Sem <- 0
+	_, err := requests.PutHTTPwithBody[IO, interface{}](global.KernelConfig.IPIo, global.IoMap[io.GetName()].Port, io.GetInstruction(), io)
 	if err != nil {
 		global.Logger.Log("Se desconecto IO:"+err.Error(), log.DEBUG)
-		delete(global.IoMap, ioStruct.Name)
+		delete(global.IoMap, io.GetName())
 		moveToExit(pcb)
 		return
 	}
-	<-global.IoMap[ioStruct.Name].Sem
+	<-global.IoMap[io.GetName()].Sem
 
 	BlockToReady(pcb)
 
@@ -117,4 +142,28 @@ func BlockToReady(pcb *model.PCB) {
 	if pcb.DisplaceReason == "QUANTUM" {
 		pcb.RemainingQuantum = global.KernelConfig.Quantum
 	}
+}
+
+func factoryIO(pcb *model.PCB) IO {
+	switch pcb.Instruction.Operation {
+	case "IO_GEN_SLEEP":
+		time, _ := strconv.Atoi(pcb.Instruction.Parameters[1])
+		return IOGen{
+			Name:        pcb.Instruction.Parameters[0],
+			Instruction: pcb.Instruction.Operation,
+			Time:        time,
+			Pid:         pcb.PID,
+		}
+
+	case "IO_STDIN_READ", "IO_STDOUT_WRITE":
+		return IOStd{
+			Name: pcb.Instruction.Parameters[0],
+			Pid: pcb.PID,
+			Length: pcb.Instruction.Size,
+			NumFrames: pcb.Instruction.NumFrames,
+			Offset:pcb.Instruction.Offset,
+		}
+	}
+
+	return nil
 }

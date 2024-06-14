@@ -9,6 +9,8 @@ fi
 # Asignar el parámetro a la variable ENV
 ENV=$1
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+
 # Ruta de la carpeta a la que quieres cambiar
 target_directory="/home/utnso/tp-2024-1c-sudoers"
 kernel_config="/home/utnso/tp-2024-1c-sudoers/kernel/config/config_plani_rr.json"
