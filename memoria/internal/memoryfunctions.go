@@ -175,14 +175,14 @@ func AddPage(Pid int) int {
 	}
 	return -1
 }
-
+/*
 func IsWritten(Pid int, Offset int) bool {
 	if len(global.DictProcess[Pid].PageTable.Pages) == 0 || Offset > global.MemoryConfig.PageSize {
 		return false
 	} else {
 		return true
 	}
-}
+}*/
 
 /*func stringsToBytes(strings []string) []byte {
     var bytesSlice []byte
@@ -192,3 +192,35 @@ func IsWritten(Pid int, Offset int) bool {
     }
     return bytesSlice
 }*/
+
+func PrintMemoryTable(memory []byte, cols int) {
+    // Imprimir encabezados de columna
+    fmt.Print("Addr\t")
+    for i := 0; i < cols; i++ {
+        fmt.Printf("%02X ", i)
+    }
+    fmt.Println()
+
+    // Imprimir separador de encabezado
+    fmt.Print("----\t")
+    for i := 0; i < cols; i++ {
+        fmt.Print("---")
+    }
+    fmt.Println()
+
+    // Imprimir contenido de la memoria
+    for i := 0; i < len(memory); i += cols {
+        // Imprimir dirección (índice de fila)
+        fmt.Printf("%04X\t", i)
+
+        // Imprimir los bytes en la fila
+        for j := 0; j < cols; j++ {
+            if i+j < len(memory) {
+                fmt.Printf("%02X ", memory[i+j])
+            } else {
+                fmt.Print("   ")
+            }
+        }
+        fmt.Println()
+    }
+}

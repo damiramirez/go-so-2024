@@ -37,6 +37,15 @@ type MemStruct struct {
 	Offset    int   `json:"offset"`
 }
 
+type MemCopyString struct {
+	Pid           int   `json:"pid"`
+	Length        int   `json:"length"`
+	NumFramesRead []int `json:"numframeRead"`
+	OffsetRead    int   `json:"offsetRead"`
+	NumFramesCopy []int `json:"numframeCopy"`
+	OffsetCopy    int   `json:"offsetCopy"`
+}
+
 type MemStdIO struct {
 	Pid       int    `json:"pid"`
 	Content   string `json:"content"`
