@@ -1,12 +1,5 @@
 package tlb
 
-import (
-	"fmt"
-
-	"github.com/sisoputnfrba/tp-golang/cpu/global"
-	log "github.com/sisoputnfrba/tp-golang/utils/logger"
-)
-
 type TLBEntry struct {
 	PID    int
 	Page   int
@@ -37,11 +30,9 @@ func (tlb *TLB) Search(pid, page int) (int, bool) {
 				tlb.entries[i].Access = tlb.accessCounter
 				tlb.accessCounter++
 			}
-			global.Logger.Log(fmt.Sprintf("Encontre %d pagina - Frame %d", page, entry.Frame), log.DEBUG)
 			return entry.Frame, true // TLB Hit
 		}
 	}
-	global.Logger.Log(fmt.Sprintf("No encontre %d pagina", page), log.DEBUG)
 
 	return -1, false // TLB Miss
 }
@@ -50,7 +41,6 @@ func (tlb *TLB) Search(pid, page int) (int, bool) {
 func (tlb *TLB) AddEntry(pid, page, frame int) {
 	if len(tlb.entries) >= tlb.capacity {
 		tlb.replaceEntry(pid, page, frame)
-		global.Logger.Log(fmt.Sprintf("Se remplazo pagina %d -> frame %d", page, frame), log.DEBUG)
 	} else {
 		tlb.entries = append(tlb.entries, TLBEntry{
 			PID:    pid,
@@ -59,7 +49,6 @@ func (tlb *TLB) AddEntry(pid, page, frame int) {
 			Access: tlb.accessCounter,
 		})
 		tlb.accessCounter++
-		global.Logger.Log(fmt.Sprintf("Se agrego pagina %d -> frame %d", page, frame), log.DEBUG)
 	}
 }
 
