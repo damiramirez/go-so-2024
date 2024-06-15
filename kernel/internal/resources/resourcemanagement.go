@@ -38,7 +38,7 @@ func Wait(Pcb *model.PCB) {
 
 		array := longterm.ConvertListToArray(global.ReadyState)
 		global.Logger.Log(fmt.Sprintf("Cola Ready : %v", array), log.INFO)
-	
+
 	} else {
 		global.MutexReadyState.Lock()
 		global.ReadyState.PushFront(Pcb)
@@ -47,7 +47,7 @@ func Wait(Pcb *model.PCB) {
 
 		array := longterm.ConvertListToArray(global.ReadyState)
 		global.Logger.Log(fmt.Sprintf("Cola Ready : %v", array), log.INFO)
-		
+
 	}
 	global.SemReadyList <- struct{}{}
 }

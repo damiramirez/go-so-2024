@@ -124,8 +124,8 @@ func VerificacionTamanio(texto string, tamanio int) {
 		VerificacionTamanio(Texto, tamanio)
 	}
 
-	if len(BtT) <= tamanio + 1{
-		Estructura_actualizada.Content = Texto[:len(BtT) - 1]
+	if len(BtT) <= tamanio+1 {
+		Estructura_actualizada.Content = Texto[:len(BtT)-1]
 		return
 	}
 

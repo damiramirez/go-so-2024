@@ -56,6 +56,7 @@ func Stdin_read(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log(fmt.Sprintf("Ingrese un valor (tamaño máximo %d): ", estructura.Length), log.INFO)
 
+	global.Estructura_actualizada.Pid = estructura.Pid
 	global.Estructura_actualizada.NumFrames = estructura.NumFrames
 	global.Estructura_actualizada.Offset = estructura.Offset
 
@@ -63,7 +64,7 @@ func Stdin_read(w http.ResponseWriter, r *http.Request) {
 	reader := bufio.NewReader(os.Stdin)
 	global.Texto, _ = reader.ReadString('\n')
 
-	global.Logger.Log("De consola escribi: "+ global.Texto, log.DEBUG)
+	global.Logger.Log("De consola escribi: "+global.Texto, log.DEBUG)
 
 	global.VerificacionTamanio(global.Texto, estructura.Length)
 
@@ -98,6 +99,7 @@ func Stdout_write(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.DEBUG)
 
+	estructura_actualizada.Pid = estructura.Pid
 	estructura_actualizada.NumFrames = estructura.NumFrames
 	estructura_actualizada.Offset = estructura.Offset
 	estructura_actualizada.Length = estructura.Length

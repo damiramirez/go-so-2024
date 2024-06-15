@@ -8,18 +8,18 @@ type TLBEntry struct {
 }
 
 type TLB struct {
-	entries      []TLBEntry
-	capacity     int
-	replacement  string
+	entries       []TLBEntry
+	capacity      int
+	replacement   string
 	accessCounter int // LRU
-	fifoPointer     int // Para FIFO
+	fifoPointer   int // Para FIFO
 }
 
 func NewTLB(capacity int, replacement string) *TLB {
 	return &TLB{
-			entries:     make([]TLBEntry, 0, capacity),
-			capacity:    capacity,
-			replacement: replacement,
+		entries:     make([]TLBEntry, 0, capacity),
+		capacity:    capacity,
+		replacement: replacement,
 	}
 }
 
@@ -41,7 +41,6 @@ func (tlb *TLB) Search(pid, page int) (int, bool) {
 	return -1, false // TLB Miss
 }
 
-
 func (tlb *TLB) AddEntry(pid, page, frame int) {
 	if tlb.capacity == 0 {
 		return // TLB deshabilitada
@@ -60,26 +59,23 @@ func (tlb *TLB) AddEntry(pid, page, frame int) {
 	}
 }
 
-
 func (tlb *TLB) replaceEntry(pid, page, frame int) {
 	var index int
 	if tlb.replacement == "FIFO" {
-			index = tlb.fifoPointer
-			tlb.fifoPointer = (tlb.fifoPointer + 1) % tlb.capacity // Actualiza el índice FIFO
+		index = tlb.fifoPointer
+		tlb.fifoPointer = (tlb.fifoPointer + 1) % tlb.capacity // Actualiza el índice FIFO
 	} else if tlb.replacement == "LRU" {
-			index = tlb.findLRUIndex()
+		index = tlb.findLRUIndex()
 	}
 
 	tlb.entries[index] = TLBEntry{
-			PID:    pid,
-			Page:   page,
-			Frame:  frame,
-			Access: tlb.accessCounter,
+		PID:    pid,
+		Page:   page,
+		Frame:  frame,
+		Access: tlb.accessCounter,
 	}
 	tlb.accessCounter++
 }
-
-
 
 func (tlb *TLB) findLRUIndex() int {
 	lruIndex := 0
@@ -92,4 +88,3 @@ func (tlb *TLB) findLRUIndex() int {
 	}
 	return lruIndex
 }
-

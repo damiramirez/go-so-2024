@@ -43,5 +43,5 @@ func InitGlobal() {
 
 	Logger = log.ConfigureLogger(CPULOG, env)
 	CPUConfig = config.LoadConfiguration[Config](configFile)
-	Tlb = tlb.NewTLB(CPUConfig.NumberFellingTLB,CPUConfig.AlgorithmTLB)
+	Tlb = tlb.NewTLB(CPUConfig.NumberFellingTLB, CPUConfig.AlgorithmTLB)
 }

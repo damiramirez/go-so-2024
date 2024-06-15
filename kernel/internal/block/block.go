@@ -41,12 +41,12 @@ func (io IOGen) GetInstruction() string {
 }
 
 type IOStd struct {
-	Pid       int    `json:"pid"`
+	Pid         int    `json:"pid"`
 	Instruction string `json:"instruccion"`
-	Name      string `json:"name"`
-	Length    int    `json:"length"`
-	NumFrames []int  `json:"numframe"`
-	Offset    int    `json:"offset"`
+	Name        string `json:"name"`
+	Length      int    `json:"length"`
+	NumFrames   []int  `json:"numframe"`
+	Offset      int    `json:"offset"`
 }
 
 func (io IOStd) GetName() string {
@@ -82,8 +82,6 @@ func ProcessToIO(pcb *model.PCB) {
 
 	io := factoryIO(pcb)
 
-
-
 	if !CheckIfExist(io.GetName()) || !CheckIfIsValid(io.GetName(), io.GetInstruction()) {
 		moveToExit(pcb)
 		return
@@ -97,7 +95,7 @@ func ProcessToIO(pcb *model.PCB) {
 		moveToExit(pcb)
 		return
 	}
-	
+
 	<-global.IoMap[io.GetName()].Sem
 
 	BlockToReady(pcb)
@@ -108,7 +106,7 @@ func ProcessToIO(pcb *model.PCB) {
 	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: BLOCK - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
 
 	// Revisar si funciona la logica dsp del &&
-	if global.KernelConfig.PlanningAlgorithm == "VRR" &&  len(arrayPlus) > 0 {
+	if global.KernelConfig.PlanningAlgorithm == "VRR" && len(arrayPlus) > 0 {
 		global.Logger.Log(fmt.Sprintf("Cola Ready : %v, Cola Ready+ : %v", arrayReady, arrayPlus), log.INFO)
 	} else {
 		global.Logger.Log(fmt.Sprintf("Cola Ready : %v", arrayReady), log.INFO)
@@ -146,7 +144,7 @@ func BlockToReady(pcb *model.PCB) {
 		global.MutexReadyPlus.Unlock()
 
 		global.Logger.Log(fmt.Sprintf("PID: %d - Bloqueado a Ready Plus", pcb.PID), log.DEBUG)
-		
+
 	} else {
 		global.MutexReadyState.Lock()
 		global.ReadyState.PushBack(pcb)
@@ -172,12 +170,12 @@ func factoryIO(pcb *model.PCB) IO {
 
 	case "IO_STDIN_READ", "IO_STDOUT_WRITE":
 		return IOStd{
-			Name: pcb.Instruction.Parameters[0],
+			Name:        pcb.Instruction.Parameters[0],
 			Instruction: pcb.Instruction.Operation,
-			Pid: pcb.PID,
-			Length: pcb.Instruction.Size,
-			NumFrames: pcb.Instruction.NumFrames,
-			Offset:pcb.Instruction.Offset,
+			Pid:         pcb.PID,
+			Length:      pcb.Instruction.Size,
+			NumFrames:   pcb.Instruction.NumFrames,
+			Offset:      pcb.Instruction.Offset,
 		}
 	}
 

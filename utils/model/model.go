@@ -33,9 +33,9 @@ type CPURegister struct {
 type Instruction struct {
 	Operation  string
 	Parameters []string
-	NumFrames []int
-	Offset int
-	Size int
+	NumFrames  []int
+	Offset     int
+	Size       int
 }
 
 type ProcessInstruction struct {

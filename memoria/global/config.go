@@ -49,7 +49,7 @@ type MemoryST struct {
 	Spaces []byte
 }
 type PageTable struct {
-	Pages       []int
+	Pages []int
 }
 
 var Memory *MemoryST
@@ -61,27 +61,27 @@ func NewMemory() *MemoryST {
 	return &mem
 }
 
-
 var PTable *PageTable
 
 func NewPageTable() *PageTable {
 	//inicializo las 16 paginas en -1
-	Slice:=make([]int,0)
-	
+	Slice := make([]int, 0)
+
 	//le asigno al "struct" pagetable el array con las paginas
 	pagetable := PageTable{Pages: Slice}
 
 	return &pagetable
 }
 
-func NewBitMap()[]int{
-	NumPages:=MemoryConfig.MemorySize/MemoryConfig.PageSize
+func NewBitMap() []int {
+	NumPages := MemoryConfig.MemorySize / MemoryConfig.PageSize
 	Array := make([]int, NumPages)
-	
+
 	return Array
 }
 
 var BitMap []int
+
 func InitGlobal() {
 	args := os.Args[1:]
 	if len(args) != 2 {

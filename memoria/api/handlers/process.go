@@ -90,5 +90,3 @@ func DeleteProcess(w http.ResponseWriter, r *http.Request) {
 	global.Logger.Log(fmt.Sprintf("Bit Map  %+v", global.BitMap), log.DEBUG)
 
 }
-
-

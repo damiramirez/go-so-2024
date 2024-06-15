@@ -39,9 +39,9 @@ func ReadTxt(Path string) ([]string, error) {
 // se le envia un contenido y una direccion para escribir en memoria
 func MemOut(NumFrames []int, Offset int, content int, Pid int, Largo int) bool {
 	var Slicebytes []byte
-	accu:=0
-	global.Logger.Log(fmt.Sprintf("largo %d",Largo), log.DEBUG)
-	
+	accu := 0
+	global.Logger.Log(fmt.Sprintf("largo %d", Largo), log.DEBUG)
+
 	//MemFrame := NumFrames[0]*global.MemoryConfig.PageSize + Offset
 	if Offset >= global.MemoryConfig.PageSize {
 		global.Logger.Log("memoria inaccesible", log.ERROR)
@@ -50,12 +50,12 @@ func MemOut(NumFrames []int, Offset int, content int, Pid int, Largo int) bool {
 	global.Logger.Log("El offset esta bien", log.DEBUG)
 	if Largo == 4 {
 		Slicebytes = EncodeContent(uint32(content))
-		global.Logger.Log(fmt.Sprintf("largo %+v",Slicebytes), log.DEBUG)
+		global.Logger.Log(fmt.Sprintf("largo %+v", Slicebytes), log.DEBUG)
 		for i := 0; i < Largo; i++ {
 			if i+Offset < global.MemoryConfig.PageSize {
 				MemFrame := NumFrames[0]*global.MemoryConfig.PageSize + Offset + i
 				global.Memory.Spaces[MemFrame] = Slicebytes[i]
-				
+
 			} else {
 				//newFrame := AddPage(Pid)
 				MemFrame := NumFrames[1]*global.MemoryConfig.PageSize + accu
@@ -175,6 +175,7 @@ func AddPage(Pid int) int {
 	}
 	return -1
 }
+
 /*
 func IsWritten(Pid int, Offset int) bool {
 	if len(global.DictProcess[Pid].PageTable.Pages) == 0 || Offset > global.MemoryConfig.PageSize {
@@ -194,33 +195,33 @@ func IsWritten(Pid int, Offset int) bool {
 }*/
 
 func PrintMemoryTable(memory []byte, cols int) {
-    // Imprimir encabezados de columna
-    fmt.Print("Addr\t")
-    for i := 0; i < cols; i++ {
-        fmt.Printf("%02X ", i)
-    }
-    fmt.Println()
+	// Imprimir encabezados de columna
+	fmt.Print("Addr\t")
+	for i := 0; i < cols; i++ {
+		fmt.Printf("%02X ", i)
+	}
+	fmt.Println()
 
-    // Imprimir separador de encabezado
-    fmt.Print("----\t")
-    for i := 0; i < cols; i++ {
-        fmt.Print("---")
-    }
-    fmt.Println()
+	// Imprimir separador de encabezado
+	fmt.Print("----\t")
+	for i := 0; i < cols; i++ {
+		fmt.Print("---")
+	}
+	fmt.Println()
 
-    // Imprimir contenido de la memoria
-    for i := 0; i < len(memory); i += cols {
-        // Imprimir dirección (índice de fila)
-        fmt.Printf("%04X\t", i)
+	// Imprimir contenido de la memoria
+	for i := 0; i < len(memory); i += cols {
+		// Imprimir dirección (índice de fila)
+		fmt.Printf("%04X\t", i)
 
-        // Imprimir los bytes en la fila
-        for j := 0; j < cols; j++ {
-            if i+j < len(memory) {
-                fmt.Printf("%02X ", memory[i+j])
-            } else {
-                fmt.Print("   ")
-            }
-        }
-        fmt.Println()
-    }
+		// Imprimir los bytes en la fila
+		for j := 0; j < cols; j++ {
+			if i+j < len(memory) {
+				fmt.Printf("%02X ", memory[i+j])
+			} else {
+				fmt.Print("   ")
+			}
+		}
+		fmt.Println()
+	}
 }

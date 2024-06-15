@@ -71,7 +71,7 @@ func Execute(pcb *model.PCB, instruction *model.Instruction) int {
 		result = copyString(pcb, instruction)
 	case "IO_GEN_SLEEP":
 		result = RETURN_CONTEXT
-		
+
 	// FUNCION STDIN == STDOUT => Hacer solo una?
 	case "IO_STDIN_READ":
 		ioStdinRead(pcb, instruction)
@@ -283,7 +283,8 @@ func copyString(pcb *model.PCB, instruction *model.Instruction) int {
 }
 
 // IO_STDIN_READ Int2 EAX AX
-// 							 Interfaz, Registro Dirección, Registro Tamaño
+//
+//	Interfaz, Registro Dirección, Registro Tamaño
 func ioStdinRead(pcb *model.PCB, instruction *model.Instruction) {
 
 	// interfaceName := instruction.Parameters[0]
@@ -303,7 +304,7 @@ func ioStdinRead(pcb *model.PCB, instruction *model.Instruction) {
 	// 	NumFrames: physicalAddress.NumFrames,
 	// 	Offset: physicalAddress.Offset,
 	// }
-	
+
 	// global.Logger.Log(fmt.Sprintf("ioSTD: %+v", ioSTD), log.DEBUG)
 
 	// TODO: Agregar struct a PCB? Hacer 2 requests?
