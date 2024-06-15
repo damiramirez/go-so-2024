@@ -13,9 +13,8 @@ func CreateServer() *server.Server {
 	configServer := server.Config{
 		Port: global.CPUConfig.Port,
 		Handlers: map[string]http.HandlerFunc{
-			"PUT /process":   handlers.PCBreciever,
 			"PUT /dispatch":  handlers.Dispatch,
-			"GET /interrupt": handlers.Interrupt,
+			"PUT /interrupt": handlers.Interrupt,
 		},
 	}
 	return server.NewServer(configServer)

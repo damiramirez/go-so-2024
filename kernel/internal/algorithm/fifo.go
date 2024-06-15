@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
+	resource "github.com/sisoputnfrba/tp-golang/kernel/internal/resources"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/utils"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
@@ -17,7 +18,7 @@ func Fifo() {
 
 	for {
 
-		global.Logger.Log("LOG ANTES DE SEMREADYLIST", log.DEBUG)
+		global.Logger.Log(fmt.Sprintf("LOG ANTES DE SEMREADYLIST largo %d", len(global.SemReadyList)), log.DEBUG)
 		<-global.SemReadyList
 
 		global.SemExecute <- 0
@@ -48,15 +49,27 @@ func Fifo() {
 			// EXIT - Agregar a exit
 			if updatePCB.DisplaceReason == "EXIT" {
 				utils.PCBtoExit(updatePCB)
+				global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: SUCCESS ", pcb.PID), log.INFO)
+			}
+
+			if updatePCB.DisplaceReason == "FAILED RESIZE" {
+				utils.PCBtoExit(updatePCB)
+				global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: OUT_OF_MEMORY", pcb.PID), log.INFO)
 			}
 
 			// Agregar a block
 			if updatePCB.DisplaceReason == "BLOCKED" {
 				utils.PCBtoBlock(updatePCB)
 			}
+			if updatePCB.DisplaceReason == "WAIT" {
+				resource.Wait(updatePCB)
+			}
+			if updatePCB.DisplaceReason == "SIGNAL" {
+				resource.Signal(updatePCB)
+			}
 
 		}
-		// VER ESTE SEMAFORO - DONDE VA?
+
 		<-global.SemExecute
 	}
 }

@@ -12,3 +12,7 @@ type ProcessState struct {
 type ProcessPath struct {
 	Path string `json:"path"`
 }
+
+type InterruptReason struct {
+	Reason string `json:"reason"`
+}

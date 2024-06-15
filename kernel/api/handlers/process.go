@@ -48,7 +48,6 @@ func InitProcessHandler(w http.ResponseWriter, r *http.Request) {
 	global.MutexNewState.Unlock()
 
 	global.SemNewList <- struct{}{}
-	global.Logger.Log(fmt.Sprintf("Semaforo de NEWLIST: %d", len(global.SemNewList)), log.DEBUG)
 
 	processPID := utils.ProcessPID{PID: pcb.PID}
 
@@ -112,7 +111,4 @@ func ProcessByIdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	global.Logger.Log(fmt.Sprintf("Process %d - State: %s", pcb.PID, pcb.State), log.DEBUG)
-}
-func Interrupt(w http.ResponseWriter, r *http.Request) {
-
 }

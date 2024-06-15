@@ -16,6 +16,7 @@ func Dispatch(pcb *model.PCB) (*model.PCB, error) {
 
 	global.ExecuteMutex.Lock()
 	global.Execute = true
+	global.InterruptReason = ""
 	global.ExecuteMutex.Unlock()
 
 	for global.Execute {
@@ -26,6 +27,13 @@ func Dispatch(pcb *model.PCB) (*model.PCB, error) {
 		}
 
 		exec_result := execute.Execute(pcb, instruction)
+
+		if !global.Execute {
+			pcb.DisplaceReason = global.InterruptReason
+			pcb.RemainingQuantum = 0
+			global.Logger.Log(fmt.Sprintf("PCB Actualizada %+v", pcb), log.DEBUG)
+			return pcb, nil
+		}
 		if exec_result == execute.RETURN_CONTEXT {
 			global.Execute = false
 		}
@@ -40,8 +48,12 @@ func DisplaceReason(pcb *model.PCB) {
 		pcb.DisplaceReason = "BLOCKED"
 	} else if pcb.Instruction.Operation == "EXIT" {
 		pcb.DisplaceReason = "EXIT"
-	} else {
-		pcb.DisplaceReason = "QUANTUM"
+	} else if pcb.Instruction.Operation == "WAIT" {
+		pcb.DisplaceReason = "WAIT"
+	} else if pcb.Instruction.Operation == "SIGNAL" {
+		pcb.DisplaceReason = "SIGNAL"
+	} else if pcb.Instruction.Operation == "RESIZE" {
+		pcb.DisplaceReason = "FAILED RESIZE"
 	}
 
 }
