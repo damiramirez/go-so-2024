@@ -122,3 +122,108 @@ func Stdout_write(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func Fs_create(w http.ResponseWriter, r *http.Request) {
+	dispositivo := global.Dispositivo
+	dispositivo.InUse = true
+
+	var estructura global.KernelIOFS_CD
+
+	err := serialization.DecodeHTTPBody[*global.KernelIOFS_CD](r, &estructura)
+	if err != nil {
+		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
+		http.Error(w, "Error al decodear", http.StatusBadRequest)
+	}
+	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", estructura.Pid, estructura.Instruction+">"), log.INFO)
+
+	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.DEBUG)
+
+	// implementación
+
+	dispositivo.InUse = false
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func Fs_delete(w http.ResponseWriter, r *http.Request) {
+	dispositivo := global.Dispositivo
+	dispositivo.InUse = true
+
+	var estructura global.KernelIOFS_CD
+
+	err := serialization.DecodeHTTPBody[*global.KernelIOFS_CD](r, &estructura)
+	if err != nil {
+		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
+		http.Error(w, "Error al decodear", http.StatusBadRequest)
+	}
+	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", estructura.Pid, estructura.Instruction+">"), log.INFO)
+
+	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.DEBUG)
+
+	// implementación
+
+	dispositivo.InUse = false
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func Fs_truncate(w http.ResponseWriter, r *http.Request) {
+	dispositivo := global.Dispositivo
+	dispositivo.InUse = true
+
+	var estructura global.KernelIOFS_Truncate
+
+	err := serialization.DecodeHTTPBody[*global.KernelIOFS_Truncate](r, &estructura)
+	if err != nil {
+		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
+		http.Error(w, "Error al decodear", http.StatusBadRequest)
+	}
+	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", estructura.Pid, estructura.Instruction+">"), log.INFO)
+
+	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.DEBUG)
+
+	// implementación
+
+	dispositivo.InUse = false
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func Fs_write(w http.ResponseWriter, r *http.Request) {
+	dispositivo := global.Dispositivo
+	dispositivo.InUse = true
+
+	var estructura global.KernelIOFS_WR
+
+	err := serialization.DecodeHTTPBody[*global.KernelIOFS_WR](r, &estructura)
+	if err != nil {
+		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
+		http.Error(w, "Error al decodear", http.StatusBadRequest)
+	}
+	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", estructura.Pid, estructura.Instruction+">"), log.INFO)
+
+	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.DEBUG)
+
+	// implementación
+
+	dispositivo.InUse = false
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func Fs_read(w http.ResponseWriter, r *http.Request) {
+	dispositivo := global.Dispositivo
+	dispositivo.InUse = true
+
+	var estructura global.KernelIOFS_WR
+
+	err := serialization.DecodeHTTPBody[*global.KernelIOFS_WR](r, &estructura)
+	if err != nil {
+		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
+		http.Error(w, "Error al decodear", http.StatusBadRequest)
+	}
+	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", estructura.Pid, estructura.Instruction+">"), log.INFO)
+
+	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.DEBUG)
+
+	// implementación
+
+	dispositivo.InUse = false
+	w.WriteHeader(http.StatusNoContent)
+}

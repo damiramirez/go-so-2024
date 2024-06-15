@@ -58,6 +58,32 @@ type KernelIOStd struct {
 	Offset      int    `json:"offset"`
 }
 
+type KernelIOFS_CD struct {
+	Pid         int    `json:"pid"`
+	Instruction string `json:"instruccion"`
+	IOName      string `json:"nombre"`
+	FileName    string `json:"filename"`
+}
+
+type KernelIOFS_Truncate struct {
+	Pid         int    `json:"pid"`
+	Instruction string `json:"instruccion"`
+	IOName      string `json:"nombre"`
+	FileName    string `json:"filename"`
+	Tamanio     int    `json:"tamanio"`
+}
+
+type KernelIOFS_WR struct {
+	Pid            int    `json:"pid"`
+	Instruction    string `json:"instruccion"`
+	IOName         string `json:"nombre"`
+	FileName       string `json:"filename"`
+	NumFrames      []int  `json:"numframe"`
+	Offset         int    `json:"offset"`
+	Tamanio        int    `json:"tamanio"`
+	PunteroArchivo int    `json:"punteroArchivo"`
+}
+
 var Estructura_actualizada MemStdIO
 
 var Dispositivo *IODevice
