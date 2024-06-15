@@ -1,6 +1,7 @@
 package global
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 
@@ -32,40 +33,32 @@ type IODevice struct {
 }
 
 type Estructura_sleep struct {
-	Nombre      string `json:"nombre"`
-	Instruccion string `json:"instruccion"`
-	Tiempo      int    `json:"tiempo"`
-}
-
-type Estructura_STDIN_read struct {
-	Nombre      string `json:"nombre"`
-	Instruccion string `json:"instruccion"`
-	Direccion   string `json:"direccion"`
-	Tamanio     string `json:"tamanio"`
-}
-
-type Estructura_read struct {
-	Texto     string
-	Direccion string
-	Tamanio   string
-}
-
-type Estructura_STDOUT_write struct {
-	Nombre      string `json:"nombre"`
-	Instruccion string `json:"instruccion"`
-	Direccion   string `json:"direccion"`
-	Tamanio     string `json:"tamanio"`
-}
-
-type Estructura_write struct {
-	Direccion string
-	Tamanio   string
+	Name        string `json:"nombre"`
+	Instruction string `json:"instruccion"`
+	Time        int    `json:"tiempo"`
+	Pid         int    `json:"pid"`
 }
 type ValoraMandar struct {
 	Texto string `json:"texto"`
 }
+type MemStdIO struct {
+	Pid       int    `json:"pid"`
+	Content   string `json:"content"`
+	Length    int    `json:"length"`
+	NumFrames []int  `json:"numframe"`
+	Offset    int    `json:"offset"`
+}
 
-var Estructura_actualizada Estructura_read
+type KernelIOStd struct {
+	Pid         int    `json:"pid"`
+	Instruction string `json:"instruccion"`
+	Name        string `json:"name"`
+	Length      int    `json:"length"`
+	NumFrames   []int  `json:"numframe"`
+	Offset      int    `json:"offset"`
+}
+
+var Estructura_actualizada MemStdIO
 
 var Dispositivo *IODevice
 
@@ -98,7 +91,7 @@ func InitIODevice(name string) *IODevice {
 
 	dispositivo := IODevice{Name: name, Type: IOConfig.Type, Port: IOConfig.Port}
 
-	Logger.Log(fmt.Sprintf("Nuevo IO inicializado: %+v", dispositivo), log.INFO)
+	Logger.Log(fmt.Sprintf("Nuevo IO inicializado: %+v", dispositivo), log.DEBUG)
 
 	return &dispositivo
 
@@ -108,74 +101,39 @@ func AvisoKernelIOExistente() {
 
 	_, err := requests.PutHTTPwithBody[IODevice, interface{}](IOConfig.IPKernel, IOConfig.PortKernel, "newio", *Dispositivo)
 	if err != nil {
-		Logger.Log(fmt.Sprintf("NO se pudo enviar al kernel el IODevice %s", err.Error()), log.INFO)
+		Logger.Log(fmt.Sprintf("NO se pudo enviar al kernel el IODevice %s", err.Error()), log.ERROR)
 		panic(1)
 		// TODO: kernel falta que entienda el mensaje (hacer el endpoint) y nos envíe la respuesta que está todo ok
 	}
 
 }
 
-func VerificacionTamanio(texto string, tamanio string) {
-
-	var tamanioEnBytes int
+func VerificacionTamanio(texto string, tamanio int) {
 
 	BtT := []byte(Texto)
 
-	switch Estructura_actualizada.Tamanio {
-
-	case "PC":
-		tamanioEnBytes = 4
-
-	case "AX":
-		tamanioEnBytes = 1
-
-	case "BX":
-		tamanioEnBytes = 1
-
-	case "CX":
-		tamanioEnBytes = 1
-
-	case "DX":
-		tamanioEnBytes = 1
-
-	case "EAX":
-		tamanioEnBytes = 4
-
-	case "EBX":
-		tamanioEnBytes = 4
-
-	case "ECX":
-		tamanioEnBytes = 4
-
-	case "EDX":
-		tamanioEnBytes = 4
-
-	case "SI":
-		tamanioEnBytes = 4
-
-	case "DI":
-		tamanioEnBytes = 4
-
-	}
+	Logger.Log(fmt.Sprintf("Slice de bytes: %+v", BtT), log.DEBUG)
 
 	if len(BtT) == 0 {
 
-		Logger.Log(fmt.Sprintf("No ingresó nada, ingrese un nuevo valor (tamaño máximo %s", Estructura_actualizada.Tamanio)+"): ", log.INFO)
+		Logger.Log(fmt.Sprintf("No ingresó nada, ingrese un nuevo valor (tamaño máximo %d", tamanio)+"): ", log.INFO)
 
-		fmt.Scanf("%s", &Texto)
+		reader := bufio.NewReader(os.Stdin)
+		Texto, _ = reader.ReadString('\n')
 
-		VerificacionTamanio(Texto, Estructura_actualizada.Tamanio)
+		VerificacionTamanio(Texto, tamanio)
 	}
 
-	if len(BtT) <= tamanioEnBytes {
-		Estructura_actualizada.Texto = Texto
+	if len(BtT) <= tamanio + 1{
+		Estructura_actualizada.Content = Texto[:len(BtT) - 1]
 		return
 	}
 
-	Logger.Log(fmt.Sprintf("Tamaño excedido, ingrese un nuevo valor (tamaño máximo %s", Estructura_actualizada.Tamanio)+"): ", log.INFO)
+	Logger.Log(fmt.Sprintf("Tamaño excedido, ingrese un nuevo valor (tamaño máximo %d", tamanio)+"): ", log.INFO)
 
-	fmt.Scanf("%s", &Texto)
+	reader := bufio.NewReader(os.Stdin)
+	Texto, _ = reader.ReadString('\n')
 
-	VerificacionTamanio(Texto, Estructura_actualizada.Tamanio)
+	VerificacionTamanio(Texto, tamanio)
 
 }

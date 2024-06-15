@@ -15,8 +15,8 @@ import (
 // var acceptedInstructions map[string] []string
 var acceptedInstructions = map[string][]string{
 	"GEN":    {"IO_GEN_SLEEP"},
-	"STDIN":  {"IO_STDIN_READ"},
 	"STDOUT": {"IO_STDOUT_WRITE"},
+	"STDIN":  {"IO_STDIN_READ"},
 	"DIALFS": {"IO_FS_CREATE", "IO_FS_DELETE", "IO_FS_TRUNCATE", "IO_FS_WRITE", "IO_FS_READ"},
 }
 
@@ -59,15 +59,20 @@ func (io IOStd) GetInstruction() string {
 
 func CheckIfExist(name string) bool {
 	_, Ioexist := global.IoMap[name]
+	global.Logger.Log(fmt.Sprintf("%s existe", name), log.DEBUG)
 	return Ioexist
 }
 func CheckIfIsValid(name, instruccion string) bool {
 	validInstructions := acceptedInstructions[global.IoMap[name].Type]
+	global.Logger.Log(fmt.Sprintf("Instrucciones validas: %+v", validInstructions), log.DEBUG)
 	for _, ins := range validInstructions {
 		if instruccion == ins {
+			global.Logger.Log(fmt.Sprintf("%s puede ejecutar %s", name, instruccion), log.DEBUG)
 			return true
 		}
 	}
+	global.Logger.Log(fmt.Sprintf("%s NO puede ejecutar %s", name, instruccion), log.DEBUG)
+
 	return false
 }
 
@@ -77,10 +82,13 @@ func ProcessToIO(pcb *model.PCB) {
 
 	io := factoryIO(pcb)
 
+
+
 	if !CheckIfExist(io.GetName()) || !CheckIfIsValid(io.GetName(), io.GetInstruction()) {
 		moveToExit(pcb)
 		return
 	}
+
 	global.IoMap[io.GetName()].Sem <- 0
 	_, err := requests.PutHTTPwithBody[IO, interface{}](global.KernelConfig.IPIo, global.IoMap[io.GetName()].Port, io.GetInstruction(), io)
 	if err != nil {
@@ -89,6 +97,7 @@ func ProcessToIO(pcb *model.PCB) {
 		moveToExit(pcb)
 		return
 	}
+	
 	<-global.IoMap[io.GetName()].Sem
 
 	BlockToReady(pcb)
@@ -164,6 +173,7 @@ func factoryIO(pcb *model.PCB) IO {
 	case "IO_STDIN_READ", "IO_STDOUT_WRITE":
 		return IOStd{
 			Name: pcb.Instruction.Parameters[0],
+			Instruction: pcb.Instruction.Operation,
 			Pid: pcb.PID,
 			Length: pcb.Instruction.Size,
 			NumFrames: pcb.Instruction.NumFrames,

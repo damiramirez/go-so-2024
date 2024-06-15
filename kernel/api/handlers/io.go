@@ -21,7 +21,7 @@ func ConnectIOHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	Device.Sem = make(chan int, 1)
 	global.IoMap[Device.Name] = Device
-	global.Logger.Log(fmt.Sprintf("Se conecto un nuevo  i/o a kernel %s ", global.IoMap[Device.Name].Name), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Se conecto %+v", global.IoMap), log.DEBUG)
 
 	w.WriteHeader(http.StatusNoContent)
 }
