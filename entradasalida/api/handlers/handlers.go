@@ -21,7 +21,7 @@ func Sleep(w http.ResponseWriter, r *http.Request) {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
 	}
-	global.Logger.Log(fmt.Sprintf("PID: <PID> - Operacion: <%s", estructura.Instruccion+">"), log.INFO)
+	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s>", estructura.Pid, estructura.Instruction), log.INFO)
 
 	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.DEBUG)
 
@@ -29,7 +29,7 @@ func Sleep(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log(fmt.Sprintf("durmiendo: %+v", dispositivo), log.DEBUG)
 
-	time.Sleep(time.Duration(estructura.Tiempo*global.IOConfig.UnitWorkTime) * time.Millisecond)
+	time.Sleep(time.Duration(estructura.Time*global.IOConfig.UnitWorkTime) * time.Millisecond)
 
 	global.Logger.Log(fmt.Sprintf("terminé de dormir: %+v", dispositivo), log.DEBUG)
 
@@ -40,31 +40,32 @@ func Stdin_read(w http.ResponseWriter, r *http.Request) {
 	dispositivo := global.Dispositivo
 	dispositivo.InUse = true
 
-	var estructura global.Estructura_STDIN_read
+	var estructura global.KernelIOStd
 
-	err := serialization.DecodeHTTPBody[*global.Estructura_STDIN_read](r, &estructura)
+	err := serialization.DecodeHTTPBody[*global.KernelIOStd](r, &estructura)
 	if err != nil {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
 	}
-	global.Logger.Log(fmt.Sprintf("PID: <PID> - Operacion: <%s", estructura.Instruccion+">"), log.INFO)
+	global.Logger.Log(fmt.Sprintf("PID: %d - Operacion: <%s>", estructura.Pid, estructura.Instruction), log.INFO)
 
 	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.INFO)
 
-	global.Logger.Log(fmt.Sprintf("Ingrese un valor (tamaño máximo %d", estructura.Tamanio)+"): ", log.INFO)
+	global.Logger.Log(fmt.Sprintf("Ingrese un valor (tamaño máximo %d): ", estructura.Length), log.INFO)
 
-	global.Estructura_actualizada.Direccion = estructura.Direccion
+	global.Estructura_actualizada.NumFrames = estructura.NumFrames
+	global.Estructura_actualizada.Offset = estructura.Offset
 
 	fmt.Scanf("%s", &global.Texto)
 
-	global.VerificacionTamanio(global.Texto, estructura.Tamanio)
+	global.VerificacionTamanio(global.Texto, estructura.Length)
 
-	global.Estructura_actualizada.Tamanio = len(global.Texto)
+	global.Estructura_actualizada.Length = len(global.Texto)
 
 	global.Logger.Log(fmt.Sprintf("Estructura actualizada para mandar a memoria: %+v", global.Estructura_actualizada), log.DEBUG)
 
 	// PUT a memoria de la estructura
-	_, err = requests.PutHTTPwithBody[global.Estructura_read, interface{}](global.IOConfig.IPMemory, global.IOConfig.PortMemory, "stdin_read", global.Estructura_actualizada)
+	_, err = requests.PutHTTPwithBody[global.MemStdIO, interface{}](global.IOConfig.IPMemory, global.IOConfig.PortMemory, "stdin_read", global.Estructura_actualizada)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("NO se pudo enviar a memoria la estructura %s", err.Error()), log.ERROR)
 		panic(1)
@@ -77,27 +78,28 @@ func Stdin_read(w http.ResponseWriter, r *http.Request) {
 func Stdout_write(w http.ResponseWriter, r *http.Request) {
 	dispositivo := global.Dispositivo
 	dispositivo.InUse = true
-	var estructura_actualizada global.Estructura_write
-	var estructura global.Estructura_STDOUT_write
-	err := serialization.DecodeHTTPBody[*global.Estructura_STDOUT_write](r, &estructura)
+	var estructura global.KernelIOStd
+	var estructura_actualizada global.MemStdIO
+	err := serialization.DecodeHTTPBody[*global.KernelIOStd](r, &estructura)
 	if err != nil {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
 	}
-	global.Logger.Log(fmt.Sprintf("PID: <PID> - Operacion: <%s", estructura.Instruccion+">"), log.INFO)
+	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", estructura.Pid, estructura.Instruction+">"), log.INFO)
 
 	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.DEBUG)
 
-	estructura_actualizada.Direccion = estructura.Direccion
-	estructura_actualizada.Tamanio = estructura.Tamanio
+	estructura_actualizada.NumFrames = estructura.NumFrames
+	estructura_actualizada.Offset = estructura.Offset
+	estructura_actualizada.Length = estructura.Length
 
-	global.Logger.Log(fmt.Sprintf("Intentando leer con %s", estructura.Nombre), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Intentando leer con %s", estructura.Name), log.DEBUG)
 
 	time.Sleep(time.Duration(global.IOConfig.UnitWorkTime) * time.Millisecond)
 
 	// PUT a memoria (le paso un registro y me devuelve el valor)
 
-	resp, err := requests.PutHTTPwithBody[global.Estructura_write, global.ValoraMandar](global.IOConfig.IPMemory, global.IOConfig.PortMemory, "stdout_write", estructura_actualizada)
+	resp, err := requests.PutHTTPwithBody[global.MemStdIO, global.ValoraMandar](global.IOConfig.IPMemory, global.IOConfig.PortMemory, "stdout_write", estructura_actualizada)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("NO se pudo enviar a memoria el valor a escribir %s", err.Error()), log.ERROR)
 		panic(1)

@@ -32,40 +32,32 @@ type IODevice struct {
 }
 
 type Estructura_sleep struct {
-	Nombre      string `json:"nombre"`
-	Instruccion string `json:"instruccion"`
-	Tiempo      int    `json:"tiempo"`
-}
-
-type Estructura_STDIN_read struct {
-	Nombre      string `json:"nombre"`
-	Instruccion string `json:"instruccion"`
-	Direccion   int    `json:"direccion"`
-	Tamanio     int    `json:"tamanio"`
-}
-
-type Estructura_read struct {
-	Texto     string
-	Direccion int
-	Tamanio   int
-}
-
-type Estructura_STDOUT_write struct {
-	Nombre      string `json:"nombre"`
-	Instruccion string `json:"instruccion"`
-	Direccion   int    `json:"direccion"`
-	Tamanio     int    `json:"tamanio"`
-}
-
-type Estructura_write struct {
-	Direccion int
-	Tamanio   int
+	Name        string `json:"nombre"`
+	Instruction string `json:"instruccion"`
+	Time        int    `json:"tiempo"`
+	Pid         int    `json:"pid"`
 }
 type ValoraMandar struct {
 	Texto string `json:"texto"`
 }
+type MemStdIO struct {
+	Pid       int    `json:"pid"`
+	Content   string `json:"content"`
+	Length    int    `json:"length"`
+	NumFrames []int  `json:"numframe"`
+	Offset    int    `json:"offset"`
+}
 
-var Estructura_actualizada Estructura_read
+type KernelIOStd struct {
+	Pid         int    `json:"pid"`
+	Instruction string `json:"instruccion"`
+	Name        string `json:"name"`
+	Length      int    `json:"length"`
+	NumFrames   []int  `json:"numframe"`
+	Offset      int    `json:"offset"`
+}
+
+var Estructura_actualizada MemStdIO
 
 var Dispositivo *IODevice
 
@@ -129,7 +121,7 @@ func VerificacionTamanio(texto string, tamanio int) {
 	}
 
 	if len(BtT) <= tamanio {
-		Estructura_actualizada.Texto = Texto
+		Estructura_actualizada.Content = Texto
 		return
 	}
 
