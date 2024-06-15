@@ -98,7 +98,8 @@ func ProcessToIO(pcb *model.PCB) {
 
 	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: BLOCK - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
 
-	if global.KernelConfig.PlanningAlgorithm == "VRR" {
+	// Revisar si funciona la logica dsp del &&
+	if global.KernelConfig.PlanningAlgorithm == "VRR" &&  len(arrayPlus) > 0 {
 		global.Logger.Log(fmt.Sprintf("Cola Ready : %v, Cola Ready+ : %v", arrayReady, arrayPlus), log.INFO)
 	} else {
 		global.Logger.Log(fmt.Sprintf("Cola Ready : %v", arrayReady), log.INFO)
