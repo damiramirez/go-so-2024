@@ -36,3 +36,5 @@ sleep 1
 terminator -e "cd $target_directory && make entradasalida ENV=$ENV N=TECLADO P=$keyboard_config && exec bash"
 terminator -e "cd $target_directory && make entradasalida ENV=$ENV N=MONITOR P=$monitor_config && exec bash"
 terminator -e "cd $target_directory && make entradasalida ENV=$ENV N=GENERICA P=$generic_config && exec bash"
+
+./run_io.sh

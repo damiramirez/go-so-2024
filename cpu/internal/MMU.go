@@ -34,6 +34,8 @@ func translateAddress(logicalAddress int) (int, int) {
 }
 
 func CreateAdress(size int, logicalAddress int, pid int, Content any) MemStruct {
+	global.Logger.Log(fmt.Sprintf("Valor de direccion a traducir %d", logicalAddress), log.DEBUG)
+
 	pageNumber, offset := translateAddress(logicalAddress)
 
 	global.Logger.Log(fmt.Sprintf("Numero de pagina %d - Offset: %d", pageNumber, offset), log.DEBUG)

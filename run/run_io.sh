@@ -11,9 +11,9 @@ KERNEL_URL="http://localhost:8001"
 
 # Lista de archivos de procesos, relativos al script
 procesos=(
-    "$PROCESOS_DIRs/IO_A.txt"
-    "$PROCESOS_DIRs/IO_B.txt"
-    "$PROCESOS_DIRs/IO_C.txt"
+    "$PROCESOS_DIR/IO_A.txt"
+    "$PROCESOS_DIR/IO_B.txt"
+    "$PROCESOS_DIR/IO_C.txt"
 )
 
 # Crear cada proceso usando la API
