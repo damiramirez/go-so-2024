@@ -36,6 +36,7 @@ type Instruction struct {
 	NumFrames  []int
 	Offset     int
 	Size       int
+	FSPointer  int
 }
 
 type ProcessInstruction struct {
