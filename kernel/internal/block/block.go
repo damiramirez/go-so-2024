@@ -2,7 +2,6 @@ package block
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
 	"github.com/sisoputnfrba/tp-golang/kernel/internal/longterm"
@@ -20,67 +19,13 @@ var acceptedInstructions = map[string][]string{
 	"DIALFS": {"IO_FS_CREATE", "IO_FS_DELETE", "IO_FS_TRUNCATE", "IO_FS_WRITE", "IO_FS_READ"},
 }
 
-type IO interface {
-	GetName() string
-	GetInstruction() string
-}
-
-type IOGen struct {
-	Name        string `json:"nombre"`
-	Instruction string `json:"instruccion"`
-	Time        int    `json:"tiempo"`
-	Pid         int    `json:"pid"`
-}
-
-func (io IOGen) GetName() string {
-	return io.Name
-}
-
-func (io IOGen) GetInstruction() string {
-	return io.Instruction
-}
-
-type IOStd struct {
-	Pid         int    `json:"pid"`
-	Instruction string `json:"instruccion"`
-	Name        string `json:"name"`
-	Length      int    `json:"length"`
-	NumFrames   []int  `json:"numframe"`
-	Offset      int    `json:"offset"`
-}
-
-func (io IOStd) GetName() string {
-	return io.Name
-}
-
-func (io IOStd) GetInstruction() string {
-	return io.Instruction
-}
-
-func CheckIfExist(name string) bool {
-	_, Ioexist := global.IoMap[name]
-	global.Logger.Log(fmt.Sprintf("%s existe", name), log.DEBUG)
-	return Ioexist
-}
-func CheckIfIsValid(name, instruccion string) bool {
-	validInstructions := acceptedInstructions[global.IoMap[name].Type]
-	global.Logger.Log(fmt.Sprintf("Instrucciones validas: %+v", validInstructions), log.DEBUG)
-	for _, ins := range validInstructions {
-		if instruccion == ins {
-			global.Logger.Log(fmt.Sprintf("%s puede ejecutar %s", name, instruccion), log.DEBUG)
-			return true
-		}
-	}
-	global.Logger.Log(fmt.Sprintf("%s NO puede ejecutar %s", name, instruccion), log.DEBUG)
-
-	return false
-}
-
 func ProcessToIO(pcb *model.PCB) {
 	// time, _ := strconv.Atoi(pcb.Instruction.Parameters[1])
 	global.Logger.Log(fmt.Sprintf("Proceso bloqueado %+v", pcb), log.DEBUG)
 
 	io := factoryIO(pcb)
+
+	global.Logger.Log(fmt.Sprintf("IO: %+v", io), log.DEBUG)
 
 	if !CheckIfExist(io.GetName()) || !CheckIfIsValid(io.GetName(), io.GetInstruction()) {
 		moveToExit(pcb)
@@ -157,27 +102,21 @@ func BlockToReady(pcb *model.PCB) {
 	}
 }
 
-func factoryIO(pcb *model.PCB) IO {
-	switch pcb.Instruction.Operation {
-	case "IO_GEN_SLEEP":
-		time, _ := strconv.Atoi(pcb.Instruction.Parameters[1])
-		return IOGen{
-			Name:        pcb.Instruction.Parameters[0],
-			Instruction: pcb.Instruction.Operation,
-			Time:        time,
-			Pid:         pcb.PID,
-		}
-
-	case "IO_STDIN_READ", "IO_STDOUT_WRITE":
-		return IOStd{
-			Name:        pcb.Instruction.Parameters[0],
-			Instruction: pcb.Instruction.Operation,
-			Pid:         pcb.PID,
-			Length:      pcb.Instruction.Size,
-			NumFrames:   pcb.Instruction.NumFrames,
-			Offset:      pcb.Instruction.Offset,
+func CheckIfExist(name string) bool {
+	_, Ioexist := global.IoMap[name]
+	global.Logger.Log(fmt.Sprintf("%s existe", name), log.DEBUG)
+	return Ioexist
+}
+func CheckIfIsValid(name, instruccion string) bool {
+	validInstructions := acceptedInstructions[global.IoMap[name].Type]
+	global.Logger.Log(fmt.Sprintf("Instrucciones validas: %+v", validInstructions), log.DEBUG)
+	for _, ins := range validInstructions {
+		if instruccion == ins {
+			global.Logger.Log(fmt.Sprintf("%s puede ejecutar %s", name, instruccion), log.DEBUG)
+			return true
 		}
 	}
+	global.Logger.Log(fmt.Sprintf("%s NO puede ejecutar %s", name, instruccion), log.DEBUG)
 
-	return nil
+	return false
 }
