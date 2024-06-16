@@ -134,6 +134,15 @@ func PCBtoExit(pcb *model.PCB) {
 	//LOG CAMBIO DE ESTADO
 	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: EXEC - Estado Actual: %s", pcb.PID, pcb.State), log.INFO)
 	<-global.SemMulti
+
+	// Request a memoria para eliminar pagina de tablas
+	endpoint := fmt.Sprintf("delete/%d", pcb.PID)
+	_, err := requests.DeleteHTTP[interface{}](global.KernelConfig.IPMemory, global.KernelConfig.PortMemory, endpoint, nil)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al eliminar proceso en memoria: %+v", err), log.ERROR)
+		return
+	}
+	global.Logger.Log(fmt.Sprintf("Proceso %d eliminado en memoria", pcb.PID), log.DEBUG)
 }
 
 func PCBtoBlock(pcb *model.PCB) {

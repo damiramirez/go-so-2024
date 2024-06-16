@@ -63,7 +63,7 @@ func PutHTTPwithBody[T any, R any](ip string, port int, endpoint string, data T)
 // desarolle una funcion q permite hacer los deletes con plani y process con PID aplicable a la funcion de arriba
 // para q funcione deberiamos pasarles como parametro en donde dice endpointwithpid en el caso de un proccess/pid
 // en el caso de plani/
-func DeleteHTTP[T any](endpoint string, port int, data T, ip string) (*T, error) {
+func DeleteHTTP[T any](ip string, port int, endpoint string, data T) (*T, error) {
 	var RespData T
 	url := fmt.Sprintf("http://%s:%d/%s", ip, port, endpoint)
 	body, err := json.Marshal(data)
