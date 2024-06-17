@@ -140,6 +140,10 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 
 	// implementación
 
+	// abrir el archivo bitmap.dat, acceder a la posición dada por initial_block del .txt
+	// y cambiar solo ese bit, luego ejecutar FS_TRUNCATE y ocupar la cantidad real de bloques
+	// dada por size (del .txt) / config.dialfs_block_size
+
 	dispositivo.InUse = false
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -161,6 +165,11 @@ func Fs_delete(w http.ResponseWriter, r *http.Request) {
 
 	// implementación
 
+	// abrir el archivo bloques.dat, acceder a la posición dada por initial_block (del .txt) * config.dialfs_block_size
+	// y borrar/setear en 0(? el contenido que hay desde esa posición hasta la posición dada por size (del .txt) * config.dialfs_block_size
+
+	// actualizar el bitmap!
+
 	dispositivo.InUse = false
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -181,6 +190,9 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.DEBUG)
 
 	// implementación
+
+	// chequear si hay lugar
+	// chequear si hay que compactar (al compactar, actualizo los initial_block de los .txt?)
 
 	dispositivo.InUse = false
 	w.WriteHeader(http.StatusNoContent)
