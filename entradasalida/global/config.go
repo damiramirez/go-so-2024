@@ -111,6 +111,8 @@ func InitGlobal() {
 
 	AvisoKernelIOExistente()
 
+	LevantarFS(IOConfig)
+
 }
 
 func InitIODevice(name string) *IODevice {
@@ -162,4 +164,78 @@ func VerificacionTamanio(texto string, tamanio int) {
 
 	VerificacionTamanio(Texto, tamanio)
 
+}
+
+func LevantarFS(config *Config) {
+
+	if config.Type == "DIALFS" {
+
+		// crear carpeta para los archivos del FS
+		dir := config.DialFSPath + "/Filesystems" + "/" + Dispositivo.Name
+
+		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+			Logger.Log(fmt.Sprintf("Error al crear el directorio: %v", err), log.ERROR)
+			return
+		}
+
+		// crear bloques.dat
+
+		createBloquesDat(config)
+
+		// crear bitmap.dat
+
+		createBitmapDat(config)
+
+	}
+
+}
+
+func createBloquesDat(config *Config) {
+
+	filename := config.DialFSPath + "/Filesystems" + "/" + Dispositivo.Name + "/bloques.dat"
+	size := config.DialFSBlockSize * config.DialFSBlockCount
+
+	// crear el archivo
+	file, err := os.Create(filename)
+	if err != nil {
+		Logger.Log(fmt.Sprint("Error al crear el archivo:", err), log.ERROR)
+		return
+	}
+
+	// cerrar el archivo
+	defer file.Close()
+
+	// ajustar el tamaño del archivo
+	err = file.Truncate(int64(size))
+	if err != nil {
+		Logger.Log(fmt.Sprint("Error al ajustar el tamaño del archivo:", err), log.ERROR)
+		return
+	}
+
+	Logger.Log(fmt.Sprintf("Archivo %s creado con éxito con un tamaño de %d bytes.", filename, size), log.DEBUG)
+}
+
+func createBitmapDat(config *Config) {
+
+	filename := config.DialFSPath + "/Filesystems" + "/" + Dispositivo.Name + "/bitmap.dat"
+	size := config.DialFSBlockCount
+
+	// crear el archivo
+	file, err := os.Create(filename)
+	if err != nil {
+		Logger.Log(fmt.Sprint("Error al crear el archivo:", err), log.ERROR)
+		return
+	}
+
+	// cerrar el archivo
+	defer file.Close()
+
+	// ajustar el tamaño del archivo
+	err = file.Truncate(int64(size))
+	if err != nil {
+		Logger.Log(fmt.Sprint("Error al ajustar el tamaño del archivo:", err), log.ERROR)
+		return
+	}
+
+	Logger.Log(fmt.Sprintf("Archivo %s creado con éxito con un tamaño de %d bytes.", filename, size), log.DEBUG)
 }
