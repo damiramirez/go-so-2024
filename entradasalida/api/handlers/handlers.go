@@ -134,15 +134,71 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
 	}
-	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", estructura.Pid, estructura.Instruction+">"), log.INFO)
+	global.Logger.Log(fmt.Sprintf("Estructura: %+v", estructura), log.DEBUG)
 
-	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Dispositivo: %+v", dispositivo), log.DEBUG)
+
+	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", estructura.Pid, estructura.Instruction+">"), log.INFO)
 
 	// implementación
 
 	// abrir el archivo bitmap.dat, acceder a la posición dada por initial_block del .txt
 	// y cambiar solo ese bit, luego ejecutar FS_TRUNCATE y ocupar la cantidad real de bloques
 	// dada por size (del .txt) / config.dialfs_block_size
+
+	// abro el archivo bitmap.dat
+
+	filepath := global.IOConfig.DialFSPath + "/Filesystems/" + global.Dispositivo.Name + "/bitmap.dat"
+
+	file, err := os.OpenFile(filepath, os.O_RDWR, 0644)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo: %s ", err.Error()), log.ERROR)
+	}
+
+	defer file.Close() // esta línea de código garantiza que el archivo en el que estoy trabajando se cierre cuando la función actual termina de ejecutarse
+
+	// leo el archivo y logeo su contenido
+
+	data := make([]byte, global.IOConfig.DialFSBlockCount)
+	_, err = file.Read(data)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
+	}
+	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s antes del cambio: %+v", global.Dispositivo.Name, data), log.DEBUG)
+
+	// obtengo la posición (el bit) a cambiar, esta posición la tengo que sacar del archivo metadata -> voy a tener que abrir y leer este archivo (por ahora hardcodeada en 10)
+	// muevo el cursor a la posición deseada
+
+	position := int64(10)
+	_, err = file.Seek(position, 0)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
+		return
+	}
+
+	// cambio el bit de 0 a 1 (ver qué pasa si esa posición ya está ocupada, fragmentación externa, compactación)
+	_, err = file.Write([]byte{1})
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al escribir el byte: %s ", err.Error()), log.ERROR)
+		return
+	}
+
+	// muevo el cursor nuevamente al principio del archivo bitmapñ.dat
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
+		return
+	}
+
+	// leo el archivo (desde la posición inicial) y logeo su contenido actualizado
+
+	data = make([]byte, global.IOConfig.DialFSBlockCount)
+	_, err = file.Read(data)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
+	}
+
+	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s luego del cambio: %+v", global.Dispositivo.Name, data), log.DEBUG)
 
 	dispositivo.InUse = false
 	w.WriteHeader(http.StatusNoContent)
