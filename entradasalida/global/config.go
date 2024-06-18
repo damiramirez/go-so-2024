@@ -84,6 +84,11 @@ type KernelIOFS_WR struct {
 	PunteroArchivo int    `json:"punteroArchivo"`
 }
 
+type File struct {
+	Initial_block int `json:"initial_block"`
+	Size          int `json:"size"`
+}
+
 var Estructura_actualizada MemStdIO
 
 var Dispositivo *IODevice

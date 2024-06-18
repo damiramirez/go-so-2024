@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"os"
 	"time"
@@ -144,47 +146,67 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 
 	// abrir el archivo bitmap.dat, acceder a la posición dada por initial_block del .txt
 	// y cambiar solo ese bit, luego ejecutar FS_TRUNCATE y ocupar la cantidad real de bloques
-	// dada por size (del .txt) / config.dialfs_block_size
+	// dada por size (del .txt) / global.IOConfig.dialfs_block_size
 
 	// abro el archivo bitmap.dat
 
-	filepath := global.IOConfig.DialFSPath + "/Filesystems/" + global.Dispositivo.Name + "/bitmap.dat"
+	bitmappath := global.IOConfig.DialFSPath + "/Filesystems/" + global.Dispositivo.Name + "/bitmap.dat"
 
-	file, err := os.OpenFile(filepath, os.O_RDWR, 0644)
+	bitmapfile, err := os.OpenFile(bitmappath, os.O_RDWR, 0644)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo: %s ", err.Error()), log.ERROR)
 	}
 
-	defer file.Close() // esta línea de código garantiza que el archivo en el que estoy trabajando se cierre cuando la función actual termina de ejecutarse
+	defer bitmapfile.Close() // esta línea de código garantiza que el archivo en el que estoy trabajando se cierre cuando la función actual termina de ejecutarse
 
 	// leo el archivo y logeo su contenido
 
 	data := make([]byte, global.IOConfig.DialFSBlockCount)
-	_, err = file.Read(data)
+	_, err = bitmapfile.Read(data)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
 	}
 	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s antes del cambio: %+v", global.Dispositivo.Name, data), log.DEBUG)
 
-	// obtengo la posición (el bit) a cambiar, esta posición la tengo que sacar del archivo metadata -> voy a tener que abrir y leer este archivo (por ahora hardcodeada en 10)
+	// obtengo la posición (el bit) a cambiar, del archivo metadata (lo abro y decodeo su contenido)
+
+	filepath := "/home/utnso/tp-2024-1c-sudoers/notas.txt"
+
+	var filestruct global.File
+
+	file, err := os.Open(filepath)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", filepath, err.Error()), log.DEBUG)
+	}
+
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&filestruct)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo: %s: %s ", filepath, err.Error()), log.ERROR)
+	}
+	global.Logger.Log(fmt.Sprintf("Datos del archivo %s: %+v ", filepath, filestruct), log.ERROR)
+
+	position := int64(filestruct.Initial_block)
+
 	// muevo el cursor a la posición deseada
 
-	position := int64(10)
-	_, err = file.Seek(position, 0)
+	_, err = bitmapfile.Seek(position, 0)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
 		return
 	}
 
 	// cambio el bit de 0 a 1 (ver qué pasa si esa posición ya está ocupada, fragmentación externa, compactación)
-	_, err = file.Write([]byte{1})
+	_, err = bitmapfile.Write([]byte{1})
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al escribir el byte: %s ", err.Error()), log.ERROR)
 		return
 	}
 
-	// muevo el cursor nuevamente al principio del archivo bitmapñ.dat
-	_, err = file.Seek(0, 0)
+	// muevo el cursor nuevamente al principio del archivo bitmap.dat
+	_, err = bitmapfile.Seek(0, 0)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
 		return
@@ -193,7 +215,7 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 	// leo el archivo (desde la posición inicial) y logeo su contenido actualizado
 
 	data = make([]byte, global.IOConfig.DialFSBlockCount)
-	_, err = file.Read(data)
+	_, err = bitmapfile.Read(data)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
 	}
@@ -249,6 +271,89 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 
 	// chequear si hay lugar
 	// chequear si hay que compactar (al compactar, actualizo los initial_block de los .txt?)
+
+	// abro el archivo metadata y decodeo su contenido
+
+	var filestruct global.File
+
+	filepath := "/home/utnso/tp-2024-1c-sudoers/notas.txt"
+
+	file, err := os.Open(filepath)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", filepath, err.Error()), log.DEBUG)
+	}
+
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&filestruct)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo: %s: %s ", filepath, err.Error()), log.ERROR)
+	}
+	global.Logger.Log(fmt.Sprintf("Datos del archivo %s: %+v ", filepath, filestruct), log.ERROR)
+
+	// modifico el bitmap usando los datos recién decodeados
+
+	// abro el archivo bitmap.dat
+
+	bitmappath := global.IOConfig.DialFSPath + "/Filesystems/" + global.Dispositivo.Name + "/bitmap.dat"
+
+	bitmapfile, err := os.OpenFile(bitmappath, os.O_RDWR, 0644)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo: %s ", err.Error()), log.ERROR)
+	}
+
+	defer bitmapfile.Close() // esta línea de código garantiza que el archivo en el que estoy trabajando se cierre cuando la función actual termina de ejecutarse
+
+	// leo el archivo y logeo su contenido
+
+	data := make([]byte, global.IOConfig.DialFSBlockCount)
+	_, err = bitmapfile.Read(data)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
+	}
+	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s antes del cambio: %+v", global.Dispositivo.Name, data), log.DEBUG)
+
+	// cambio todos los bits que corresponden a los bloques que va a ocupar el archivo metadata
+
+	neededBlocks := int(math.Ceil(float64(float64(estructura.Tamanio) / float64(global.IOConfig.DialFSBlockSize))))
+
+	global.Logger.Log(fmt.Sprintf("Bloques necesarios: %d", neededBlocks), log.DEBUG)
+
+	// muevo el cursor a la primera posición (filestruct.Initial_block)
+
+	for i := 0; i < neededBlocks; i++ {
+
+		_, err = bitmapfile.Seek(int64(filestruct.Initial_block+i), 0)
+		if err != nil {
+			global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
+			return
+		}
+
+		// cambio el bit de 0 a 1 (ver qué pasa si esa posición ya está ocupada, fragmentación externa, compactación)
+		_, err = bitmapfile.Write([]byte{1})
+		if err != nil {
+			global.Logger.Log(fmt.Sprintf("Error al escribir el byte: %s ", err.Error()), log.ERROR)
+			return
+		}
+	}
+
+	// muevo el cursor nuevamente al principio del archivo bitmap.dat
+	_, err = bitmapfile.Seek(0, 0)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
+		return
+	}
+
+	// leo el archivo (desde la posición inicial) y logeo su contenido actualizado
+
+	data = make([]byte, global.IOConfig.DialFSBlockCount)
+	_, err = bitmapfile.Read(data)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
+	}
+
+	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s luego del cambio: %+v", global.Dispositivo.Name, data), log.DEBUG)
 
 	dispositivo.InUse = false
 	w.WriteHeader(http.StatusNoContent)
