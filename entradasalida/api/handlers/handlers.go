@@ -186,7 +186,7 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo: %s: %s ", filepath, err.Error()), log.ERROR)
 	}
-	global.Logger.Log(fmt.Sprintf("Datos del archivo %s: %+v ", filepath, filestruct), log.ERROR)
+	global.Logger.Log(fmt.Sprintf("Datos del archivo %s: %+v ", filepath, filestruct), log.DEBUG)
 
 	position := int64(filestruct.Initial_block)
 
@@ -316,26 +316,51 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 
 	// cambio todos los bits que corresponden a los bloques que va a ocupar el archivo metadata
 
-	neededBlocks := int(math.Ceil(float64(float64(estructura.Tamanio) / float64(global.IOConfig.DialFSBlockSize))))
+	currentBlocks := int(math.Ceil(float64(filestruct.Size) / float64(global.IOConfig.DialFSBlockSize)))
+
+	neededBlocks := int(math.Ceil(float64(estructura.Tamanio) / float64(global.IOConfig.DialFSBlockSize)))
+
+	global.Logger.Log(fmt.Sprintf("Bloques actuales: %d", currentBlocks), log.DEBUG)
 
 	global.Logger.Log(fmt.Sprintf("Bloques necesarios: %d", neededBlocks), log.DEBUG)
 
-	// muevo el cursor a la primera posición (filestruct.Initial_block)
+	if neededBlocks >= currentBlocks { // tengo que ocupar más bloques
 
-	for i := 0; i < neededBlocks; i++ {
+		// muevo el cursor a la primera posición (filestruct.Initial_block)
 
-		_, err = bitmapfile.Seek(int64(filestruct.Initial_block+i), 0)
-		if err != nil {
-			global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
-			return
+		for i := 0; i < neededBlocks; i++ {
+
+			_, err = bitmapfile.Seek(int64(filestruct.Initial_block+i), 0)
+			if err != nil {
+				global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
+				return
+			}
+
+			// cambio el bit de 0 a 1 (ver qué pasa si esa posición ya está ocupada, fragmentación externa, compactación)
+			_, err = bitmapfile.Write([]byte{1})
+			if err != nil {
+				global.Logger.Log(fmt.Sprintf("Error al escribir el byte: %s ", err.Error()), log.ERROR)
+				return
+			}
+		}
+	} else { // neededBlocks < currentBlocks (tengo que liberar bloques)
+
+		for i := 0; i < currentBlocks-neededBlocks; i++ {
+
+			_, err = bitmapfile.Seek(int64(neededBlocks+1+i), 0)
+			if err != nil {
+				global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
+				return
+			}
+
+			// cambio el bit de 1 a 0
+			_, err = bitmapfile.Write([]byte{0})
+			if err != nil {
+				global.Logger.Log(fmt.Sprintf("Error al escribir el byte: %s ", err.Error()), log.ERROR)
+				return
+			}
 		}
 
-		// cambio el bit de 0 a 1 (ver qué pasa si esa posición ya está ocupada, fragmentación externa, compactación)
-		_, err = bitmapfile.Write([]byte{1})
-		if err != nil {
-			global.Logger.Log(fmt.Sprintf("Error al escribir el byte: %s ", err.Error()), log.ERROR)
-			return
-		}
 	}
 
 	// muevo el cursor nuevamente al principio del archivo bitmap.dat
