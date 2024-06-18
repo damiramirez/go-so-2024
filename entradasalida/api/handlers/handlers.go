@@ -326,6 +326,8 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 
 	if neededBlocks >= currentBlocks { // tengo que ocupar más bloques
 
+		global.Logger.Log(fmt.Sprintln("Entré a truncar para aumentar"), log.DEBUG)
+
 		// muevo el cursor a la primera posición (filestruct.Initial_block)
 
 		for i := 0; i < neededBlocks; i++ {
@@ -345,9 +347,11 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 		}
 	} else { // neededBlocks < currentBlocks (tengo que liberar bloques)
 
+		global.Logger.Log(fmt.Sprintln("Entré a truncar para disminuir"), log.DEBUG)
+
 		for i := 0; i < currentBlocks-neededBlocks; i++ {
 
-			_, err = bitmapfile.Seek(int64(neededBlocks+1+i), 0)
+			_, err = bitmapfile.Seek(int64(neededBlocks+i), 0)
 			if err != nil {
 				global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
 				return

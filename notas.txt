@@ -1,5 +1,5 @@
 {
-    "initial_block": 25,
+    "initial_block": 0,
     "size": 1024
 }
 
