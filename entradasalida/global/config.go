@@ -201,7 +201,7 @@ func createBloquesDat(config *Config) {
 	size := config.DialFSBlockSize * config.DialFSBlockCount
 
 	// crear el archivo
-	file, err := os.Create(filename)
+	file, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
 	if err != nil {
 		Logger.Log(fmt.Sprint("Error al crear el archivo:", err), log.ERROR)
 		return
@@ -226,7 +226,7 @@ func createBitmapDat(config *Config) {
 	size := config.DialFSBlockCount
 
 	// crear el archivo
-	file, err := os.Create(filename)
+	file, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
 	if err != nil {
 		Logger.Log(fmt.Sprint("Error al crear el archivo:", err), log.ERROR)
 		return
