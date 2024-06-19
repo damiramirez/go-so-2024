@@ -43,6 +43,10 @@ func ProcessToIO(pcb *model.PCB) {
 
 	<-global.IoMap[io.GetName()].Sem
 
+	if pcb.State == "EXIT" {
+		return
+	}
+
 	BlockToReady(pcb)
 
 	arrayReady := longterm.ConvertListToArray(global.ReadyState)
