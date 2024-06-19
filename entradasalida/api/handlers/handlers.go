@@ -289,6 +289,9 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo %s: %s ", filepath, err.Error()), log.ERROR)
 	}
+
+	global.Filestruct.CurrentBlocks = int(math.Ceil(float64(global.Filestruct.Size) / float64(global.IOConfig.DialFSBlockSize)))
+
 	global.Logger.Log(fmt.Sprintf("Datos del archivo %s antes de truncar: %+v ", filepath, global.Filestruct), log.DEBUG)
 
 	// modifico el bitmap usando los datos recién decodeados

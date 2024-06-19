@@ -188,17 +188,17 @@ func LevantarFS(config *Config) {
 
 		// crear bloques.dat
 
-		createBloquesDat(config)
+		openBloquesDat(config)
 
 		// crear bitmap.dat
 
-		createBitmapDat(config)
+		openBitmapDat(config)
 
 	}
 
 }
 
-func createBloquesDat(config *Config) {
+func openBloquesDat(config *Config) {
 
 	filename := config.DialFSPath + "/Filesystems" + "/" + Dispositivo.Name + "/bloques.dat"
 	size := config.DialFSBlockSize * config.DialFSBlockCount
@@ -220,10 +220,16 @@ func createBloquesDat(config *Config) {
 		return
 	}
 
-	Logger.Log(fmt.Sprintf("Archivo %s creado con éxito con un tamaño de %d bytes.", filename, size), log.DEBUG)
+	data := make([]byte, IOConfig.DialFSBlockCount*IOConfig.DialFSBlockCount) // crea un slice de bytes de tamaño global.IOConfig.DialFSBlockCount*IOConfig.DialFSBlockCount, en el cual asigno los bytes que leo del archivo bloques.dat
+	_, err = file.Read(data)
+	if err != nil {
+		Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
+	}
+
+	Logger.Log(fmt.Sprintf("Archivo %s abierto con éxito (tamaño de %d bytes): %+v", filename, size, data), log.DEBUG)
 }
 
-func createBitmapDat(config *Config) {
+func openBitmapDat(config *Config) {
 
 	filename := config.DialFSPath + "/Filesystems" + "/" + Dispositivo.Name + "/bitmap.dat"
 	size := config.DialFSBlockCount
@@ -245,5 +251,11 @@ func createBitmapDat(config *Config) {
 		return
 	}
 
-	Logger.Log(fmt.Sprintf("Archivo %s creado con éxito con un tamaño de %d bytes.", filename, size), log.DEBUG)
+	data := make([]byte, IOConfig.DialFSBlockCount) // crea un slice de bytes de tamaño global.IOConfig.DialFSBlockCount, en el cual asigno los bytes que leo del archivo bitmapfile
+	_, err = file.Read(data)
+	if err != nil {
+		Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
+	}
+
+	Logger.Log(fmt.Sprintf("Archivo %s abierto con éxito (tamaño de %d bytes): %+v", filename, size, data), log.DEBUG)
 }
