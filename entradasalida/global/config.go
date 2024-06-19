@@ -87,7 +87,10 @@ type KernelIOFS_WR struct {
 type File struct {
 	Initial_block int `json:"initial_block"`
 	Size          int `json:"size"`
+	CurrentBlocks int
 }
+
+var Filestruct File
 
 var Estructura_actualizada MemStdIO
 

@@ -172,8 +172,6 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 
 	filepath := "/home/utnso/tp-2024-1c-sudoers/notas.txt"
 
-	var filestruct global.File
-
 	file, err := os.Open(filepath)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", filepath, err.Error()), log.DEBUG)
@@ -182,13 +180,13 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&filestruct)
+	err = decoder.Decode(&global.Filestruct)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo: %s: %s ", filepath, err.Error()), log.ERROR)
 	}
-	global.Logger.Log(fmt.Sprintf("Datos del archivo %s: %+v ", filepath, filestruct), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Datos del archivo %s: %+v ", filepath, global.Filestruct), log.DEBUG)
 
-	position := int64(filestruct.Initial_block)
+	position := int64(global.Filestruct.Initial_block)
 
 	// muevo el cursor a la posición deseada
 
@@ -204,6 +202,10 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 		global.Logger.Log(fmt.Sprintf("Error al escribir el byte: %s ", err.Error()), log.ERROR)
 		return
 	}
+
+	global.Filestruct.CurrentBlocks = 1
+
+	global.Logger.Log(fmt.Sprintf("Current blocks actualizado: %+v ", global.Filestruct), log.DEBUG)
 
 	// muevo el cursor nuevamente al principio del archivo bitmap.dat
 	_, err = bitmapfile.Seek(0, 0)
@@ -274,8 +276,6 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 
 	// abro el archivo metadata y decodeo su contenido
 
-	var filestruct global.File
-
 	filepath := "/home/utnso/tp-2024-1c-sudoers/notas.txt"
 
 	file, err := os.Open(filepath)
@@ -286,11 +286,13 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&filestruct)
+	err = decoder.Decode(&global.Filestruct)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo: %s: %s ", filepath, err.Error()), log.ERROR)
 	}
-	global.Logger.Log(fmt.Sprintf("Datos del archivo %s: %+v ", filepath, filestruct), log.ERROR)
+	global.Logger.Log(fmt.Sprintf("Datos del archivo %s: %+v ", filepath, global.Filestruct), log.ERROR)
+
+	global.Logger.Log(fmt.Sprintf("Current blocks luego de decodear: %+v ", global.Filestruct), log.DEBUG)
 
 	// modifico el bitmap usando los datos recién decodeados
 
@@ -316,7 +318,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 
 	// cambio todos los bits que corresponden a los bloques que va a ocupar el archivo metadata
 
-	currentBlocks := int(math.Ceil(float64(filestruct.Size) / float64(global.IOConfig.DialFSBlockSize)))
+	currentBlocks := global.Filestruct.CurrentBlocks
 
 	neededBlocks := int(math.Ceil(float64(estructura.Tamanio) / float64(global.IOConfig.DialFSBlockSize)))
 
@@ -328,11 +330,11 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 
 		global.Logger.Log(fmt.Sprintln("Entré a truncar para aumentar"), log.DEBUG)
 
-		// muevo el cursor a la primera posición (filestruct.Initial_block)
+		// muevo el cursor a la primera posición (global.Filestruct.Initial_block)
 
 		for i := 0; i < neededBlocks; i++ {
 
-			_, err = bitmapfile.Seek(int64(filestruct.Initial_block+i), 0)
+			_, err = bitmapfile.Seek(int64(global.Filestruct.Initial_block+i), 0)
 			if err != nil {
 				global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
 				return
@@ -345,6 +347,9 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+
+		global.Filestruct.CurrentBlocks = neededBlocks
+
 	} else { // neededBlocks < currentBlocks (tengo que liberar bloques)
 
 		global.Logger.Log(fmt.Sprintln("Entré a truncar para disminuir"), log.DEBUG)
@@ -364,6 +369,8 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+
+		global.Filestruct.CurrentBlocks = neededBlocks
 
 	}
 
