@@ -166,7 +166,7 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
 	}
-	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s antes del cambio: %+v", global.Dispositivo.Name, data), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s antes de crear el nuevo archivo: %+v", global.Dispositivo.Name, data), log.DEBUG)
 
 	// obtengo la posición (el bit) a cambiar, del archivo metadata (lo abro y decodeo su contenido)
 
@@ -222,7 +222,7 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
 	}
 
-	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s luego del cambio: %+v", global.Dispositivo.Name, data), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s luego de crear el nuevo archivo: %+v", global.Dispositivo.Name, data), log.DEBUG)
 
 	dispositivo.InUse = false
 	w.WriteHeader(http.StatusNoContent)
@@ -267,7 +267,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	}
 	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", estructura.Pid, estructura.Instruction+">"), log.INFO)
 
-	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Dispositivo: %+v", dispositivo), log.DEBUG)
 
 	// implementación
 
@@ -288,11 +288,9 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&global.Filestruct)
 	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo: %s: %s ", filepath, err.Error()), log.ERROR)
+		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo %s: %s ", filepath, err.Error()), log.ERROR)
 	}
-	global.Logger.Log(fmt.Sprintf("Datos del archivo antes de truncar %s: %+v ", filepath, global.Filestruct), log.DEBUG)
-
-	global.Logger.Log(fmt.Sprintf("Current blocks luego de decodear: %+v ", global.Filestruct), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Datos del archivo %s antes de truncar: %+v ", filepath, global.Filestruct), log.DEBUG)
 
 	// modifico el bitmap usando los datos recién decodeados
 
@@ -314,7 +312,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
 	}
-	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s antes del cambio: %+v", global.Dispositivo.Name, data), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s antes de truncar: %+v", global.Dispositivo.Name, data), log.DEBUG)
 
 	// cambio todos los bits que corresponden a los bloques que va a ocupar el archivo metadata
 
@@ -322,13 +320,9 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 
 	neededBlocks := int(math.Ceil(float64(estructura.Tamanio) / float64(global.IOConfig.DialFSBlockSize)))
 
-	global.Logger.Log(fmt.Sprintf("Bloques actuales: %d", currentBlocks), log.DEBUG)
-
-	global.Logger.Log(fmt.Sprintf("Bloques necesarios: %d", neededBlocks), log.DEBUG)
-
 	if neededBlocks >= currentBlocks { // tengo que ocupar más bloques
 
-		global.Logger.Log(fmt.Sprintln("Entré a truncar para aumentar"), log.DEBUG)
+		global.Logger.Log("Entré a truncar para aumentar", log.DEBUG)
 
 		// muevo el cursor a la primera posición (global.Filestruct.Initial_block)
 
@@ -352,7 +346,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 
 	} else { // neededBlocks < currentBlocks (tengo que liberar bloques)
 
-		global.Logger.Log(fmt.Sprintln("Entré a truncar para disminuir"), log.DEBUG)
+		global.Logger.Log("Entré a truncar para disminuir", log.DEBUG)
 
 		for i := 0; i < currentBlocks-neededBlocks; i++ {
 
@@ -405,7 +399,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo: %s: %s ", filepath, err.Error()), log.ERROR)
 	}
 
-	global.Logger.Log(fmt.Sprintf("Datos del archivo luego de truncar %s: %+v ", filepath, global.Filestruct), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Datos del archivo %s luego de truncar: %+v ", filepath, global.Filestruct), log.DEBUG)
 
 	// muevo el cursor nuevamente al principio del archivo bitmap.dat
 	_, err = bitmapfile.Seek(0, 0)
@@ -422,7 +416,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
 	}
 
-	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s luego del cambio: %+v", global.Dispositivo.Name, data), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s luego de truncar: %+v", global.Dispositivo.Name, data), log.DEBUG)
 
 	dispositivo.InUse = false
 	w.WriteHeader(http.StatusNoContent)
