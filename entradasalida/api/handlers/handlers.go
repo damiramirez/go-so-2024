@@ -161,7 +161,7 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 
 	// leo el archivo y logeo su contenido
 
-	data := make([]byte, global.IOConfig.DialFSBlockCount)
+	data := make([]byte, global.IOConfig.DialFSBlockCount) // crea un slice de bytes de tamaño global.IOConfig.DialFSBlockCount, en el cual asigno los bytes que leo del archivo bitmapfile
 	_, err = bitmapfile.Read(data)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
@@ -216,8 +216,7 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 
 	// leo el archivo (desde la posición inicial) y logeo su contenido actualizado
 
-	data = make([]byte, global.IOConfig.DialFSBlockCount)
-	_, err = bitmapfile.Read(data)
+	_, err = bitmapfile.Read(data) // asigno los bytes que leo del archivo bitmapfile (actualizado) a mi slice de bytes data, creado anteriormente
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
 	}
@@ -307,7 +306,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 
 	// leo el archivo y logeo su contenido
 
-	data := make([]byte, global.IOConfig.DialFSBlockCount)
+	data := make([]byte, global.IOConfig.DialFSBlockCount) // crea un slice de bytes de tamaño global.IOConfig.DialFSBlockCount, en el cual asigno los bytes que leo del archivo bitmapfile
 	_, err = bitmapfile.Read(data)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
@@ -410,8 +409,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 
 	// leo el archivo (desde la posición inicial) y logeo su contenido actualizado
 
-	data = make([]byte, global.IOConfig.DialFSBlockCount)
-	_, err = bitmapfile.Read(data)
+	_, err = bitmapfile.Read(data) // asigno los bytes que leo del archivo bitmapfile (actualizado) a mi slice de bytes data, creado anteriormente
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
 	}
