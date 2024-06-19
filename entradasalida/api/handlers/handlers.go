@@ -24,6 +24,7 @@ func Sleep(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
+		return
 	}
 	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s>", estructura.Pid, estructura.Instruction), log.INFO)
 
@@ -51,6 +52,7 @@ func Stdin_read(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
+		return
 	}
 	global.Logger.Log(fmt.Sprintf("PID: %d - Operacion: <%s>", estructura.Pid, estructura.Instruction), log.INFO)
 
@@ -79,6 +81,7 @@ func Stdin_read(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("NO se pudo enviar a memoria la estructura %s", err.Error()), log.ERROR)
 		w.WriteHeader(http.StatusBadRequest)
+		return
 		// TODO: falta que memoria vea si puede escribir o no (?)
 	}
 
@@ -96,6 +99,7 @@ func Stdout_write(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
+		return
 	}
 	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", estructura.Pid, estructura.Instruction+">"), log.INFO)
 
@@ -115,7 +119,8 @@ func Stdout_write(w http.ResponseWriter, r *http.Request) {
 	resp, err := requests.PutHTTPwithBody[global.MemStdIO, string](global.IOConfig.IPMemory, global.IOConfig.PortMemory, "stdout_write", estructura_actualizada)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("NO se pudo enviar a memoria el valor a escribir %s", err.Error()), log.ERROR)
-		panic(1)
+		http.Error(w, "Error al enviar a memoria el valor a escribir", http.StatusBadRequest)
+		return
 		// TODO: memoria falta que entienda el mensaje (hacer el endpoint) y me devuelva el valor del registro
 	}
 	global.Logger.Log(fmt.Sprintf("Memoria devolvió este valor: %s", *resp), log.DEBUG)
@@ -135,6 +140,7 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
+		return
 	}
 	global.Logger.Log(fmt.Sprintf("Estructura: %+v", estructura), log.DEBUG)
 
@@ -155,6 +161,8 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 	bitmapfile, err := os.OpenFile(bitmappath, os.O_RDWR, 0644)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo: %s ", err.Error()), log.ERROR)
+		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
+		return
 	}
 
 	defer bitmapfile.Close() // esta línea de código garantiza que el archivo en el que estoy trabajando se cierre cuando la función actual termina de ejecutarse
@@ -165,6 +173,8 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 	_, err = bitmapfile.Read(data)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
+		http.Error(w, "Error al leer el archivo", http.StatusBadRequest)
+		return
 	}
 	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s antes de crear el nuevo archivo: %+v", global.Dispositivo.Name, data), log.DEBUG)
 
@@ -175,6 +185,8 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", filepath, err.Error()), log.DEBUG)
+		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
+		return
 	}
 
 	defer file.Close()
@@ -183,6 +195,8 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 	err = decoder.Decode(&global.Filestruct)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo: %s: %s ", filepath, err.Error()), log.ERROR)
+		http.Error(w, "Error al decodear el archivo", http.StatusBadRequest)
+		return
 	}
 	global.Logger.Log(fmt.Sprintf("Datos del archivo %s: %+v ", filepath, global.Filestruct), log.DEBUG)
 
@@ -200,6 +214,7 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 	_, err = bitmapfile.Write([]byte{1})
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al escribir el byte: %s ", err.Error()), log.ERROR)
+		http.Error(w, "Error al escribir el byte", http.StatusBadRequest)
 		return
 	}
 
@@ -211,6 +226,7 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 	_, err = bitmapfile.Seek(0, 0)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
+		http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
 		return
 	}
 
@@ -219,6 +235,8 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 	_, err = bitmapfile.Read(data) // asigno los bytes que leo del archivo bitmapfile (actualizado) a mi slice de bytes data, creado anteriormente
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
+		http.Error(w, "Error al leer el archivo", http.StatusBadRequest)
+		return
 	}
 
 	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s luego de crear el nuevo archivo: %+v", global.Dispositivo.Name, data), log.DEBUG)
@@ -237,6 +255,7 @@ func Fs_delete(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
+		return
 	}
 	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", estructura.Pid, estructura.Instruction+">"), log.INFO)
 
@@ -263,6 +282,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
+		return
 	}
 	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", estructura.Pid, estructura.Instruction+">"), log.INFO)
 
@@ -280,6 +300,8 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", filepath, err.Error()), log.DEBUG)
+		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
+		return
 	}
 
 	defer file.Close()
@@ -288,7 +310,11 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	err = decoder.Decode(&global.Filestruct)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo %s: %s ", filepath, err.Error()), log.ERROR)
+		http.Error(w, "Error al decodear el archivo", http.StatusBadRequest)
+		return
 	}
+
+	// antes de truncar, calculo el valor de currentBlocks con el size (del metadata) / blocksize
 
 	global.Filestruct.CurrentBlocks = int(math.Ceil(float64(global.Filestruct.Size) / float64(global.IOConfig.DialFSBlockSize)))
 
@@ -303,6 +329,8 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	bitmapfile, err := os.OpenFile(bitmappath, os.O_RDWR, 0644)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo: %s ", err.Error()), log.ERROR)
+		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
+		return
 	}
 
 	defer bitmapfile.Close() // esta línea de código garantiza que el archivo en el que estoy trabajando se cierre cuando la función actual termina de ejecutarse
@@ -313,6 +341,8 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	_, err = bitmapfile.Read(data)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
+		http.Error(w, "Error al leer el archivo", http.StatusBadRequest)
+		return
 	}
 	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s antes de truncar: %+v", global.Dispositivo.Name, data), log.DEBUG)
 
@@ -333,6 +363,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 			_, err = bitmapfile.Seek(int64(global.Filestruct.Initial_block+i), 0)
 			if err != nil {
 				global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
+				http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
 				return
 			}
 
@@ -340,11 +371,10 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 			_, err = bitmapfile.Write([]byte{1})
 			if err != nil {
 				global.Logger.Log(fmt.Sprintf("Error al escribir el byte: %s ", err.Error()), log.ERROR)
+				http.Error(w, "Error al escribir el byte", http.StatusBadRequest)
 				return
 			}
 		}
-
-		global.Filestruct.CurrentBlocks = neededBlocks
 
 	} else { // neededBlocks < currentBlocks (tengo que liberar bloques)
 
@@ -355,6 +385,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 			_, err = bitmapfile.Seek(int64(neededBlocks+i), 0)
 			if err != nil {
 				global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
+				http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
 				return
 			}
 
@@ -362,19 +393,21 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 			_, err = bitmapfile.Write([]byte{0})
 			if err != nil {
 				global.Logger.Log(fmt.Sprintf("Error al escribir el byte: %s ", err.Error()), log.ERROR)
+				http.Error(w, "Error al escribir el byte", http.StatusBadRequest)
 				return
 			}
 		}
 
-		global.Filestruct.CurrentBlocks = neededBlocks
-
 	}
+
+	global.Filestruct.CurrentBlocks = neededBlocks
 
 	// modificar el size en el txt
 
 	file, err = os.OpenFile(filepath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0644)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", filepath, err.Error()), log.ERROR)
+		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
 		return
 	}
 
@@ -387,11 +420,14 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	err = encoder.Encode(newSize)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al encodear el nuevo size en el archivo %s: %s ", filepath, err.Error()), log.ERROR)
+		http.Error(w, "Error al encodear el nuevo size en el archivo", http.StatusBadRequest)
+		return
 	}
 
 	_, err = file.Seek(0, 0)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
+		http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
 		return
 	}
 
@@ -399,6 +435,8 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	err = decoder.Decode(&global.Filestruct)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo: %s: %s ", filepath, err.Error()), log.ERROR)
+		http.Error(w, "Error al decodear el archivo", http.StatusBadRequest)
+		return
 	}
 
 	global.Logger.Log(fmt.Sprintf("Datos del archivo %s luego de truncar: %+v ", filepath, global.Filestruct), log.DEBUG)
@@ -415,6 +453,8 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	_, err = bitmapfile.Read(data) // asigno los bytes que leo del archivo bitmapfile (actualizado) a mi slice de bytes data, creado anteriormente
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
+		http.Error(w, "Error al leer el archivo", http.StatusBadRequest)
+		return
 	}
 
 	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s luego de truncar: %+v", global.Dispositivo.Name, data), log.DEBUG)
@@ -433,6 +473,7 @@ func Fs_write(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
+		return
 	}
 	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", estructura.Pid, estructura.Instruction+">"), log.INFO)
 
@@ -454,6 +495,7 @@ func Fs_read(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
+		return
 	}
 	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", estructura.Pid, estructura.Instruction+">"), log.INFO)
 
