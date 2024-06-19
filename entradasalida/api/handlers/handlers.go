@@ -290,7 +290,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo: %s: %s ", filepath, err.Error()), log.ERROR)
 	}
-	global.Logger.Log(fmt.Sprintf("Datos del archivo %s: %+v ", filepath, global.Filestruct), log.ERROR)
+	global.Logger.Log(fmt.Sprintf("Datos del archivo antes de truncar %s: %+v ", filepath, global.Filestruct), log.DEBUG)
 
 	global.Logger.Log(fmt.Sprintf("Current blocks luego de decodear: %+v ", global.Filestruct), log.DEBUG)
 
@@ -373,6 +373,39 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 		global.Filestruct.CurrentBlocks = neededBlocks
 
 	}
+
+	// modificar el size en el txt
+
+	file, err = os.OpenFile(filepath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0644)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", filepath, err.Error()), log.ERROR)
+		return
+	}
+
+	newSize := map[string]interface{}{
+		"initial_block": global.Filestruct.Initial_block,
+		"size":          estructura.Tamanio,
+	}
+
+	encoder := json.NewEncoder(file)
+	err = encoder.Encode(newSize)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al encodear el nuevo size en el archivo %s: %s ", filepath, err.Error()), log.ERROR)
+	}
+
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
+		return
+	}
+
+	decoder = json.NewDecoder(file)
+	err = decoder.Decode(&global.Filestruct)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo: %s: %s ", filepath, err.Error()), log.ERROR)
+	}
+
+	global.Logger.Log(fmt.Sprintf("Datos del archivo luego de truncar %s: %+v ", filepath, global.Filestruct), log.DEBUG)
 
 	// muevo el cursor nuevamente al principio del archivo bitmap.dat
 	_, err = bitmapfile.Seek(0, 0)
