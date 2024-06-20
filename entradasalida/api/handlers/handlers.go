@@ -557,7 +557,35 @@ func Fs_read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// por ahora hardcodeado porque no tengo forma de escribir en bloques.dat (salvo con hex editor)
+
+	data[0] = 72
+	data[1] = 79
+	data[2] = 76
+	data[3] = 65
+	data[4] = 33
+
 	global.Logger.Log(fmt.Sprintf("Del archivo leí: %+v ", data), log.DEBUG)
+
+	// armo la estructura para mandar a memoria
+
+	global.Estructura_actualizada.Pid = estructura.Pid
+	global.Estructura_actualizada.Content = string(data)
+	global.Estructura_actualizada.NumFrames = estructura.NumFrames
+	global.Estructura_actualizada.Offset = estructura.Offset
+	global.Estructura_actualizada.Length = len(data)
+
+	global.Logger.Log(fmt.Sprintf("String a mandar a memoria: %+v", string(data)), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Estructura a mandar a memoria: %+v", global.Estructura_actualizada), log.DEBUG)
+
+	// Put a memoria de la estructura
+	_, err = requests.PutHTTPwithBody[global.MemStdIO, interface{}](global.IOConfig.IPMemory, global.IOConfig.PortMemory, "stdin_read", global.Estructura_actualizada)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("NO se pudo enviar a memoria la estructura %s", err.Error()), log.ERROR)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+		// TODO: falta que memoria vea si puede escribir o no (?)
+	}
 
 	dispositivo.InUse = false
 	w.WriteHeader(http.StatusNoContent)
