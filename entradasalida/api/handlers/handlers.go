@@ -503,6 +503,62 @@ func Fs_read(w http.ResponseWriter, r *http.Request) {
 
 	// implementación
 
+	// abro el archivo metadata y decodeo su contenido
+
+	filepath := "/home/utnso/tp-2024-1c-sudoers/notas.txt"
+
+	file, err := os.Open(filepath)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", filepath, err.Error()), log.DEBUG)
+		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
+		return
+	}
+
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&global.Filestruct)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo %s: %s ", filepath, err.Error()), log.ERROR)
+		http.Error(w, "Error al decodear el archivo", http.StatusBadRequest)
+		return
+	}
+
+	// abro el archivo bloques.dat
+
+	bloquesdatpath := global.IOConfig.DialFSPath + "/Filesystems" + "/" + global.Dispositivo.Name + "/bloques.dat"
+
+	bloquesdatfile, err := os.OpenFile(bloquesdatpath, os.O_RDONLY, 0644)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", bloquesdatpath, err.Error()), log.ERROR)
+		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
+		return
+	}
+
+	// ubico el puntero en la ubicación deseada
+
+	ubicacionDeseada := global.IOConfig.DialFSBlockSize*global.Filestruct.Initial_block + estructura.PunteroArchivo
+
+	_, err = bloquesdatfile.Seek(int64(ubicacionDeseada), 0)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
+		return
+	}
+
+	// crea un slice de estructura.Tamanio bytes
+
+	data := make([]byte, estructura.Tamanio)
+
+	// leo estructura.Tamanio bytes desde el archivo y los asigno a mi data
+	_, err = bloquesdatfile.Read(data)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
+		http.Error(w, "Error al leer el archivo", http.StatusBadRequest)
+		return
+	}
+
+	global.Logger.Log(fmt.Sprintf("Del archivo leí: %+v ", data), log.DEBUG)
+
 	dispositivo.InUse = false
 	w.WriteHeader(http.StatusNoContent)
 }
