@@ -557,7 +557,8 @@ func Fs_read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// por ahora hardcodeado porque no tengo forma de escribir en bloques.dat (salvo con hex editor)
+	// la lógica de leer ya está implementada pero por ahora lo hardcodeo
+	// porque no tengo forma de escribir en bloques.dat (salvo con hex editor) y está todo en 0
 
 	data[0] = 72
 	data[1] = 79
