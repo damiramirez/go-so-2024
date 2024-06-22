@@ -314,11 +314,11 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	global.Logger.Log(fmt.Sprintf("Datos del archivo %s antes de truncar: %+v ", filepath, global.Filestruct), log.DEBUG)
+
 	// antes de truncar, calculo el valor de currentBlocks con el size (del metadata) / blocksize
 
 	global.Filestruct.CurrentBlocks = int(math.Ceil(float64(global.Filestruct.Size) / float64(global.IOConfig.DialFSBlockSize)))
-
-	global.Logger.Log(fmt.Sprintf("Datos del archivo %s antes de truncar: %+v ", filepath, global.Filestruct), log.DEBUG)
 
 	// modifico el bitmap usando los datos recién decodeados
 
