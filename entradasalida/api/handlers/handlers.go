@@ -288,7 +288,6 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	global.Logger.Log(fmt.Sprintf("Dispositivo: %+v", dispositivo), log.DEBUG)
 
 	global.Logger.Log(fmt.Sprintf("Instrucción: %+v", global.Estructura_truncate), log.INFO)
-	global.PrintBitmap(w, global.Estructura_truncate.IOName)
 
 	currentBlocks := global.GetCurrentBlocks(global.Estructura_truncate.FileName, w)
 	freeContiguousBlocks := global.GetFreeContiguousBlocks(global.Estructura_truncate.FileName, w)
@@ -311,7 +310,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 		global.UpdateSize(global.Estructura_truncate.FileName, w)
 		w.WriteHeader(http.StatusNoContent)
 		return
-	} else if neededBlocks <= freeContiguousBlocks {
+	} else if neededBlocks-currentBlocks <= freeContiguousBlocks {
 		global.Logger.Log(fmt.Sprintf("Trunco a más %+v", global.Estructura_truncate), log.DEBUG)
 		global.TruncateMore(global.Estructura_truncate.FileName, w)
 		global.AddToTruncatedFiles(global.Estructura_truncate.FileName)
