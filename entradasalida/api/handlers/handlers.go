@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"math"
 	"net/http"
 	"os"
 	"time"
@@ -150,13 +149,13 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 
 	// implementación
 
-	// abrir el archivo bitmap.dat, acceder a la posición dada por initial_block del .txt
+	// abrir el archivo bitmap, acceder a la posición dada por initial_block del .txt
 	// y cambiar solo ese bit, luego ejecutar FS_TRUNCATE y ocupar la cantidad real de bloques
 	// dada por size (del .txt) / global.IOConfig.dialfs_block_size
 
-	// abro el archivo bitmap.dat
+	// abro el archivo bitmap
 
-	bitmappath := global.IOConfig.DialFSPath + "/Filesystems/" + global.Dispositivo.Name + "/bitmap.dat"
+	bitmappath := global.IOConfig.DialFSPath + "/" + estructura.IOName + "/bitmap.dat"
 
 	bitmapfile, err := os.OpenFile(bitmappath, os.O_RDWR, 0644)
 	if err != nil {
@@ -180,7 +179,7 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 
 	// obtengo la posición (el bit) a cambiar, del archivo metadata (lo abro y decodeo su contenido)
 
-	filepath := "/home/utnso/tp-2024-1c-sudoers/notas.txt"
+	filepath := global.IOConfig.DialFSPath + "/" + estructura.FileName
 
 	file, err := os.Open(filepath)
 	if err != nil {
@@ -220,7 +219,7 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 
 	global.Filestruct.CurrentBlocks = 1
 
-	// muevo el cursor nuevamente al principio del archivo bitmap.dat
+	// muevo el cursor nuevamente al principio del archivo bitmap
 	_, err = bitmapfile.Seek(0, 0)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
@@ -263,7 +262,7 @@ func Fs_delete(w http.ResponseWriter, r *http.Request) {
 
 	// implementación
 
-	// abrir el archivo bloques.dat, acceder a la posición dada por initial_block (del .txt) * config.dialfs_block_size
+	// abrir el archivo bloques, acceder a la posición dada por initial_block (del .txt) * config.dialfs_block_size
 	// y borrar/setear en 0(? el contenido que hay desde esa posición hasta la posición dada por size (del .txt) * config.dialfs_block_size
 
 	// actualizar el bitmap!
@@ -273,237 +272,58 @@ func Fs_delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func Fs_truncate(w http.ResponseWriter, r *http.Request) {
+
+	// decodeo el json que me acaba de llegar para los logs obligatorios
+
 	dispositivo := global.Dispositivo
 	dispositivo.InUse = true
 
-	var estructura global.KernelIOFS_Truncate
-
-	err := serialization.DecodeHTTPBody[*global.KernelIOFS_Truncate](r, &estructura)
+	err := serialization.DecodeHTTPBody[*global.KernelIOFS_Truncate](r, &global.Estructura_truncate)
 	if err != nil {
 		global.Logger.Log("Error al decodear: "+err.Error(), log.ERROR)
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
 		return
 	}
-	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", estructura.Pid, estructura.Instruction+">"), log.INFO)
-
+	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", global.Estructura_truncate.Pid, global.Estructura_truncate.Instruction+">"), log.INFO)
 	global.Logger.Log(fmt.Sprintf("Dispositivo: %+v", dispositivo), log.DEBUG)
 
-	// implementación
+	global.Logger.Log(fmt.Sprintf("Instrucción: %+v", global.Estructura_truncate), log.INFO)
+	global.PrintBitmap(w, global.Estructura_truncate.IOName)
 
-	// abro el archivo metadata y decodeo su contenido
+	currentBlocks := global.GetCurrentBlocks(global.Estructura_truncate.FileName, w)
+	freeContiguousBlocks := global.GetFreeContiguousBlocks(global.Estructura_truncate.FileName, w)
+	neededBlocks := global.GetNeededBlocks(w, global.Estructura_truncate)
+	totalFreeBlocks := global.GetTotalFreeBlocks(w)
 
-	filepath := "/home/utnso/tp-2024-1c-sudoers/notas.txt"
-
-	file, err := os.Open(filepath)
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", filepath, err.Error()), log.DEBUG)
-		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
+	if currentBlocks == neededBlocks {
+		global.UpdateSize(global.Estructura_truncate.FileName, w)
+		global.Logger.Log(fmt.Sprintf("No es necesario truncar pero actualicé el size: %+v", global.Estructura_truncate), log.DEBUG)
+		w.WriteHeader(http.StatusNoContent)
 		return
-	}
-
-	defer file.Close()
-
-	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&global.Filestruct)
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo %s: %s ", filepath, err.Error()), log.ERROR)
-		http.Error(w, "Error al decodear el archivo", http.StatusBadRequest)
+	} else if !(totalFreeBlocks >= neededBlocks-currentBlocks) {
+		global.Logger.Log(fmt.Sprintf("No es posible agrandar el archivo: %+v", global.Estructura_truncate), log.ERROR)
+		w.WriteHeader(http.StatusNoContent)
 		return
-	}
-
-	// modifico el bitmap usando los datos recién decodeados
-
-	// abro el archivo bitmap.dat
-
-	bitmappath := global.IOConfig.DialFSPath + "/Filesystems/" + global.Dispositivo.Name + "/bitmap.dat"
-
-	bitmapfile, err := os.OpenFile(bitmappath, os.O_RDWR, 0644)
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo: %s ", err.Error()), log.ERROR)
-		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
+	} else if currentBlocks > neededBlocks {
+		global.Logger.Log(fmt.Sprintf("Trunco a menos %+v", global.Estructura_truncate), log.DEBUG)
+		global.TruncateLess(global.Estructura_truncate.FileName, w)
+		global.AddToTruncatedFiles(global.Estructura_truncate.FileName)
+		global.UpdateSize(global.Estructura_truncate.FileName, w)
+		w.WriteHeader(http.StatusNoContent)
 		return
-	}
-
-	defer bitmapfile.Close() // esta línea de código garantiza que el archivo en el que estoy trabajando se cierre cuando la función actual termina de ejecutarse
-
-	// leo el archivo y logeo su contenido
-
-	data := make([]byte, global.IOConfig.DialFSBlockCount) // crea un slice de bytes de tamaño global.IOConfig.DialFSBlockCount, en el cual asigno los bytes que leo del archivo bitmapfile
-	_, err = bitmapfile.Read(data)
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
-		http.Error(w, "Error al leer el archivo", http.StatusBadRequest)
+	} else if neededBlocks <= freeContiguousBlocks {
+		global.Logger.Log(fmt.Sprintf("Trunco a más %+v", global.Estructura_truncate), log.DEBUG)
+		global.TruncateMore(global.Estructura_truncate.FileName, w)
+		global.AddToTruncatedFiles(global.Estructura_truncate.FileName)
+		global.UpdateSize(global.Estructura_truncate.FileName, w)
+		w.WriteHeader(http.StatusNoContent)
 		return
-	}
-	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s antes de truncar: %+v", global.Dispositivo.Name, data), log.DEBUG)
-
-	// cambio todos los bits que corresponden a los bloques que va a ocupar el archivo metadata
-
-	currentBlocks := global.Filestruct.CurrentBlocks
-
-	global.Logger.Log(fmt.Sprintf("Datos del archivo %s antes de truncar: %+v ", filepath, global.Filestruct), log.DEBUG)
-
-	neededBlocks := int(math.Ceil(float64(estructura.Tamanio) / float64(global.IOConfig.DialFSBlockSize)))
-
-	global.Logger.Log(fmt.Sprintf("Current Blocks: %d", global.Filestruct.CurrentBlocks), log.DEBUG)
-
-	global.Logger.Log(fmt.Sprintf("Needed Blocks: %d", neededBlocks), log.DEBUG)
-
-	if neededBlocks > global.Filestruct.CurrentBlocks { // tengo que ocupar más bloques, acá chequeo si es necesario compactar (al compactar, actualizo los initial_block de los .txt?)
-
-		// compactar
-
-		// obtengo el valor de los bloquesContiguosLibres que tiene mi archivo de metadata
-
-		var bloquesContiguosLibres int = 0
-
-		// posiciono el cursor en la posición siguiente al último bloque utilizado por mi archivo de metadata
-
-		_, err = bitmapfile.Seek(int64(global.Filestruct.CurrentBlocks+1), 0)
-		if err != nil {
-			global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
-			http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
-			return
-		}
-		value := make([]byte, 1)
-
-		bitmapfile.Read(value)
-
-		for value[0] != 1 && currentBlocks+bloquesContiguosLibres <= global.IOConfig.DialFSBlockCount-1 {
-
-			bloquesContiguosLibres++
-			_, err = bitmapfile.Seek(int64(currentBlocks+1+bloquesContiguosLibres), 0)
-			if err != nil {
-				global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
-				http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
-				return
-			}
-
-			bitmapfile.Read(value)
-
-		}
-
-		global.Logger.Log(fmt.Sprintf("Bloques contiguos libres: %d ", bloquesContiguosLibres), log.DEBUG)
-
-		if neededBlocks > bloquesContiguosLibres {
-
-			global.Logger.Log("Es necesario compactar", log.DEBUG)
-
-			// hay que cambiar los valores de initalBlock de cada archivo metadata (compactar en sí) y modificar bitmap.dat
-
-			return
-		}
-
-		global.Logger.Log("Entré a truncar para aumentar", log.DEBUG)
-
-		// muevo el cursor a la primera posición (global.Filestruct.Initial_block)
-
-		for i := 0; i < neededBlocks; i++ {
-
-			_, err = bitmapfile.Seek(int64(global.Filestruct.Initial_block+i), 0)
-			if err != nil {
-				global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
-				http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
-				return
-			}
-
-			// cambio el bit de 0 a 1 (ver qué pasa si esa posición ya está ocupada, fragmentación externa, compactación)
-			_, err = bitmapfile.Write([]byte{1})
-			if err != nil {
-				global.Logger.Log(fmt.Sprintf("Error al escribir el byte: %s ", err.Error()), log.ERROR)
-				http.Error(w, "Error al escribir el byte", http.StatusBadRequest)
-				return
-			}
-		}
-
-	} else if neededBlocks < currentBlocks { // neededBlocks < currentBlocks (tengo que liberar bloques)
-
-		global.Logger.Log("Entré a truncar para disminuir", log.DEBUG)
-
-		for i := 0; i < currentBlocks-neededBlocks; i++ {
-
-			_, err = bitmapfile.Seek(int64(neededBlocks+i), 0)
-			if err != nil {
-				global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
-				http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
-				return
-			}
-
-			// cambio el bit de 1 a 0
-			_, err = bitmapfile.Write([]byte{0})
-			if err != nil {
-				global.Logger.Log(fmt.Sprintf("Error al escribir el byte: %s ", err.Error()), log.ERROR)
-				http.Error(w, "Error al escribir el byte", http.StatusBadRequest)
-				return
-			}
-		}
-
 	} else {
-		global.Logger.Log(fmt.Sprintf("No es necesario truncar, tamaño actualizado: %+v", global.Filestruct), log.DEBUG)
+		global.Logger.Log(fmt.Sprintf("Es necesario ~·~·compactar·~·~: +%v", global.Estructura_truncate), log.DEBUG)
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
-	global.Filestruct.CurrentBlocks = neededBlocks
-
-	// modificar el size en el txt
-
-	file, err = os.OpenFile(filepath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0644)
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", filepath, err.Error()), log.ERROR)
-		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
-		return
-	}
-
-	newSize := map[string]interface{}{
-		"initial_block": global.Filestruct.Initial_block,
-		"size":          estructura.Tamanio,
-	}
-
-	encoder := json.NewEncoder(file)
-	err = encoder.Encode(newSize)
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al encodear el nuevo size en el archivo %s: %s ", filepath, err.Error()), log.ERROR)
-		http.Error(w, "Error al encodear el nuevo size en el archivo", http.StatusBadRequest)
-		return
-	}
-
-	_, err = file.Seek(0, 0)
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
-		http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
-		return
-	}
-
-	decoder = json.NewDecoder(file)
-	err = decoder.Decode(&global.Filestruct)
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo: %s: %s ", filepath, err.Error()), log.ERROR)
-		http.Error(w, "Error al decodear el archivo", http.StatusBadRequest)
-		return
-	}
-
-	global.Logger.Log(fmt.Sprintf("Datos del archivo %s luego de truncar: %+v ", filepath, global.Filestruct), log.DEBUG)
-
-	// muevo el cursor nuevamente al principio del archivo bitmap.dat
-	_, err = bitmapfile.Seek(0, 0)
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
-		return
-	}
-
-	// leo el archivo (desde la posición inicial) y logeo su contenido actualizado
-
-	_, err = bitmapfile.Read(data) // asigno los bytes que leo del archivo bitmapfile (actualizado) a mi slice de bytes data, creado anteriormente
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
-		http.Error(w, "Error al leer el archivo", http.StatusBadRequest)
-		return
-	}
-
-	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s luego de truncar: %+v", global.Dispositivo.Name, data), log.DEBUG)
-
-	dispositivo.InUse = false
-	w.WriteHeader(http.StatusNoContent)
 }
 
 func Fs_write(w http.ResponseWriter, r *http.Request) {
@@ -548,7 +368,7 @@ func Fs_read(w http.ResponseWriter, r *http.Request) {
 
 	// abro el archivo metadata y decodeo su contenido
 
-	filepath := "/home/utnso/tp-2024-1c-sudoers/notas.txt"
+	filepath := global.IOConfig.DialFSPath + "/" + estructura.FileName
 
 	file, err := os.Open(filepath)
 	if err != nil {
@@ -567,9 +387,9 @@ func Fs_read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// abro el archivo bloques.dat
+	// abro el archivo bloques
 
-	bloquesdatpath := global.IOConfig.DialFSPath + "/Filesystems" + "/" + global.Dispositivo.Name + "/bloques.dat"
+	bloquesdatpath := global.IOConfig.DialFSPath + "/" + estructura.IOName + "/bloques.dat"
 
 	bloquesdatfile, err := os.OpenFile(bloquesdatpath, os.O_RDONLY, 0644)
 	if err != nil {
@@ -601,7 +421,7 @@ func Fs_read(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// la lógica de leer ya está implementada pero por ahora lo hardcodeo
-	// porque no tengo forma de escribir en bloques.dat (salvo con hex editor) y está todo en 0
+	// porque no tengo forma de escribir en bloques (salvo con hex editor) y está todo en 0
 
 	data[0] = 72
 	data[1] = 79
