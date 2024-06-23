@@ -275,38 +275,37 @@ func openBitmapDat(config *Config) {
 
 func GetCurrentBlocks(file string, w http.ResponseWriter) int {
 
-	// si no fue truncado => return 1
+	metadatapath := IOConfig.DialFSPath + "/" + file
+
+	metadatafile, err := os.Open(metadatapath)
+	if err != nil {
+		Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", metadatapath, err.Error()), log.DEBUG)
+		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
+		return -1
+	}
+
+	defer metadatafile.Close()
+
+	decoder := json.NewDecoder(metadatafile)
+	err = decoder.Decode(&Filestruct)
+	if err != nil {
+		Logger.Log(fmt.Sprintf("Error al decodear el archivo %s: %s ", metadatapath, err.Error()), log.ERROR)
+		http.Error(w, "Error al decodear el archivo", http.StatusBadRequest)
+		return -1
+	}
 
 	if hasBeenTruncated(file) == 1 {
 
-		metadatapath := IOConfig.DialFSPath + "/" + file
-
-		metadatafile, err := os.Open(metadatapath)
-		if err != nil {
-			Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", metadatapath, err.Error()), log.DEBUG)
-			http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
-			return -1
-		}
-
-		defer metadatafile.Close()
-
-		decoder := json.NewDecoder(metadatafile)
-		err = decoder.Decode(&Filestruct)
-		if err != nil {
-			Logger.Log(fmt.Sprintf("Error al decodear el archivo %s: %s ", metadatapath, err.Error()), log.ERROR)
-			http.Error(w, "Error al decodear el archivo", http.StatusBadRequest)
-			return -1
-		}
-
-		currentBlocks := int(math.Ceil(float64(Filestruct.Size) / float64(IOConfig.DialFSBlockSize)))
-
+		Filestruct.CurrentBlocks = int(math.Ceil(float64(Filestruct.Size) / float64(IOConfig.DialFSBlockSize)))
 		Logger.Log(fmt.Sprintf("Filestruct: %+v", Filestruct), log.DEBUG)
-		Logger.Log(fmt.Sprintf("Current blocks: %d", currentBlocks), log.DEBUG)
-		return currentBlocks
+		Logger.Log(fmt.Sprintf("Current blocks: %d", Filestruct.CurrentBlocks), log.DEBUG)
+		return Filestruct.CurrentBlocks
+
 	} else {
-		currentBlocks := 1
+
+		Filestruct.CurrentBlocks = 1
 		Logger.Log(fmt.Sprintf("Filestruct: %+v", Filestruct), log.DEBUG)
-		Logger.Log(fmt.Sprintf("Current blocks: %d", currentBlocks), log.DEBUG)
+		Logger.Log(fmt.Sprintf("Current blocks: %d", Filestruct.CurrentBlocks), log.DEBUG)
 		return 1
 	}
 }
@@ -315,7 +314,7 @@ func GetFreeContiguousBlocks(file string, w http.ResponseWriter) int {
 
 	currentBlocks := GetCurrentBlocks(file, w)
 
-	var freeContiguousBlocks int = 0
+	freeContiguousBlocks := 0
 
 	bitmappath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/bitmap.dat"
 
@@ -328,7 +327,7 @@ func GetFreeContiguousBlocks(file string, w http.ResponseWriter) int {
 
 	defer bitmapfile.Close()
 
-	_, err = bitmapfile.Seek(int64(currentBlocks+1), 0)
+	_, err = bitmapfile.Seek(int64(Filestruct.Initial_block+currentBlocks), 0)
 	if err != nil {
 		Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
 		http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
@@ -338,10 +337,10 @@ func GetFreeContiguousBlocks(file string, w http.ResponseWriter) int {
 
 	bitmapfile.Read(value)
 
-	for value[0] != 1 && currentBlocks+freeContiguousBlocks <= IOConfig.DialFSBlockCount-1 {
+	for value[0] != 1 && Filestruct.Initial_block+currentBlocks+freeContiguousBlocks <= IOConfig.DialFSBlockCount-1 {
 
 		freeContiguousBlocks++
-		_, err = bitmapfile.Seek(int64(currentBlocks+1+freeContiguousBlocks), 0)
+		_, err = bitmapfile.Seek(int64(Filestruct.Initial_block+currentBlocks+freeContiguousBlocks), 0)
 		if err != nil {
 			Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
 			http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
@@ -440,7 +439,7 @@ func AddToTruncatedFiles(file string) {
 		return
 	}
 
-	truncatedpath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/truncated-files/" + "truncated-" + file
+	truncatedpath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/truncated-files/truncated-" + file
 
 	truncatedfile, err := os.OpenFile(truncatedpath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
 	if err != nil {
@@ -502,6 +501,8 @@ func UpdateSize(file string, w http.ResponseWriter) { // modificar el size en el
 		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
 		return
 	}
+
+	defer metadatafile.Close()
 
 	newSize := map[string]interface{}{
 		"initial_block": Filestruct.Initial_block,

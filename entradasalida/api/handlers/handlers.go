@@ -197,6 +197,9 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error al decodear el archivo", http.StatusBadRequest)
 		return
 	}
+
+	global.Filestruct.CurrentBlocks = 0
+
 	global.Logger.Log(fmt.Sprintf("Datos del archivo %s antes de ser creado: %+v ", filepath, global.Filestruct), log.DEBUG)
 
 	position := int64(global.Filestruct.Initial_block)
@@ -240,7 +243,7 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log(fmt.Sprintf("Datos del archivo %s luego de ser creado: %+v ", filepath, global.Filestruct), log.DEBUG)
 
-	global.AddToActiveFiles(global.Estructura_truncate.FileName)
+	global.AddToActiveFiles(estructura.FileName)
 
 	dispositivo.InUse = false
 	w.WriteHeader(http.StatusNoContent)
