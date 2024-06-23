@@ -340,6 +340,7 @@ func Fs_write(w http.ResponseWriter, r *http.Request) {
 	dispositivo.InUse = true
 
 	var estructura global.KernelIOFS_WR
+	var estructura_actualizada global.MemStdIO
 
 	err := serialization.DecodeHTTPBody[*global.KernelIOFS_WR](r, &estructura)
 	if err != nil {
@@ -352,6 +353,49 @@ func Fs_write(w http.ResponseWriter, r *http.Request) {
 	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.DEBUG)
 
 	// implementación
+
+	estructura_actualizada.Pid = estructura.Pid
+	estructura_actualizada.NumFrames = estructura.NumFrames
+	estructura_actualizada.Offset = estructura.Offset
+
+	// hago una request a memoria para obtener un valor
+
+	resp, err := requests.PutHTTPwithBody[global.MemStdIO, string](global.IOConfig.IPMemory, global.IOConfig.PortMemory, "stdout_write", estructura_actualizada)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("NO se pudo enviar a memoria el valor a escribir %s", err.Error()), log.ERROR)
+		http.Error(w, "Error al enviar a memoria el valor a escribir", http.StatusBadRequest)
+		return
+		// TODO: memoria falta que entienda el mensaje (hacer el endpoint) y me devuelva el valor del registro
+	}
+	global.Logger.Log(fmt.Sprintf("Memoria devolvió este valor: %s", *resp), log.DEBUG)
+
+	// habría que decodear la response que nos da memoria en un slice de bytes.
+
+	// abro el archivo bloques
+
+	bloquesdatpath := global.IOConfig.DialFSPath + "/" + estructura.IOName + "/bloques.dat"
+
+	bloquesdatfile, err := os.OpenFile(bloquesdatpath, os.O_RDONLY, 0644)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", bloquesdatpath, err.Error()), log.ERROR)
+		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
+		return
+	}
+
+	// esta línea de código garantiza que el archivo en el que estoy trabajando se cierre cuando la función actual termina de ejecutarse
+	defer bloquesdatfile.Close()
+
+	// ubico el puntero en la ubicación deseada
+
+	ubicacionDeseada := global.IOConfig.DialFSBlockSize*global.Filestruct.Initial_block + estructura.PunteroArchivo
+
+	_, err = bloquesdatfile.Seek(int64(ubicacionDeseada), 0)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
+		return
+	}
+
+	// escribo el contenido que me llegó de memoria en el archivo de bloques
 
 	dispositivo.InUse = false
 	w.WriteHeader(http.StatusNoContent)
