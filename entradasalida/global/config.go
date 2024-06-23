@@ -556,7 +556,7 @@ func TruncateLess(file string, w http.ResponseWriter) {
 
 	for i := 0; i < currentBlocks-neededBlocks; i++ {
 
-		_, err = bitmapfile.Seek(int64(neededBlocks+i), 0)
+		_, err = bitmapfile.Seek(int64(Filestruct.Initial_block+Filestruct.CurrentBlocks-neededBlocks+i), 0)
 		if err != nil {
 			Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
 			http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
