@@ -369,8 +369,6 @@ func Fs_write(w http.ResponseWriter, r *http.Request) {
 	}
 	global.Logger.Log(fmt.Sprintf("Memoria devolvió este valor: %s", *resp), log.DEBUG)
 
-	// habría que decodear la response que nos da memoria en un slice de bytes.
-
 	// abro el archivo bloques
 
 	bloquesdatpath := global.IOConfig.DialFSPath + "/" + estructura.IOName + "/bloques.dat"
