@@ -369,6 +369,12 @@ func Fs_write(w http.ResponseWriter, r *http.Request) {
 	}
 	global.Logger.Log(fmt.Sprintf("Memoria devolvió este valor: %s", *resp), log.DEBUG)
 
+	// convierto la response en un slice de bytes
+
+	valor := []byte(*resp)
+
+	global.Logger.Log(fmt.Sprintf("Conversión de la respuesta de memoria en un slice de bytes: %v", valor), log.INFO)
+
 	// abro el archivo bloques
 
 	bloquesdatpath := global.IOConfig.DialFSPath + "/" + estructura.IOName + "/bloques.dat"
@@ -394,6 +400,15 @@ func Fs_write(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// escribo el contenido que me llegó de memoria en el archivo de bloques
+
+	_, err = bloquesdatfile.Write(valor)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al escribir en el archivo %s: %s ", bloquesdatpath, err.Error()), log.ERROR)
+		http.Error(w, "Error al escribir en el archivo", http.StatusInternalServerError)
+		return
+	}
+
+	global.Logger.Log("Datos escritos exitosamente en el archivo bloques.dat", log.INFO)
 
 	dispositivo.InUse = false
 	w.WriteHeader(http.StatusNoContent)
