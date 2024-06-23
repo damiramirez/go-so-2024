@@ -240,6 +240,8 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log(fmt.Sprintf("Datos del archivo %s luego de ser creado: %+v ", filepath, global.Filestruct), log.DEBUG)
 
+	global.AddToActiveFiles(global.Estructura_truncate.FileName)
+
 	dispositivo.InUse = false
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -298,10 +300,12 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 		global.UpdateSize(global.Estructura_truncate.FileName, w)
 		global.Logger.Log(fmt.Sprintf("No es necesario truncar pero actualicé el size: %+v", global.Estructura_truncate), log.DEBUG)
 		w.WriteHeader(http.StatusNoContent)
+		dispositivo.InUse = false
 		return
 	} else if !(totalFreeBlocks >= neededBlocks-currentBlocks) {
 		global.Logger.Log(fmt.Sprintf("No es posible agrandar el archivo: %+v", global.Estructura_truncate), log.ERROR)
 		w.WriteHeader(http.StatusNoContent)
+		dispositivo.InUse = false
 		return
 	} else if currentBlocks > neededBlocks {
 		global.Logger.Log(fmt.Sprintf("Trunco a menos %+v", global.Estructura_truncate), log.DEBUG)
@@ -309,6 +313,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 		global.AddToTruncatedFiles(global.Estructura_truncate.FileName)
 		global.UpdateSize(global.Estructura_truncate.FileName, w)
 		w.WriteHeader(http.StatusNoContent)
+		dispositivo.InUse = false
 		return
 	} else if neededBlocks-currentBlocks <= freeContiguousBlocks {
 		global.Logger.Log(fmt.Sprintf("Trunco a más %+v", global.Estructura_truncate), log.DEBUG)
@@ -316,10 +321,12 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 		global.AddToTruncatedFiles(global.Estructura_truncate.FileName)
 		global.UpdateSize(global.Estructura_truncate.FileName, w)
 		w.WriteHeader(http.StatusNoContent)
+		dispositivo.InUse = false
 		return
 	} else {
-		global.Logger.Log(fmt.Sprintf("Es necesario ~·~·compactar·~·~: +%v", global.Estructura_truncate), log.DEBUG)
+		global.Logger.Log(fmt.Sprintf("Es necesario ··compactar··: +%v", global.Estructura_truncate), log.DEBUG)
 		w.WriteHeader(http.StatusNoContent)
+		dispositivo.InUse = false
 		return
 	}
 

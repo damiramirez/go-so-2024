@@ -199,9 +199,13 @@ func LevantarFS(config *Config) {
 
 		openBitmapDat(config)
 
-		// crear el directorio para archivos que han sido truncados
+		// crear/abrir el directorio para archivos que han sido truncados
 
 		openTruncatedFilesDirectory(config)
+
+		// crear/abrir el directorio para archivos que están activos
+
+		openActiveFilesDirectory(config)
 
 	}
 
@@ -668,4 +672,37 @@ func TruncateMore(file string, w http.ResponseWriter) {
 
 	Logger.Log(fmt.Sprintf("Bitmap del FS %s luego de truncar: %+v", Dispositivo.Name, data), log.DEBUG)
 
+}
+
+func AddToActiveFiles(file string) {
+
+	// crear carpeta para los archivos del FS que están activos
+	dir := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/" + "active-files"
+
+	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+		Logger.Log(fmt.Sprintf("Error al crear el directorio: %s", err.Error()), log.ERROR)
+		return
+	}
+
+	activepath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/active-files/" + "active-" + file
+
+	activefile, err := os.OpenFile(activepath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
+	if err != nil {
+		Logger.Log(fmt.Sprintf("Error al crear el archivo: %s", err.Error()), log.ERROR)
+	}
+
+	defer activefile.Close()
+}
+
+func openActiveFilesDirectory(config *Config) {
+
+	// crear carpeta para los archivos del FS que están activos
+	dir := config.DialFSPath + "/" + Dispositivo.Name + "/" + "active-files"
+
+	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+		Logger.Log(fmt.Sprintf("Error al crear el directorio: %s", err.Error()), log.ERROR)
+		return
+	}
+
+	Logger.Log(fmt.Sprintf("Archivo %s abierto con éxito", dir), log.DEBUG)
 }
