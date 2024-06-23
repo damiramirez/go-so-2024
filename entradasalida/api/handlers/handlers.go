@@ -198,7 +198,7 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error al decodear el archivo", http.StatusBadRequest)
 		return
 	}
-	global.Logger.Log(fmt.Sprintf("Datos del archivo %s: %+v ", filepath, global.Filestruct), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Datos del archivo %s antes de ser creado: %+v ", filepath, global.Filestruct), log.DEBUG)
 
 	position := int64(global.Filestruct.Initial_block)
 
@@ -220,8 +220,6 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 
 	global.Filestruct.CurrentBlocks = 1
 
-	global.Logger.Log(fmt.Sprintf("Current blocks actualizado: %+v ", global.Filestruct), log.DEBUG)
-
 	// muevo el cursor nuevamente al principio del archivo bitmap.dat
 	_, err = bitmapfile.Seek(0, 0)
 	if err != nil {
@@ -240,6 +238,8 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s luego de crear el nuevo archivo: %+v", global.Dispositivo.Name, data), log.DEBUG)
+
+	global.Logger.Log(fmt.Sprintf("Datos del archivo %s luego de ser creado: %+v ", filepath, global.Filestruct), log.DEBUG)
 
 	dispositivo.InUse = false
 	w.WriteHeader(http.StatusNoContent)
@@ -290,9 +290,6 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 
 	// implementación
 
-	// chequear si hay lugar
-	// chequear si hay que compactar (al compactar, actualizo los initial_block de los .txt?)
-
 	// abro el archivo metadata y decodeo su contenido
 
 	filepath := "/home/utnso/tp-2024-1c-sudoers/notas.txt"
@@ -313,12 +310,6 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error al decodear el archivo", http.StatusBadRequest)
 		return
 	}
-
-	global.Logger.Log(fmt.Sprintf("Datos del archivo %s antes de truncar: %+v ", filepath, global.Filestruct), log.DEBUG)
-
-	// antes de truncar, calculo el valor de currentBlocks con el size (del metadata) / blocksize
-
-	global.Filestruct.CurrentBlocks = int(math.Ceil(float64(global.Filestruct.Size) / float64(global.IOConfig.DialFSBlockSize)))
 
 	// modifico el bitmap usando los datos recién decodeados
 
@@ -350,9 +341,58 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 
 	currentBlocks := global.Filestruct.CurrentBlocks
 
+	global.Logger.Log(fmt.Sprintf("Datos del archivo %s antes de truncar: %+v ", filepath, global.Filestruct), log.DEBUG)
+
 	neededBlocks := int(math.Ceil(float64(estructura.Tamanio) / float64(global.IOConfig.DialFSBlockSize)))
 
-	if neededBlocks >= currentBlocks { // tengo que ocupar más bloques
+	global.Logger.Log(fmt.Sprintf("Current Blocks: %d", global.Filestruct.CurrentBlocks), log.DEBUG)
+
+	global.Logger.Log(fmt.Sprintf("Needed Blocks: %d", neededBlocks), log.DEBUG)
+
+	if neededBlocks > global.Filestruct.CurrentBlocks { // tengo que ocupar más bloques, acá chequeo si es necesario compactar (al compactar, actualizo los initial_block de los .txt?)
+
+		// compactar
+
+		// obtengo el valor de los bloquesContiguosLibres que tiene mi archivo de metadata
+
+		var bloquesContiguosLibres int = 0
+
+		// posiciono el cursor en la posición siguiente al último bloque utilizado por mi archivo de metadata
+
+		_, err = bitmapfile.Seek(int64(global.Filestruct.CurrentBlocks+1), 0)
+		if err != nil {
+			global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
+			http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
+			return
+		}
+		value := make([]byte, 1)
+
+		bitmapfile.Read(value)
+
+		for value[0] != 1 && currentBlocks+bloquesContiguosLibres <= global.IOConfig.DialFSBlockCount-1 {
+
+			bloquesContiguosLibres++
+			_, err = bitmapfile.Seek(int64(currentBlocks+1+bloquesContiguosLibres), 0)
+			if err != nil {
+				global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
+				http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
+				return
+			}
+
+			bitmapfile.Read(value)
+
+		}
+
+		global.Logger.Log(fmt.Sprintf("Bloques contiguos libres: %d ", bloquesContiguosLibres), log.DEBUG)
+
+		if neededBlocks > bloquesContiguosLibres {
+
+			global.Logger.Log("Es necesario compactar", log.DEBUG)
+
+			// hay que cambiar los valores de initalBlock de cada archivo metadata (compactar en sí) y modificar bitmap.dat
+
+			return
+		}
 
 		global.Logger.Log("Entré a truncar para aumentar", log.DEBUG)
 
@@ -376,7 +416,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-	} else { // neededBlocks < currentBlocks (tengo que liberar bloques)
+	} else if neededBlocks < currentBlocks { // neededBlocks < currentBlocks (tengo que liberar bloques)
 
 		global.Logger.Log("Entré a truncar para disminuir", log.DEBUG)
 
@@ -398,6 +438,9 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+	} else {
+		global.Logger.Log(fmt.Sprintf("No es necesario truncar, tamaño actualizado: %+v", global.Filestruct), log.DEBUG)
+		return
 	}
 
 	global.Filestruct.CurrentBlocks = neededBlocks
