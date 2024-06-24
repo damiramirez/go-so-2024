@@ -74,7 +74,7 @@ func EndProcessHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: Eliminado desde la API", pid), log.INFO)
+	global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: INTERRUPTED_BY_USER", pid), log.INFO)
 	w.WriteHeader(http.StatusNoContent)
 }
 

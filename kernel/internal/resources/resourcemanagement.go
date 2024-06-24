@@ -11,7 +11,15 @@ import (
 )
 
 func Wait(Pcb *model.PCB) {
-	resource := global.ResourceMap[Pcb.Instruction.Parameters[0]]
+	resource, exist := global.ResourceMap[Pcb.Instruction.Parameters[0]]
+
+	if !exist {
+		global.Logger.Log(fmt.Sprintf("Nombre del recurso: %s no existe", Pcb.Instruction.Parameters[0]), log.DEBUG)
+		utils.PCBtoExit(Pcb)
+		global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: INVALID_RESOURCE", Pcb.PID), log.INFO)
+		return
+	}
+
 	resource.Count -= 1
 	resource.PidList = append(resource.PidList, Pcb.PID)
 
@@ -53,7 +61,15 @@ func Wait(Pcb *model.PCB) {
 }
 
 func Signal(PcbExec *model.PCB) {
-	resource := global.ResourceMap[PcbExec.Instruction.Parameters[0]]
+	resource, exist := global.ResourceMap[PcbExec.Instruction.Parameters[0]]
+
+	if !exist {
+		global.Logger.Log(fmt.Sprintf("Nombre del recurso: %s no existe", PcbExec.Instruction.Parameters[0]), log.DEBUG)
+		utils.PCBtoExit(PcbExec)
+		global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: INVALID_RESOURCE", PcbExec.PID), log.INFO)
+		return
+	}
+
 	resource.Count += 1
 	global.Logger.Log(fmt.Sprintf("%s %d", resource.Name, resource.Count), log.DEBUG)
 

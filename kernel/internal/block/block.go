@@ -85,7 +85,7 @@ func moveToExit(pcb *model.PCB) {
 	}
 
 	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: BLOCK - Estado Actual: %s ", pcb.PID, pcb.State), log.INFO)
-	global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: INVALID_RESOURCE", pcb.PID), log.INFO)
+	global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: INVALID_INTERFACE", pcb.PID), log.INFO)
 }
 
 func BlockToReady(pcb *model.PCB) {
