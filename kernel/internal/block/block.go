@@ -37,6 +37,7 @@ func ProcessToIO(pcb *model.PCB) {
 	if err != nil {
 		global.Logger.Log("Se desconecto IO:"+err.Error(), log.DEBUG)
 		delete(global.IoMap, io.GetName())
+		<-global.IoMap[io.GetName()].Sem
 		moveToExit(pcb)
 		return
 	}
