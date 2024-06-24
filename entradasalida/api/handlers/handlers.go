@@ -413,24 +413,29 @@ func Fs_write(w http.ResponseWriter, r *http.Request) {
 	// esta línea de código garantiza que el archivo en el que estoy trabajando se cierre cuando la función actual termina de ejecutarse
 	defer bloquesdatfile.Close()
 
-	//TODO: chequear que esté bien colocada la ubicación deseada
+	// TODO: chequear que esté bien colocada la ubicación deseada
 	// ubico el puntero en la ubicación deseada
 
 	ubicacionDeseada := global.IOConfig.DialFSBlockSize*global.Filestruct.Initial_block + estructura.PunteroArchivo
 
-	_, err = bloquesdatfile.Seek(int64(ubicacionDeseada), 0)
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
-		return
-	}
+	for i := 0; i < len(valor); i++ {
 
-	// escribo el contenido que me llegó de memoria en el archivo de bloques
+		// Mueve el cursor a medida que vas escribiendo(lenght de valor)
+		_, err = bloquesdatfile.Seek(int64(ubicacionDeseada+i), 0)
+		if err != nil {
+			global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
+			return
+		}
 
-	_, err = bloquesdatfile.Write(valor)
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al escribir en el archivo %s: %s ", bloquesdatpath, err.Error()), log.ERROR)
-		http.Error(w, "Error al escribir en el archivo", http.StatusInternalServerError)
-		return
+		// escribo el contenido que me llegó de memoria en el archivo de bloques
+
+		_, err = bloquesdatfile.Write(valor[:i])
+		if err != nil {
+			global.Logger.Log(fmt.Sprintf("Error al escribir en el archivo %s: %s ", bloquesdatpath, err.Error()), log.ERROR)
+			http.Error(w, "Error al escribir en el archivo", http.StatusInternalServerError)
+			return
+		}
+
 	}
 
 	global.Logger.Log("Datos escritos exitosamente en el archivo bloques.dat", log.INFO)
