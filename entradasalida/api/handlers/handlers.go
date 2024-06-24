@@ -375,6 +375,7 @@ func Fs_write(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log(fmt.Sprintf("Conversión de la respuesta de memoria en un slice de bytes: %v", valor), log.INFO)
 
+	// TODO: chequear que donde escribo pertenece al archivo
 	// abro el archivo bloques
 
 	bloquesdatpath := global.IOConfig.DialFSPath + "/" + estructura.IOName + "/bloques.dat"
@@ -389,6 +390,7 @@ func Fs_write(w http.ResponseWriter, r *http.Request) {
 	// esta línea de código garantiza que el archivo en el que estoy trabajando se cierre cuando la función actual termina de ejecutarse
 	defer bloquesdatfile.Close()
 
+	//TODO: chequear que esté bien colocada la ubicación deseada
 	// ubico el puntero en la ubicación deseada
 
 	ubicacionDeseada := global.IOConfig.DialFSBlockSize*global.Filestruct.Initial_block + estructura.PunteroArchivo
