@@ -76,6 +76,14 @@ func moveToExit(pcb *model.PCB) {
 	global.ExitState.PushBack(pcb)
 	global.MutexExitState.Unlock()
 
+	// Request a memoria para eliminar pagina de tablas
+	endpoint := fmt.Sprintf("delete/%d", pcb.PID)
+	_, err := requests.DeleteHTTP[interface{}](global.KernelConfig.IPMemory, global.KernelConfig.PortMemory, endpoint, nil)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al eliminar proceso en memoria: %+v", err), log.ERROR)
+		return
+	}
+
 	global.Logger.Log(fmt.Sprintf("PID: %d - Estado Anterior: BLOCK - Estado Actual: %s ", pcb.PID, pcb.State), log.INFO)
 	global.Logger.Log(fmt.Sprintf("Finaliza el proceso %d - Motivo: INVALID_RESOURCE", pcb.PID), log.INFO)
 }
