@@ -268,6 +268,23 @@ func Fs_delete(w http.ResponseWriter, r *http.Request) {
 	// implementación
 
 	// abrir el archivo bloques, acceder a la posición dada por initial_block (del .txt) * config.dialfs_block_size
+
+	// abro el archivo bloques
+
+	bloquesdatpath := global.IOConfig.DialFSPath + "/" + estructura.IOName + "/bloques.dat"
+
+	bloquesdatfile, err := os.OpenFile(bloquesdatpath, os.O_RDWR, 0644)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", bloquesdatpath, err.Error()), log.ERROR)
+		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
+		return
+	}
+
+	// esta línea de código garantiza que el archivo en el que estoy trabajando se cierre cuando la función actual termina de ejecutarse
+	defer bloquesdatfile.Close()
+
+	// posiciones de inicio y fin
+
 	// y borrar/setear en 0(? el contenido que hay desde esa posición hasta la posición dada por size (del .txt) * config.dialfs_block_size
 
 	// actualizar el bitmap!
@@ -376,11 +393,12 @@ func Fs_write(w http.ResponseWriter, r *http.Request) {
 	global.Logger.Log(fmt.Sprintf("Conversión de la respuesta de memoria en un slice de bytes: %v", valor), log.INFO)
 
 	// TODO: chequear que donde escribo pertenece al archivo
+
 	// abro el archivo bloques
 
 	bloquesdatpath := global.IOConfig.DialFSPath + "/" + estructura.IOName + "/bloques.dat"
 
-	bloquesdatfile, err := os.OpenFile(bloquesdatpath, os.O_RDONLY, 0644)
+	bloquesdatfile, err := os.OpenFile(bloquesdatpath, os.O_RDWR, 0644)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", bloquesdatpath, err.Error()), log.ERROR)
 		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
