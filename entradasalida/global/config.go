@@ -270,7 +270,7 @@ func openBitmapDat(config *Config) {
 		Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
 	}
 
-	Logger.Log(fmt.Sprintf("Archivo %s abierto con éxito (tamaño de %d bytes): %+v", filename, size, data), log.DEBUG)
+	Logger.Log(fmt.Sprintf("Archivo %s abierto con éxito (tamaño de %d bits): %+v", filename, size, data), log.DEBUG)
 }
 
 func GetCurrentBlocks(file string, w http.ResponseWriter) int {
@@ -556,7 +556,7 @@ func TruncateLess(file string, w http.ResponseWriter) {
 
 	for i := 0; i < currentBlocks-neededBlocks; i++ {
 
-		_, err = bitmapfile.Seek(int64(Filestruct.Initial_block+Filestruct.CurrentBlocks-neededBlocks+i), 0)
+		_, err = bitmapfile.Seek(int64(Filestruct.Initial_block+neededBlocks+i), 0)
 		if err != nil {
 			Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
 			http.Error(w, "Error al mover el cursor", http.StatusBadRequest)

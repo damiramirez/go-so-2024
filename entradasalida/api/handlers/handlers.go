@@ -345,6 +345,11 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		global.Logger.Log(fmt.Sprintf("Es necesario ··compactar··: +%v", global.Estructura_truncate), log.DEBUG)
+
+		// compactar huecos libres entre bloques ocupados (1 a la izq)
+
+		//
+
 		w.WriteHeader(http.StatusNoContent)
 		dispositivo.InUse = false
 		return
