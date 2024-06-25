@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/sisoputnfrba/tp-golang/entradasalida/global"
@@ -148,23 +149,11 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 	// implementación
 
 	// 1) busco en mi bitmap el primer bloque libre, uso ese dato para asignarlo como initial_block del archivo metadata estructura.Filename
-	var firstFreeBlock int
 
-	found := false
-	for i, v := range global.Bitmap {
-		if v == byte(0) {
-			global.Logger.Log(fmt.Sprintf("FirstFreeBlock: %d", i), log.DEBUG)
-			firstFreeBlock = i
-			found = true
-			break
-		}
-	}
-	if !found {
-		global.Logger.Log("No hay bloques libres", log.DEBUG)
-	}
+	firstFreeBlock := getFirstFreeBlock()
 
 	// 2) creo el archivo metadata, de nombre estructura.Filename, con size = 0 e initial_block = al valor hallado en 2)
-	filename := global.IOConfig.DialFSPath + "/" + estructura.FileName
+	filename := global.IOConfig.DialFSPath + "/" + global.Dispositivo.Name + "/" + estructura.FileName
 	file, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
 	if err != nil {
 		global.Logger.Log(fmt.Sprint("Error al crear el archivo:", err), log.ERROR)
@@ -190,6 +179,8 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 	global.Filestruct.Initial_block = firstFreeBlock
 	global.Filestruct.Size = 0
 	global.Logger.Log(fmt.Sprintf("Datos del archivo luego de ser creado (%s): %+v ", filename, global.Filestruct), log.DEBUG)
+
+	global.MapFiles[estructura.FileName] = global.Filestruct
 
 	//global.AddToActiveFiles(estructura.FileName)
 
@@ -260,7 +251,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 
 	// obtengo los datos del archivo metadata
 
-	metadatapath := global.IOConfig.DialFSPath + "/" + global.Estructura_truncate.FileName
+	metadatapath := global.IOConfig.DialFSPath + "/" + global.Dispositivo.Name + "/" + global.Estructura_truncate.FileName
 
 	metadatafile, err := os.Open(metadatapath)
 	if err != nil {
@@ -324,7 +315,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 
 		// compactar huecos libres entre bloques ocupados (1 a la izq)
 
-		//
+		compactar(totalFreeBlocks, w)
 
 		w.WriteHeader(http.StatusNoContent)
 		dispositivo.InUse = false
@@ -525,4 +516,78 @@ func Fs_read(w http.ResponseWriter, r *http.Request) {
 
 	dispositivo.InUse = false
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func compactar(totalfreeblocks int, w http.ResponseWriter) {
+
+	//sacar el truncado
+
+	global.UpdateBitmap(0, global.Filestruct.Initial_block, global.Filestruct.CurrentBlocks, w)
+
+	//actualizar bitmap (mover todos los 1 a la izquierda)
+	totalUsedBlocks := global.IOConfig.DialFSBlockCount - totalfreeblocks
+	global.UpdateBitmap(1, 0, totalUsedBlocks, w)
+	global.UpdateBitmap(0, totalUsedBlocks, totalfreeblocks, w)
+
+	// set initial block del truncado
+	global.UpdateInitialBlock(global.Estructura_truncate.FileName, getFirstFreeBlock(), w)
+
+	//actualizar los initial block de los archivos de metadata
+	updateMetadataFiles(w)
+
+	// actualizar el size del archivo truncado
+	global.UpdateSize(global.Estructura_truncate.FileName, global.Estructura_truncate.Tamanio, w)
+
+	global.PrintBitmap(w)
+
+}
+
+func updateMetadataFiles(w http.ResponseWriter) {
+
+	var fileNames []string
+
+	dirPath := global.IOConfig.DialFSPath + "/" + global.Dispositivo.Name
+
+	// Leer los contenidos del directorio
+	entries, err := os.ReadDir(dirPath)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("No se pudo leer el directorio que contiene los metadata %s", err.Error()), log.ERROR)
+	}
+	// Iterar sobre los archivos y agregar sus nombres al slice
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.Contains(entry.Name(), "txt") {
+			fileNames = append(fileNames, entry.Name())
+		}
+	}
+
+	// Imprimir los nombres de los archivos
+	global.Logger.Log(fmt.Sprintf("Nombre de los archivos: %+v", fileNames), log.DEBUG)
+
+	currentInitialBlock := 0
+
+	for i := 0; i < len(fileNames); i++ {
+		global.Logger.Log(fmt.Sprintf("Archivo a actualizar: %s - %d", fileNames[i], currentInitialBlock), log.DEBUG)
+		global.UpdateInitialBlock(fileNames[i], currentInitialBlock, w)
+		currentInitialBlock = currentInitialBlock + global.GetCurrentBlocks(fileNames[i], w)
+	}
+
+}
+
+func getFirstFreeBlock() int {
+
+	var firstFreeBlock int
+
+	found := false
+	for i, v := range global.Bitmap {
+		if v == byte(0) {
+			global.Logger.Log(fmt.Sprintf("FirstFreeBlock: %d", i), log.DEBUG)
+			firstFreeBlock = i
+			found = true
+			break
+		}
+	}
+	if !found {
+		global.Logger.Log("No hay bloques libres", log.DEBUG)
+	}
+	return firstFreeBlock
 }

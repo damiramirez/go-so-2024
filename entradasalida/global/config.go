@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/sisoputnfrba/tp-golang/cpu/global"
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 	"github.com/sisoputnfrba/tp-golang/utils/requests"
@@ -94,6 +93,8 @@ type File struct {
 	CurrentBlocks int
 }
 
+var MapFiles map[string]File
+
 var Bloques []byte
 
 var Bitmap []byte
@@ -130,6 +131,8 @@ func InitGlobal() {
 	AvisoKernelIOExistente()
 
 	LevantarFS(IOConfig)
+
+	MapFiles = map[string]File{}
 
 }
 
@@ -188,6 +191,14 @@ func LevantarFS(config *Config) {
 
 	if config.Type == "DIALFS" {
 
+		// crear directorio específico de la IO
+		dir := config.DialFSPath + "/" + Dispositivo.Name
+
+		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+			Logger.Log(fmt.Sprintf("Error al crear el directorio: %s", err.Error()), log.ERROR)
+			return
+		}
+
 		// crear-abrir bloques.dat
 
 		openBloquesDat(config)
@@ -211,7 +222,7 @@ func LevantarFS(config *Config) {
 
 func openBloquesDat(config *Config) {
 
-	filename := config.DialFSPath + "/bloques.dat"
+	filename := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/bloques.dat"
 	size := config.DialFSBlockSize * config.DialFSBlockCount
 	Bloques = make([]byte, IOConfig.DialFSBlockCount*IOConfig.DialFSBlockSize)
 
@@ -242,7 +253,7 @@ func openBloquesDat(config *Config) {
 
 func openBitmapDat(config *Config) {
 
-	filename := config.DialFSPath + "/bitmap.dat"
+	filename := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/bitmap.dat"
 	size := config.DialFSBlockCount
 	Bitmap = make([]byte, IOConfig.DialFSBlockCount)
 
@@ -272,13 +283,16 @@ func openBitmapDat(config *Config) {
 }
 
 func GetCurrentBlocks(file string, w http.ResponseWriter) int {
-	if Filestruct.Size > 0 {
-		Filestruct.CurrentBlocks = int(math.Ceil(float64(Filestruct.Size) / float64(IOConfig.DialFSBlockSize)))
-	} else if Filestruct.Size == 0 {
-		Filestruct.CurrentBlocks = 1
+
+	filestruct := MapFiles[file]
+	Logger.Log(fmt.Sprintf("Filestruct %s: %+v", file, filestruct), log.DEBUG)
+	if filestruct.Size > 0 {
+		filestruct.CurrentBlocks = int(math.Ceil(float64(Filestruct.Size) / float64(IOConfig.DialFSBlockSize)))
+	} else if filestruct.Size == 0 {
+		filestruct.CurrentBlocks = 1
 	}
-	Logger.Log(fmt.Sprintf("Current blocks: %d", Filestruct.CurrentBlocks), log.DEBUG)
-	return Filestruct.CurrentBlocks
+	Logger.Log(fmt.Sprintf("Current blocks: %d", filestruct.CurrentBlocks), log.DEBUG)
+	return filestruct.CurrentBlocks
 
 }
 
@@ -288,7 +302,7 @@ func GetFreeContiguousBlocks(file string, w http.ResponseWriter) int {
 
 	freeContiguousBlocks := 0
 
-	bitmappath := IOConfig.DialFSPath + "/bitmap.dat"
+	bitmappath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/bitmap.dat"
 
 	bitmapfile, err := os.OpenFile(bitmappath, os.O_RDWR, 0644)
 	if err != nil {
@@ -340,7 +354,7 @@ func GetNeededBlocks(w http.ResponseWriter, estructura KernelIOFS_Truncate) int 
 
 func GetTotalFreeBlocks(w http.ResponseWriter) int {
 
-	bitmappath := IOConfig.DialFSPath + "/bitmap.dat"
+	bitmappath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/bitmap.dat"
 
 	bitmapfile, err := os.OpenFile(bitmappath, os.O_RDWR, 0644)
 	if err != nil {
@@ -384,7 +398,7 @@ func PrintBitmap(w http.ResponseWriter) {
 
 	// leo el archivo y logeo su contenido
 
-	bitmappath := IOConfig.DialFSPath + "/bitmap.dat"
+	bitmappath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/bitmap.dat"
 
 	bitmapfile, err := os.OpenFile(bitmappath, os.O_RDWR, 0644)
 	if err != nil {
@@ -407,7 +421,7 @@ func PrintBitmap(w http.ResponseWriter) {
 
 func UpdateSize(file string, newSize int, w http.ResponseWriter) { // modificar el size en el metadata
 
-	filepath := IOConfig.DialFSPath + "/" + file
+	filepath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/" + file
 
 	metadatafile, err := os.OpenFile(filepath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0644)
 	if err != nil {
@@ -415,6 +429,8 @@ func UpdateSize(file string, newSize int, w http.ResponseWriter) { // modificar 
 		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
 		return
 	}
+
+	Logger.Log(fmt.Sprintf("NewSize: %d", newSize), log.DEBUG)
 
 	defer metadatafile.Close()
 
@@ -434,7 +450,11 @@ func UpdateSize(file string, newSize int, w http.ResponseWriter) { // modificar 
 
 func UpdateInitialBlock(file string, newInitialBlock int, w http.ResponseWriter) { // modificar el initial block en el metadata
 
-	filepath := IOConfig.DialFSPath + "/" + file
+	// declarar variable filestruct
+	// accedo a map con la key file
+	// actualizar map con la key file
+
+	filepath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/" + file
 
 	metadatafile, err := os.OpenFile(filepath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0644)
 	if err != nil {
@@ -447,7 +467,7 @@ func UpdateInitialBlock(file string, newInitialBlock int, w http.ResponseWriter)
 
 	newSize := map[string]interface{}{
 		"initial_block": newInitialBlock,
-		"size":          Filestruct.Size,
+		"size":          Filestruct.Size, // filestruct.Size
 	}
 
 	encoder := json.NewEncoder(metadatafile)
@@ -469,11 +489,11 @@ func UpdateBitmap(writeValue int, initialBit int, bitAmount int, w http.Response
 
 	// actualizo el archivo bitmap.dat
 
-	bitmappath := IOConfig.DialFSPath + "/bitmap.dat"
+	bitmappath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/bitmap.dat"
 
 	bitmapfile, err := os.OpenFile(bitmappath, os.O_RDWR, 0644)
 	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo: %s ", err.Error()), log.ERROR)
+		Logger.Log(fmt.Sprintf("Error al abrir el archivo: %s ", err.Error()), log.ERROR)
 		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
 		return
 	}
@@ -492,9 +512,9 @@ func UpdateBitmap(writeValue int, initialBit int, bitAmount int, w http.Response
 /*
 func TruncateLess(file string, w http.ResponseWriter) {
 
-		filepath := IOConfig.DialFSPath + "/" + file
+		filepath := IOConfig.DialFSPath + "/" + Dispositivo.Name  "/" + file
 
-		bitmappath := IOConfig.DialFSPath + "/bitmap.dat"
+		bitmappath := IOConfig.DialFSPath + "/" + Dispositivo.Name  "/bitmap.dat"
 
 		bitmapfile, err := os.OpenFile(bitmappath, os.O_RDWR, 0644)
 		if err != nil {
@@ -572,9 +592,9 @@ func TruncateLess(file string, w http.ResponseWriter) {
 /*
 func TruncateMore(file string, w http.ResponseWriter) {
 
-	filepath := IOConfig.DialFSPath + "/" + file
+	filepath := IOConfig.DialFSPath + "/" + Dispositivo.Name  "/" + file
 
-	bitmappath := IOConfig.DialFSPath + "/bitmap.dat"
+	bitmappath := IOConfig.DialFSPath + "/" + Dispositivo.Name  "/bitmap.dat"
 
 	bitmapfile, err := os.OpenFile(bitmappath, os.O_RDWR, 0644)
 	if err != nil {
