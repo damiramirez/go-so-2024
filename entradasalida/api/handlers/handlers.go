@@ -182,7 +182,6 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 	global.UpdateBitmap(1, firstFreeBlock, 1, w)
 	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s luego de crear el nuevo archivo: %+v", global.Dispositivo.Name, global.Bitmap), log.DEBUG)
 
-	global.Logger.Log(fmt.Sprintf("Datos del archivo creado justo antes: %+v ", global.Filestruct), log.DEBUG)
 	global.Filestruct.CurrentBlocks = 0
 	global.Filestruct.Initial_block = -1
 	global.Filestruct.Size = -1
@@ -259,6 +258,29 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	global.Logger.Log(fmt.Sprintf("Dispositivo: %+v", dispositivo), log.DEBUG)
 	global.Logger.Log(fmt.Sprintf("Instrucción: %+v", global.Estructura_truncate), log.DEBUG)
 
+	// obtengo los datos del archivo metadata
+
+	metadatapath := global.IOConfig.DialFSPath + "/" + global.Estructura_truncate.FileName
+
+	metadatafile, err := os.Open(metadatapath)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", metadatapath, err.Error()), log.DEBUG)
+		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
+		return
+	}
+
+	defer metadatafile.Close()
+
+	decoder := json.NewDecoder(metadatafile)
+	err = decoder.Decode(&global.Filestruct)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo %s: %s ", metadatapath, err.Error()), log.ERROR)
+		http.Error(w, "Error al decodear el archivo", http.StatusBadRequest)
+		return
+	}
+
+	global.Logger.Log(fmt.Sprintf("Filestruct recién decodeado: %+v", global.Filestruct), log.DEBUG)
+
 	currentBlocks := global.GetCurrentBlocks(global.Estructura_truncate.FileName, w)
 	freeContiguousBlocks := global.GetFreeContiguousBlocks(global.Estructura_truncate.FileName, w)
 	neededBlocks := global.GetNeededBlocks(w, global.Estructura_truncate)
@@ -277,22 +299,28 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if currentBlocks > neededBlocks {
 		global.Logger.Log(fmt.Sprintf("Trunco a menos %+v", global.Estructura_truncate), log.DEBUG)
-		global.TruncateLess(global.Estructura_truncate.FileName, w)
+		//global.TruncateLess(global.Estructura_truncate.FileName, w)
 		//global.AddToTruncatedFiles(global.Estructura_truncate.FileName)
 		global.UpdateSize(global.Estructura_truncate.FileName, global.Estructura_truncate.Tamanio, w)
+		global.PrintBitmap(w)
+		global.UpdateBitmap(0, global.Filestruct.Initial_block+neededBlocks, currentBlocks-neededBlocks, w)
+		global.PrintBitmap(w)
 		w.WriteHeader(http.StatusNoContent)
 		dispositivo.InUse = false
 		return
 	} else if neededBlocks-currentBlocks <= freeContiguousBlocks {
 		global.Logger.Log(fmt.Sprintf("Trunco a más %+v", global.Estructura_truncate), log.DEBUG)
-		global.TruncateMore(global.Estructura_truncate.FileName, w)
+		//global.TruncateMore(global.Estructura_truncate.FileName, w)
 		//global.AddToTruncatedFiles(global.Estructura_truncate.FileName)
 		global.UpdateSize(global.Estructura_truncate.FileName, global.Estructura_truncate.Tamanio, w)
+		global.PrintBitmap(w)
+		global.UpdateBitmap(1, global.Filestruct.Initial_block+currentBlocks, neededBlocks-currentBlocks, w)
+		global.PrintBitmap(w)
 		w.WriteHeader(http.StatusNoContent)
 		dispositivo.InUse = false
 		return
 	} else {
-		global.Logger.Log(fmt.Sprintf("Es necesario ··compactar··: +%v", global.Estructura_truncate), log.DEBUG)
+		global.Logger.Log(fmt.Sprintf("Es necesario compactar: %+v", global.Estructura_truncate), log.DEBUG)
 
 		// compactar huecos libres entre bloques ocupados (1 a la izq)
 
