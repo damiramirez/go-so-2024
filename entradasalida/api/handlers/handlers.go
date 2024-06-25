@@ -141,11 +141,9 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error al decodear", http.StatusBadRequest)
 		return
 	}
-	global.Logger.Log(fmt.Sprintf("Estructura: %+v", estructura), log.DEBUG)
-
-	global.Logger.Log(fmt.Sprintf("Dispositivo: %+v", dispositivo), log.DEBUG)
-
 	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", estructura.Pid, estructura.Instruction+">"), log.INFO)
+	global.Logger.Log(fmt.Sprintf("Estructura: %+v", estructura), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Dispositivo: %+v", dispositivo), log.DEBUG)
 
 	// implementación
 
@@ -184,9 +182,14 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 	global.UpdateBitmap(1, firstFreeBlock, 1, w)
 	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s luego de crear el nuevo archivo: %+v", global.Dispositivo.Name, global.Bitmap), log.DEBUG)
 
+	global.Logger.Log(fmt.Sprintf("Datos del archivo creado justo antes: %+v ", global.Filestruct), log.DEBUG)
 	global.Filestruct.CurrentBlocks = 0
-	global.Logger.Log(fmt.Sprintf("Datos del archivo antes de ser creado (%s) : %+v ", filename, global.Filestruct), log.DEBUG)
+	global.Filestruct.Initial_block = -1
+	global.Filestruct.Size = -1
+	global.Logger.Log(fmt.Sprintf("Datos del archivo antes de ser creado (%s): %+v ", filename, global.Filestruct), log.DEBUG)
 	global.Filestruct.CurrentBlocks = 1
+	global.Filestruct.Initial_block = firstFreeBlock
+	global.Filestruct.Size = 0
 	global.Logger.Log(fmt.Sprintf("Datos del archivo luego de ser creado (%s): %+v ", filename, global.Filestruct), log.DEBUG)
 
 	//global.AddToActiveFiles(estructura.FileName)
@@ -254,8 +257,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	}
 	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", global.Estructura_truncate.Pid, global.Estructura_truncate.Instruction+">"), log.INFO)
 	global.Logger.Log(fmt.Sprintf("Dispositivo: %+v", dispositivo), log.DEBUG)
-
-	global.Logger.Log(fmt.Sprintf("Instrucción: %+v", global.Estructura_truncate), log.INFO)
+	global.Logger.Log(fmt.Sprintf("Instrucción: %+v", global.Estructura_truncate), log.DEBUG)
 
 	currentBlocks := global.GetCurrentBlocks(global.Estructura_truncate.FileName, w)
 	freeContiguousBlocks := global.GetFreeContiguousBlocks(global.Estructura_truncate.FileName, w)
