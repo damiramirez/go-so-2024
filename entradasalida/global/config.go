@@ -349,8 +349,13 @@ func GetFreeContiguousBlocks(file string, w http.ResponseWriter) int {
 
 func GetNeededBlocks(w http.ResponseWriter, estructura KernelIOFS_Truncate) int {
 
-	var neededBlocks = int(math.Ceil((float64(estructura.Tamanio) / float64(IOConfig.DialFSBlockSize))))
+	var neededBlocks int
 
+	if estructura.Tamanio == 0 {
+		neededBlocks = 1
+	} else {
+		neededBlocks = int(math.Ceil((float64(estructura.Tamanio) / float64(IOConfig.DialFSBlockSize))))
+	}
 	Logger.Log(fmt.Sprintf("Needed blocks: %d ", neededBlocks), log.DEBUG)
 	return neededBlocks
 }
