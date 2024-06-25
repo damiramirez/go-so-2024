@@ -149,101 +149,47 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 
 	// implementación
 
-	// abrir el archivo bitmap, acceder a la posición dada por initial_block del .txt
-	// y cambiar solo ese bit, luego ejecutar FS_TRUNCATE y ocupar la cantidad real de bloques
-	// dada por size (del .txt) / global.IOConfig.dialfs_block_size
+	// 1) busco en mi bitmap el primer bloque libre, uso ese dato para asignarlo como initial_block del archivo metadata estructura.Filename
+	var firstFreeBlock int
 
-	// abro el archivo bitmap
-
-	bitmappath := global.IOConfig.DialFSPath + "/" + estructura.IOName + "/bitmap.dat"
-
-	bitmapfile, err := os.OpenFile(bitmappath, os.O_RDWR, 0644)
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo: %s ", err.Error()), log.ERROR)
-		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
-		return
+	found := false
+	for i, v := range global.Bitmap {
+		if v == byte(0) {
+			global.Logger.Log(fmt.Sprintf("FirstFreeBlock: %d", i), log.DEBUG)
+			firstFreeBlock = i
+			found = true
+			break
+		}
+	}
+	if !found {
+		global.Logger.Log("No hay bloques libres", log.DEBUG)
 	}
 
-	defer bitmapfile.Close() // esta línea de código garantiza que el archivo en el que estoy trabajando se cierre cuando la función actual termina de ejecutarse
-
-	// leo el archivo y logeo su contenido
-
-	data := make([]byte, global.IOConfig.DialFSBlockCount) // crea un slice de bytes de tamaño global.IOConfig.DialFSBlockCount, en el cual asigno los bytes que leo del archivo bitmapfile
-	_, err = bitmapfile.Read(data)
+	// 2) creo el archivo metadata, de nombre estructura.Filename, con size = 0 e initial_block = al valor hallado en 2)
+	filename := global.IOConfig.DialFSPath + "/" + estructura.FileName
+	file, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
 	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
-		http.Error(w, "Error al leer el archivo", http.StatusBadRequest)
-		return
-	}
-	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s antes de crear el nuevo archivo: %+v", global.Dispositivo.Name, data), log.DEBUG)
-
-	// obtengo la posición (el bit) a cambiar, del archivo metadata (lo abro y decodeo su contenido)
-
-	filepath := global.IOConfig.DialFSPath + "/" + estructura.FileName
-
-	file, err := os.Open(filepath)
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", filepath, err.Error()), log.DEBUG)
-		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
+		global.Logger.Log(fmt.Sprint("Error al crear el archivo:", err), log.ERROR)
 		return
 	}
 
 	defer file.Close()
 
-	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&global.Filestruct)
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo: %s: %s ", filepath, err.Error()), log.ERROR)
-		http.Error(w, "Error al decodear el archivo", http.StatusBadRequest)
-		return
-	}
+	global.UpdateSize(estructura.FileName, 0, w)
+	global.UpdateInitialBlock(estructura.FileName, firstFreeBlock, w)
+
+	// 3) actualizo el bitmap, tanto el slice bytes como el archivo (podría hacerlo en el paso 1))
+
+	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s antes de crear el nuevo archivo: %+v", global.Dispositivo.Name, global.Bitmap), log.DEBUG)
+	global.UpdateBitmap(1, firstFreeBlock, 1, w)
+	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s luego de crear el nuevo archivo: %+v", global.Dispositivo.Name, global.Bitmap), log.DEBUG)
 
 	global.Filestruct.CurrentBlocks = 0
-
-	global.Logger.Log(fmt.Sprintf("Datos del archivo %s antes de ser creado: %+v ", filepath, global.Filestruct), log.DEBUG)
-
-	position := int64(global.Filestruct.Initial_block)
-
-	// muevo el cursor a la posición deseada
-
-	_, err = bitmapfile.Seek(position, 0)
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
-		return
-	}
-
-	// cambio el bit de 0 a 1 (ver qué pasa si esa posición ya está ocupada, fragmentación externa, compactación)
-	_, err = bitmapfile.Write([]byte{1})
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al escribir el byte: %s ", err.Error()), log.ERROR)
-		http.Error(w, "Error al escribir el byte", http.StatusBadRequest)
-		return
-	}
-
+	global.Logger.Log(fmt.Sprintf("Datos del archivo antes de ser creado (%s) : %+v ", filename, global.Filestruct), log.DEBUG)
 	global.Filestruct.CurrentBlocks = 1
+	global.Logger.Log(fmt.Sprintf("Datos del archivo luego de ser creado (%s): %+v ", filename, global.Filestruct), log.DEBUG)
 
-	// muevo el cursor nuevamente al principio del archivo bitmap
-	_, err = bitmapfile.Seek(0, 0)
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
-		http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
-		return
-	}
-
-	// leo el archivo (desde la posición inicial) y logeo su contenido actualizado
-
-	_, err = bitmapfile.Read(data) // asigno los bytes que leo del archivo bitmapfile (actualizado) a mi slice de bytes data, creado anteriormente
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
-		http.Error(w, "Error al leer el archivo", http.StatusBadRequest)
-		return
-	}
-
-	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s luego de crear el nuevo archivo: %+v", global.Dispositivo.Name, data), log.DEBUG)
-
-	global.Logger.Log(fmt.Sprintf("Datos del archivo %s luego de ser creado: %+v ", filepath, global.Filestruct), log.DEBUG)
-
-	global.AddToActiveFiles(estructura.FileName)
+	//global.AddToActiveFiles(estructura.FileName)
 
 	dispositivo.InUse = false
 	w.WriteHeader(http.StatusNoContent)
@@ -271,7 +217,7 @@ func Fs_delete(w http.ResponseWriter, r *http.Request) {
 
 	// abro el archivo bloques
 
-	bloquesdatpath := global.IOConfig.DialFSPath + "/" + estructura.IOName + "/bloques.dat"
+	bloquesdatpath := global.IOConfig.DialFSPath + "/bloques.dat"
 
 	bloquesdatfile, err := os.OpenFile(bloquesdatpath, os.O_RDWR, 0644)
 	if err != nil {
@@ -317,7 +263,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	totalFreeBlocks := global.GetTotalFreeBlocks(w)
 
 	if currentBlocks == neededBlocks {
-		global.UpdateSize(global.Estructura_truncate.FileName, w)
+		global.UpdateSize(global.Estructura_truncate.FileName, global.Estructura_truncate.Tamanio, w)
 		global.Logger.Log(fmt.Sprintf("No es necesario truncar pero actualicé el size: %+v", global.Estructura_truncate), log.DEBUG)
 		w.WriteHeader(http.StatusNoContent)
 		dispositivo.InUse = false
@@ -330,16 +276,16 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	} else if currentBlocks > neededBlocks {
 		global.Logger.Log(fmt.Sprintf("Trunco a menos %+v", global.Estructura_truncate), log.DEBUG)
 		global.TruncateLess(global.Estructura_truncate.FileName, w)
-		global.AddToTruncatedFiles(global.Estructura_truncate.FileName)
-		global.UpdateSize(global.Estructura_truncate.FileName, w)
+		//global.AddToTruncatedFiles(global.Estructura_truncate.FileName)
+		global.UpdateSize(global.Estructura_truncate.FileName, global.Estructura_truncate.Tamanio, w)
 		w.WriteHeader(http.StatusNoContent)
 		dispositivo.InUse = false
 		return
 	} else if neededBlocks-currentBlocks <= freeContiguousBlocks {
 		global.Logger.Log(fmt.Sprintf("Trunco a más %+v", global.Estructura_truncate), log.DEBUG)
 		global.TruncateMore(global.Estructura_truncate.FileName, w)
-		global.AddToTruncatedFiles(global.Estructura_truncate.FileName)
-		global.UpdateSize(global.Estructura_truncate.FileName, w)
+		//global.AddToTruncatedFiles(global.Estructura_truncate.FileName)
+		global.UpdateSize(global.Estructura_truncate.FileName, global.Estructura_truncate.Tamanio, w)
 		w.WriteHeader(http.StatusNoContent)
 		dispositivo.InUse = false
 		return
@@ -401,7 +347,7 @@ func Fs_write(w http.ResponseWriter, r *http.Request) {
 
 	// abro el archivo bloques
 
-	bloquesdatpath := global.IOConfig.DialFSPath + "/" + estructura.IOName + "/bloques.dat"
+	bloquesdatpath := global.IOConfig.DialFSPath + "/bloques.dat"
 
 	bloquesdatfile, err := os.OpenFile(bloquesdatpath, os.O_RDWR, 0644)
 	if err != nil {
@@ -485,7 +431,7 @@ func Fs_read(w http.ResponseWriter, r *http.Request) {
 
 	// abro el archivo bloques
 
-	bloquesdatpath := global.IOConfig.DialFSPath + "/" + estructura.IOName + "/bloques.dat"
+	bloquesdatpath := global.IOConfig.DialFSPath + "/bloques.dat"
 
 	bloquesdatfile, err := os.OpenFile(bloquesdatpath, os.O_RDONLY, 0644)
 	if err != nil {

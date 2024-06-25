@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/sisoputnfrba/tp-golang/cpu/global"
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 	"github.com/sisoputnfrba/tp-golang/utils/requests"
@@ -92,6 +93,10 @@ type File struct {
 	Size          int `json:"size"`
 	CurrentBlocks int
 }
+
+var Bloques []byte
+
+var Bitmap []byte
 
 var Estructura_truncate KernelIOFS_Truncate
 
@@ -183,29 +188,22 @@ func LevantarFS(config *Config) {
 
 	if config.Type == "DIALFS" {
 
-		// crear carpeta para los archivos del FS
-		dir := config.DialFSPath + "/" + Dispositivo.Name
-
-		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-			Logger.Log(fmt.Sprintf("Error al crear el directorio: %v", err), log.ERROR)
-			return
-		}
-
-		// crear bloques.dat
+		// crear-abrir bloques.dat
 
 		openBloquesDat(config)
 
-		// crear bitmap.dat
+		// crear-abrir bitmap.dat
 
 		openBitmapDat(config)
 
 		// crear/abrir el directorio para archivos que han sido truncados
+		/*
+			openTruncatedFilesDirectory(config)
 
-		openTruncatedFilesDirectory(config)
+			// crear/abrir el directorio para archivos que están activos
 
-		// crear/abrir el directorio para archivos que están activos
-
-		openActiveFilesDirectory(config)
+			openActiveFilesDirectory(config)
+		*/
 
 	}
 
@@ -213,8 +211,9 @@ func LevantarFS(config *Config) {
 
 func openBloquesDat(config *Config) {
 
-	filename := config.DialFSPath + "/" + Dispositivo.Name + "/bloques.dat"
+	filename := config.DialFSPath + "/bloques.dat"
 	size := config.DialFSBlockSize * config.DialFSBlockCount
+	Bloques = make([]byte, IOConfig.DialFSBlockCount*IOConfig.DialFSBlockSize)
 
 	// crear el archivo
 	file, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
@@ -233,19 +232,19 @@ func openBloquesDat(config *Config) {
 		return
 	}
 
-	data := make([]byte, IOConfig.DialFSBlockCount*IOConfig.DialFSBlockCount) // crea un slice de bytes de tamaño global.IOConfig.DialFSBlockCount*IOConfig.DialFSBlockCount, en el cual asigno los bytes que leo del archivo bloques.dat
-	_, err = file.Read(data)
+	_, err = file.Read(Bloques)
 	if err != nil {
 		Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
 	}
 
-	Logger.Log(fmt.Sprintf("Archivo %s abierto con éxito (tamaño de %d bytes): %+v", filename, size, data), log.DEBUG)
+	Logger.Log(fmt.Sprintf("Archivo %s abierto con éxito (tamaño de %d bytes): %+v", filename, size, Bloques), log.DEBUG)
 }
 
 func openBitmapDat(config *Config) {
 
-	filename := config.DialFSPath + "/" + Dispositivo.Name + "/bitmap.dat"
+	filename := config.DialFSPath + "/bitmap.dat"
 	size := config.DialFSBlockCount
+	Bitmap = make([]byte, IOConfig.DialFSBlockCount)
 
 	// crear el archivo
 	file, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
@@ -264,13 +263,12 @@ func openBitmapDat(config *Config) {
 		return
 	}
 
-	data := make([]byte, IOConfig.DialFSBlockCount) // crea un slice de bytes de tamaño global.IOConfig.DialFSBlockCount, en el cual asigno los bytes que leo del archivo bitmapfile
-	_, err = file.Read(data)
+	_, err = file.Read(Bitmap)
 	if err != nil {
 		Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
 	}
 
-	Logger.Log(fmt.Sprintf("Archivo %s abierto con éxito (tamaño de %d bits): %+v", filename, size, data), log.DEBUG)
+	Logger.Log(fmt.Sprintf("Archivo %s abierto con éxito (tamaño de %d bits): %+v", filename, size, Bitmap), log.DEBUG)
 }
 
 func GetCurrentBlocks(file string, w http.ResponseWriter) int {
@@ -294,20 +292,16 @@ func GetCurrentBlocks(file string, w http.ResponseWriter) int {
 		return -1
 	}
 
-	if hasBeenTruncated(file) == 1 {
-
+	if Filestruct.Size > 0 {
 		Filestruct.CurrentBlocks = int(math.Ceil(float64(Filestruct.Size) / float64(IOConfig.DialFSBlockSize)))
-		Logger.Log(fmt.Sprintf("Filestruct: %+v", Filestruct), log.DEBUG)
-		Logger.Log(fmt.Sprintf("Current blocks: %d", Filestruct.CurrentBlocks), log.DEBUG)
-		return Filestruct.CurrentBlocks
-
-	} else {
-
+	} else if Filestruct.Size == 0 {
 		Filestruct.CurrentBlocks = 1
-		Logger.Log(fmt.Sprintf("Filestruct: %+v", Filestruct), log.DEBUG)
-		Logger.Log(fmt.Sprintf("Current blocks: %d", Filestruct.CurrentBlocks), log.DEBUG)
-		return 1
 	}
+
+	Logger.Log(fmt.Sprintf("Filestruct: %+v", Filestruct), log.DEBUG)
+	Logger.Log(fmt.Sprintf("Current blocks: %d", Filestruct.CurrentBlocks), log.DEBUG)
+	return Filestruct.CurrentBlocks
+
 }
 
 func GetFreeContiguousBlocks(file string, w http.ResponseWriter) int {
@@ -403,11 +397,11 @@ func GetTotalFreeBlocks(w http.ResponseWriter) int {
 	return totalFreeBlocks
 }
 
-func PrintBitmap(w http.ResponseWriter, ioname string) {
+func PrintBitmap(w http.ResponseWriter) {
 
 	// leo el archivo y logeo su contenido
 
-	bitmappath := IOConfig.DialFSPath + "/" + ioname + "/bitmap.dat"
+	bitmappath := IOConfig.DialFSPath + "/bitmap.dat"
 
 	bitmapfile, err := os.OpenFile(bitmappath, os.O_RDWR, 0644)
 	if err != nil {
@@ -429,69 +423,34 @@ func PrintBitmap(w http.ResponseWriter, ioname string) {
 
 }
 
-func AddToTruncatedFiles(file string) {
+func UpdateSize(file string, newSize int, w http.ResponseWriter) { // modificar el size en el metadata
 
-	// crear carpeta para los archivos del FS que fueron truncados
-	dir := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/" + "truncated-files"
+	filepath := IOConfig.DialFSPath + "/" + file
 
-	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-		Logger.Log(fmt.Sprintf("Error al crear el directorio: %s", err.Error()), log.ERROR)
+	metadatafile, err := os.OpenFile(filepath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0644)
+	if err != nil {
+		Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", filepath, err.Error()), log.ERROR)
+		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
 		return
 	}
 
-	truncatedpath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/truncated-files/truncated-" + file
+	defer metadatafile.Close()
 
-	truncatedfile, err := os.OpenFile(truncatedpath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
+	newSizemap := map[string]interface{}{
+		"initial_block": Filestruct.Initial_block,
+		"size":          newSize,
+	}
+
+	encoder := json.NewEncoder(metadatafile)
+	err = encoder.Encode(newSizemap)
 	if err != nil {
-		Logger.Log(fmt.Sprintf("Error al crear el archivo: %s", err.Error()), log.ERROR)
-	}
-
-	defer truncatedfile.Close()
-}
-
-func hasBeenTruncated(file string) int { // 1 si fue truncado, 0 si no lo fue
-
-	dirPath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/" + "truncated-files"
-
-	dir, err := os.Open(dirPath)
-	if err != nil {
-		fmt.Printf("Error al abrir el directorio %s: %s\n", dirPath, err.Error())
-		return 0
-	}
-	defer dir.Close()
-
-	fileNames, err := dir.Readdirnames(0)
-	if err != nil {
-		fmt.Printf("Error al leer los nombres de los archivos en el directorio %s: %s", dirPath, err.Error())
-		return 0
-	}
-
-	// Comprobar si el archivo específico existe
-	for _, fName := range fileNames {
-		if fName == "truncated-"+file {
-			Logger.Log(fmt.Sprintf("El archivo %s ha sido truncado anteriormente", file), log.DEBUG)
-			return 1
-		}
-	}
-
-	Logger.Log(fmt.Sprintf("El archivo %s no ha sido truncado anteriormente", file), log.DEBUG)
-	return 0
-}
-
-func openTruncatedFilesDirectory(config *Config) {
-
-	// crear carpeta para los archivos del FS que fueron truncados
-	dir := config.DialFSPath + "/" + Dispositivo.Name + "/" + "truncated-files"
-
-	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-		Logger.Log(fmt.Sprintf("Error al crear el directorio: %s", err.Error()), log.ERROR)
+		Logger.Log(fmt.Sprintf("Error al encodear el nuevo size en el archivo %s: %s ", filepath, err.Error()), log.ERROR)
+		http.Error(w, "Error al encodear el nuevo size en el archivo", http.StatusBadRequest)
 		return
 	}
-
-	Logger.Log(fmt.Sprintf("Archivo %s abierto con éxito", dir), log.DEBUG)
 }
 
-func UpdateSize(file string, w http.ResponseWriter) { // modificar el size en el txt
+func UpdateInitialBlock(file string, newInitialBlock int, w http.ResponseWriter) { // modificar el initial block en el metadata
 
 	filepath := IOConfig.DialFSPath + "/" + file
 
@@ -505,15 +464,15 @@ func UpdateSize(file string, w http.ResponseWriter) { // modificar el size en el
 	defer metadatafile.Close()
 
 	newSize := map[string]interface{}{
-		"initial_block": Filestruct.Initial_block,
-		"size":          Estructura_truncate.Tamanio,
+		"initial_block": newInitialBlock,
+		"size":          Filestruct.Size,
 	}
 
 	encoder := json.NewEncoder(metadatafile)
 	err = encoder.Encode(newSize)
 	if err != nil {
-		Logger.Log(fmt.Sprintf("Error al encodear el nuevo size en el archivo %s: %s ", filepath, err.Error()), log.ERROR)
-		http.Error(w, "Error al encodear el nuevo size en el archivo", http.StatusBadRequest)
+		Logger.Log(fmt.Sprintf("Error al encodear el nuevo initial block en el archivo %s: %s ", filepath, err.Error()), log.ERROR)
+		http.Error(w, "Error al encodear el nuevo initial block en el archivo", http.StatusBadRequest)
 		return
 	}
 }
@@ -675,6 +634,99 @@ func TruncateMore(file string, w http.ResponseWriter) {
 
 }
 
+func UpdateBitmap(writeValue int, initialBit int, bitAmount int, w http.ResponseWriter) {
+
+	// actualizo el slice de bytes
+
+	for i := 0; i < bitAmount; i++ {
+		Bitmap[initialBit+i] = byte(writeValue)
+	}
+
+	// actualizo el archivo bitmap.dat
+
+	bitmappath := IOConfig.DialFSPath + "/bitmap.dat"
+
+	bitmapfile, err := os.OpenFile(bitmappath, os.O_RDWR, 0644)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo: %s ", err.Error()), log.ERROR)
+		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
+		return
+	}
+
+	defer bitmapfile.Close()
+
+	_, err = bitmapfile.Write(Bitmap)
+	if err != nil {
+		Logger.Log(fmt.Sprintf("Error al actualizar el bitmap: %s ", err.Error()), log.ERROR)
+		http.Error(w, "Error al actualizar el bitmap", http.StatusBadRequest)
+		return
+	}
+
+}
+
+/*
+func openTruncatedFilesDirectory(config *Config) {
+
+	// crear carpeta para los archivos del FS que fueron truncados
+	dir := config.DialFSPath + "/" + Dispositivo.Name + "/" + "truncated-files"
+
+	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+		Logger.Log(fmt.Sprintf("Error al crear el directorio: %s", err.Error()), log.ERROR)
+		return
+	}
+
+	Logger.Log(fmt.Sprintf("Archivo %s abierto con éxito", dir), log.DEBUG)
+}
+
+func AddToTruncatedFiles(file string) {
+
+	// crear carpeta para los archivos del FS que fueron truncados
+	dir := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/" + "truncated-files"
+
+	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+		Logger.Log(fmt.Sprintf("Error al crear el directorio: %s", err.Error()), log.ERROR)
+		return
+	}
+
+	truncatedpath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/truncated-files/truncated-" + file
+
+	truncatedfile, err := os.OpenFile(truncatedpath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
+	if err != nil {
+		Logger.Log(fmt.Sprintf("Error al crear el archivo: %s", err.Error()), log.ERROR)
+	}
+
+	defer truncatedfile.Close()
+}
+
+/*
+func hasBeenTruncated(file string) int { // 1 si fue truncado, 0 si no lo fue
+
+	dirPath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/" + "truncated-files"
+
+	dir, err := os.Open(dirPath)
+	if err != nil {
+		fmt.Printf("Error al abrir el directorio %s: %s\n", dirPath, err.Error())
+		return 0
+	}
+	defer dir.Close()
+
+	fileNames, err := dir.Readdirnames(0)
+	if err != nil {
+		fmt.Printf("Error al leer los nombres de los archivos en el directorio %s: %s", dirPath, err.Error())
+		return 0
+	}
+
+	// Comprobar si el archivo específico existe
+	for _, fName := range fileNames {
+		if fName == "truncated-"+file {
+			Logger.Log(fmt.Sprintf("El archivo %s ha sido truncado anteriormente", file), log.DEBUG)
+			return 1
+		}
+	}
+
+	Logger.Log(fmt.Sprintf("El archivo %s no ha sido truncado anteriormente", file), log.DEBUG)
+	return 0
+
 func AddToActiveFiles(file string) {
 
 	// crear carpeta para los archivos del FS que están activos
@@ -695,6 +747,7 @@ func AddToActiveFiles(file string) {
 	defer activefile.Close()
 }
 
+
 func openActiveFilesDirectory(config *Config) {
 
 	// crear carpeta para los archivos del FS que están activos
@@ -707,3 +760,4 @@ func openActiveFilesDirectory(config *Config) {
 
 	Logger.Log(fmt.Sprintf("Archivo %s abierto con éxito", dir), log.DEBUG)
 }
+*/
