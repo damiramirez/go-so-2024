@@ -206,28 +206,18 @@ func Fs_delete(w http.ResponseWriter, r *http.Request) {
 
 	// implementación
 
-	// abrir el archivo bloques, acceder a la posición dada por initial_block (del .txt) * config.dialfs_block_size
-
-	// abro el archivo bloques
-
-	bloquesdatpath := global.IOConfig.DialFSPath + "/bloques.dat"
-
-	bloquesdatfile, err := os.OpenFile(bloquesdatpath, os.O_RDWR, 0644)
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", bloquesdatpath, err.Error()), log.ERROR)
-		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
-		return
-	}
-
-	// esta línea de código garantiza que el archivo en el que estoy trabajando se cierre cuando la función actual termina de ejecutarse
-	defer bloquesdatfile.Close()
-
-	// posiciones de inicio y fin
-
-	// y borrar/setear en 0(? el contenido que hay desde esa posición hasta la posición dada por size (del .txt) * config.dialfs_block_size
-
 	// actualizar el bitmap!
+	global.UpdateBitmap(0, global.Filestruct.Initial_block, global.Filestruct.CurrentBlocks, w)
 
+	//actualizar la cerpeta de archivos
+	metadatapath := global.IOConfig.DialFSPath + "/" + global.Dispositivo.Name + "/" + estructura.FileName
+
+	// Eliminar el archivo metadata
+	err = os.Remove(metadatapath)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error al eliminar el archivo: "+err.Error()), log.ERROR)
+		http.Error(w, "Error al eliminar el archivo", http.StatusInternalServerError)
+	}
 	dispositivo.InUse = false
 	w.WriteHeader(http.StatusNoContent)
 }
