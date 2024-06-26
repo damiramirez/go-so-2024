@@ -171,16 +171,16 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 	global.UpdateBitmap(1, firstFreeBlock, 1, w)
 	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s luego de crear el nuevo archivo: %+v", global.Dispositivo.Name, global.Bitmap), log.DEBUG)
 
-	global.Filestruct.CurrentBlocks = 0
-	global.Filestruct.Initial_block = -1
-	global.Filestruct.Size = -1
-	global.Logger.Log(fmt.Sprintf("Datos del archivo antes de ser creado (%s): %+v ", filename, global.Filestruct), log.DEBUG)
-	global.Filestruct.CurrentBlocks = 1
-	global.Filestruct.Initial_block = firstFreeBlock
-	global.Filestruct.Size = 0
-	global.Logger.Log(fmt.Sprintf("Datos del archivo luego de ser creado (%s): %+v ", filename, global.Filestruct), log.DEBUG)
+	filestruct := global.FilesMap[estructura.FileName]
 
-	global.MapFiles[estructura.FileName] = global.Filestruct
+	filestruct.CurrentBlocks = 0
+	filestruct.Initial_block = -1
+	filestruct.Size = -1
+	global.Logger.Log(fmt.Sprintf("Datos del archivo antes de ser creado (%s): %+v ", filename, filestruct), log.DEBUG)
+	filestruct.CurrentBlocks = 1
+	filestruct.Initial_block = firstFreeBlock
+	filestruct.Size = 0
+	global.Logger.Log(fmt.Sprintf("Datos del archivo luego de ser creado (%s): %+v ", filename, filestruct), log.DEBUG)
 
 	//global.AddToActiveFiles(estructura.FileName)
 
@@ -206,8 +206,10 @@ func Fs_delete(w http.ResponseWriter, r *http.Request) {
 
 	// implementación
 
+	filestruct := global.FilesMap[estructura.FileName]
+
 	// actualizar el bitmap!
-	global.UpdateBitmap(0, global.Filestruct.Initial_block, global.Filestruct.CurrentBlocks, w)
+	global.UpdateBitmap(0, filestruct.Initial_block, filestruct.CurrentBlocks, w)
 
 	//actualizar la cerpeta de archivos
 	metadatapath := global.IOConfig.DialFSPath + "/" + global.Dispositivo.Name + "/" + estructura.FileName
@@ -241,6 +243,8 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 
 	// obtengo los datos del archivo metadata
 
+	filestruct := global.FilesMap[global.Estructura_truncate.FileName]
+
 	metadatapath := global.IOConfig.DialFSPath + "/" + global.Dispositivo.Name + "/" + global.Estructura_truncate.FileName
 
 	metadatafile, err := os.Open(metadatapath)
@@ -253,14 +257,14 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	defer metadatafile.Close()
 
 	decoder := json.NewDecoder(metadatafile)
-	err = decoder.Decode(&global.Filestruct)
+	err = decoder.Decode(&filestruct)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo %s: %s ", metadatapath, err.Error()), log.ERROR)
 		http.Error(w, "Error al decodear el archivo", http.StatusBadRequest)
 		return
 	}
 
-	global.Logger.Log(fmt.Sprintf("Filestruct recién decodeado: %+v", global.Filestruct), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Filestruct recién decodeado: %+v", filestruct), log.DEBUG)
 
 	currentBlocks := global.GetCurrentBlocks(global.Estructura_truncate.FileName, w)
 	freeContiguousBlocks := global.GetFreeContiguousBlocks(global.Estructura_truncate.FileName, w)
@@ -284,7 +288,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 		//global.AddToTruncatedFiles(global.Estructura_truncate.FileName)
 		global.UpdateSize(global.Estructura_truncate.FileName, global.Estructura_truncate.Tamanio, w)
 		global.PrintBitmap(w)
-		global.UpdateBitmap(0, global.Filestruct.Initial_block+neededBlocks, currentBlocks-neededBlocks, w)
+		global.UpdateBitmap(0, filestruct.Initial_block+neededBlocks, currentBlocks-neededBlocks, w)
 		global.PrintBitmap(w)
 		w.WriteHeader(http.StatusNoContent)
 		dispositivo.InUse = false
@@ -295,7 +299,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 		//global.AddToTruncatedFiles(global.Estructura_truncate.FileName)
 		global.UpdateSize(global.Estructura_truncate.FileName, global.Estructura_truncate.Tamanio, w)
 		global.PrintBitmap(w)
-		global.UpdateBitmap(1, global.Filestruct.Initial_block+currentBlocks, neededBlocks-currentBlocks, w)
+		global.UpdateBitmap(1, filestruct.Initial_block+currentBlocks, neededBlocks-currentBlocks, w)
 		global.PrintBitmap(w)
 		w.WriteHeader(http.StatusNoContent)
 		dispositivo.InUse = false
@@ -305,7 +309,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 
 		// compactar huecos libres entre bloques ocupados (1 a la izq)
 
-		compactar(totalFreeBlocks, w)
+		compactar(global.Estructura_truncate.FileName, totalFreeBlocks, w)
 
 		w.WriteHeader(http.StatusNoContent)
 		dispositivo.InUse = false
@@ -423,6 +427,8 @@ func Fs_read(w http.ResponseWriter, r *http.Request) {
 
 	// implementación
 
+	filestruct := global.FilesMap[estructura.FileName]
+
 	// abro el archivo metadata y decodeo su contenido
 
 	filepath := global.IOConfig.DialFSPath + "/" + estructura.FileName
@@ -437,7 +443,7 @@ func Fs_read(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&global.Filestruct)
+	err = decoder.Decode(&filestruct)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo %s: %s ", filepath, err.Error()), log.ERROR)
 		http.Error(w, "Error al decodear el archivo", http.StatusBadRequest)
@@ -457,7 +463,7 @@ func Fs_read(w http.ResponseWriter, r *http.Request) {
 
 	// ubico el puntero en la ubicación deseada
 
-	ubicacionDeseada := global.IOConfig.DialFSBlockSize*global.Filestruct.Initial_block + estructura.PunteroArchivo
+	ubicacionDeseada := global.IOConfig.DialFSBlockSize*filestruct.Initial_block + estructura.PunteroArchivo
 
 	_, err = bloquesdatfile.Seek(int64(ubicacionDeseada), 0)
 	if err != nil {
@@ -512,11 +518,13 @@ func Fs_read(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func compactar(totalfreeblocks int, w http.ResponseWriter) {
+func compactar(file string, totalfreeblocks int, w http.ResponseWriter) {
 
 	//sacar el truncado
 
-	global.UpdateBitmap(0, global.Filestruct.Initial_block, global.Filestruct.CurrentBlocks, w)
+	filestruct := global.FilesMap[file]
+
+	global.UpdateBitmap(0, filestruct.Initial_block, filestruct.CurrentBlocks, w)
 
 	//actualizar bitmap (mover todos los 1 a la izquierda)
 	totalUsedBlocks := global.IOConfig.DialFSBlockCount - totalfreeblocks

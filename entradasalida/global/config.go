@@ -7,6 +7,7 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"strings"
 
 	config "github.com/sisoputnfrba/tp-golang/utils/config"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
@@ -93,7 +94,7 @@ type File struct {
 	CurrentBlocks int
 }
 
-var MapFiles map[string]File
+var FilesMap map[string]File
 
 var Bloques []byte
 
@@ -101,7 +102,7 @@ var Bitmap []byte
 
 var Estructura_truncate KernelIOFS_Truncate
 
-var Filestruct File
+// var Filestruct File
 
 var Estructura_actualizada MemStdIO
 
@@ -131,8 +132,6 @@ func InitGlobal() {
 	AvisoKernelIOExistente()
 
 	LevantarFS(IOConfig)
-
-	MapFiles = map[string]File{}
 
 }
 
@@ -207,14 +206,9 @@ func LevantarFS(config *Config) {
 
 		openBitmapDat(config)
 
-		// crear/abrir el directorio para archivos que han sido truncados
-		/*
-			openTruncatedFilesDirectory(config)
+		// reconstruir mi map de files
 
-			// crear/abrir el directorio para archivos que están activos
-
-			openActiveFilesDirectory(config)
-		*/
+		rebuildFilesMap(config)
 
 	}
 
@@ -284,7 +278,7 @@ func openBitmapDat(config *Config) {
 
 func GetCurrentBlocks(file string, w http.ResponseWriter) int {
 
-	filestruct := MapFiles[file]
+	filestruct := FilesMap[file]
 	Logger.Log(fmt.Sprintf("Filestruct %s: %+v", file, filestruct), log.DEBUG)
 	if filestruct.Size > 0 {
 		filestruct.CurrentBlocks = int(math.Ceil(float64(filestruct.Size) / float64(IOConfig.DialFSBlockSize)))
@@ -313,7 +307,9 @@ func GetFreeContiguousBlocks(file string, w http.ResponseWriter) int {
 
 	defer bitmapfile.Close()
 
-	_, err = bitmapfile.Seek(int64(Filestruct.Initial_block+currentBlocks), 0)
+	filestruct := FilesMap[file]
+
+	_, err = bitmapfile.Seek(int64(filestruct.Initial_block+currentBlocks), 0)
 	if err != nil {
 		Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
 		http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
@@ -323,10 +319,10 @@ func GetFreeContiguousBlocks(file string, w http.ResponseWriter) int {
 
 	bitmapfile.Read(value)
 
-	for value[0] != 1 && Filestruct.Initial_block+currentBlocks+freeContiguousBlocks <= IOConfig.DialFSBlockCount-1 {
+	for value[0] != 1 && filestruct.Initial_block+currentBlocks+freeContiguousBlocks <= IOConfig.DialFSBlockCount-1 {
 
 		freeContiguousBlocks++
-		_, err = bitmapfile.Seek(int64(Filestruct.Initial_block+currentBlocks+freeContiguousBlocks), 0)
+		_, err = bitmapfile.Seek(int64(filestruct.Initial_block+currentBlocks+freeContiguousBlocks), 0)
 		if err != nil {
 			Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
 			http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
@@ -434,8 +430,11 @@ func UpdateSize(file string, newSize int, w http.ResponseWriter) { // modificar 
 
 	defer metadatafile.Close()
 
+	filestruct := FilesMap[file]
+	filestruct.Size = newSize
+
 	newSizemap := map[string]interface{}{
-		"initial_block": Filestruct.Initial_block,
+		"initial_block": filestruct.Initial_block,
 		"size":          newSize,
 	}
 
@@ -465,13 +464,16 @@ func UpdateInitialBlock(file string, newInitialBlock int, w http.ResponseWriter)
 
 	defer metadatafile.Close()
 
-	newSize := map[string]interface{}{
+	filestruct := FilesMap[file]
+	filestruct.Initial_block = newInitialBlock
+
+	newInitialBlockmap := map[string]interface{}{
 		"initial_block": newInitialBlock,
-		"size":          Filestruct.Size, // filestruct.Size
+		"size":          filestruct.Size,
 	}
 
 	encoder := json.NewEncoder(metadatafile)
-	err = encoder.Encode(newSize)
+	err = encoder.Encode(newInitialBlockmap)
 	if err != nil {
 		Logger.Log(fmt.Sprintf("Error al encodear el nuevo initial block en el archivo %s: %s ", filepath, err.Error()), log.ERROR)
 		http.Error(w, "Error al encodear el nuevo initial block en el archivo", http.StatusBadRequest)
@@ -520,7 +522,7 @@ func UpdateBlocksFile(newInfo []byte, file string, punteroArchivo int, w http.Re
 		}
 	*/
 
-	filestruct := MapFiles[file]
+	filestruct := FilesMap[file]
 
 	bloquesdatpath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/bloques.dat"
 
@@ -535,7 +537,7 @@ func UpdateBlocksFile(newInfo []byte, file string, punteroArchivo int, w http.Re
 
 	}
 
-	Logger.Log(fmt.Sprintf("Contenido del slice modificado:%+v", Bloques), log.DEBUG)
+	Logger.Log(fmt.Sprintf("Contenido del slice modificado: %+v", Bloques), log.DEBUG)
 
 	//Actualizo el archivo bloques.dat con el slice Bloques
 
@@ -545,7 +547,55 @@ func UpdateBlocksFile(newInfo []byte, file string, punteroArchivo int, w http.Re
 		return
 	}
 
-	Logger.Log(fmt.Sprintf("El archivo se actualizó con éxito"), log.INFO)
+	Logger.Log(fmt.Sprintf("El archivo se actualizó con éxito: %+v", Bloques), log.INFO)
+
+}
+
+func rebuildFilesMap(config *Config) {
+
+	// recorrer el directorio en busca de metadatas existentes
+
+	dirPath := config.DialFSPath + "/" + Dispositivo.Name
+
+	// Leer los contenidos del directorio
+	entries, err := os.ReadDir(dirPath)
+	if err != nil {
+		Logger.Log(fmt.Sprintf("No se pudo leer el directorio que contiene los metadata %s", err.Error()), log.ERROR)
+	}
+	// Iterar sobre los archivos y agregarlos al map
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.Contains(entry.Name(), "txt") {
+			addToFilesMap(entry.Name())
+		}
+	}
+
+	Logger.Log(fmt.Sprintf("FilesMap %+v", FilesMap), log.DEBUG)
+}
+
+func addToFilesMap(file string) {
+
+	filestruct := FilesMap[file]
+
+	// obtengo los datos del archivo metadata
+
+	metadatapath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/" + file
+
+	metadatafile, err := os.Open(metadatapath)
+	if err != nil {
+		Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", metadatapath, err.Error()), log.DEBUG)
+		return
+	}
+
+	defer metadatafile.Close()
+
+	decoder := json.NewDecoder(metadatafile)
+	err = decoder.Decode(&filestruct) // este decode no está funcionando! revisar
+	if err != nil {
+		Logger.Log(fmt.Sprintf("Error al decodear el archivo %s: %s ", metadatapath, err.Error()), log.ERROR)
+		return
+	}
+
+	Logger.Log(fmt.Sprintf("Filestruct recién decodeado: %+v", filestruct), log.DEBUG)
 
 }
 
