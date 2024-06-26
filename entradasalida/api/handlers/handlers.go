@@ -356,11 +356,9 @@ func Fs_write(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: chequear que donde escribo pertenece al archivo
 
-	bloquesdatpath := global.IOConfig.DialFSPath + "/bloques.dat"
-
 	//modifico el archivo de bloques
 
-	global.UpdateBlocksFile(bloquesdatpath, valor, w)
+	global.UpdateBlocksFile(valor, estructura.FileName, estructura.PunteroArchivo, w)
 
 	// abro el archivo bloques
 	/*

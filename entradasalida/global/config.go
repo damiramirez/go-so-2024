@@ -287,7 +287,7 @@ func GetCurrentBlocks(file string, w http.ResponseWriter) int {
 	filestruct := MapFiles[file]
 	Logger.Log(fmt.Sprintf("Filestruct %s: %+v", file, filestruct), log.DEBUG)
 	if filestruct.Size > 0 {
-		filestruct.CurrentBlocks = int(math.Ceil(float64(Filestruct.Size) / float64(IOConfig.DialFSBlockSize)))
+		filestruct.CurrentBlocks = int(math.Ceil(float64(filestruct.Size) / float64(IOConfig.DialFSBlockSize)))
 	} else if filestruct.Size == 0 {
 		filestruct.CurrentBlocks = 1
 	}
@@ -509,22 +509,37 @@ func UpdateBitmap(writeValue int, initialBit int, bitAmount int, w http.Response
 
 }
 
-func UpdateBlocksFile(filepath string, newInfo []byte, w http.ResponseWriter) {
+func UpdateBlocksFile(newInfo []byte, file string, punteroArchivo int, w http.ResponseWriter) {
 
 	// convierto el archivo bloques.dat en un slice de bytes
-	data, err := os.ReadFile(filepath)
-	if err != nil {
-		Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
-		return
+	/*
+		data, err := os.ReadFile(filepath)
+		if err != nil {
+			Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
+			return
+		}
+	*/
+
+	filestruct := MapFiles[file]
+
+	bloquesdatpath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/bloques.dat"
+
+	Logger.Log(fmt.Sprintf("Contenido original del slice bloques: %+v", Bloques), log.DEBUG)
+
+	//Actualizo slice Bloques
+
+	ubicacionDeseada := IOConfig.DialFSBlockSize*filestruct.Initial_block + punteroArchivo
+
+	for i := 0; i < len(newInfo); i++ {
+		Bloques[ubicacionDeseada+i] = newInfo[i]
+
 	}
 
-	Logger.Log(fmt.Sprintf("Contenido original del archivo:\n %s\n", string(data)), log.DEBUG)
+	Logger.Log(fmt.Sprintf("Contenido del slice modificado:%+v", Bloques), log.DEBUG)
 
-	data = append(data, newInfo...)
+	//Actualizo el archivo bloques.dat con el slice Bloques
 
-	Logger.Log(fmt.Sprintf("Contenido del archivo modificado:\n%s\n", string(data)), log.DEBUG)
-
-	err = os.WriteFile(filepath, data, 0644)
+	err := os.WriteFile(bloquesdatpath, Bloques, 0644)
 	if err != nil {
 		fmt.Println("Error al escribir en el archivo:", err)
 		return
