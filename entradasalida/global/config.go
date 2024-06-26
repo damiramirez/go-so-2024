@@ -509,6 +509,31 @@ func UpdateBitmap(writeValue int, initialBit int, bitAmount int, w http.Response
 
 }
 
+func UpdateBlocksFile(filepath string, newInfo []byte, w http.ResponseWriter) {
+
+	// convierto el archivo bloques.dat en un slice de bytes
+	data, err := os.ReadFile(filepath)
+	if err != nil {
+		Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
+		return
+	}
+
+	Logger.Log(fmt.Sprintf("Contenido original del archivo:\n %s\n", string(data)), log.DEBUG)
+
+	data = append(data, newInfo...)
+
+	Logger.Log(fmt.Sprintf("Contenido del archivo modificado:\n%s\n", string(data)), log.DEBUG)
+
+	err = os.WriteFile(filepath, data, 0644)
+	if err != nil {
+		fmt.Println("Error al escribir en el archivo:", err)
+		return
+	}
+
+	Logger.Log(fmt.Sprintf("El archivo se actualizó con éxito"), log.INFO)
+
+}
+
 /*
 func TruncateLess(file string, w http.ResponseWriter) {
 
