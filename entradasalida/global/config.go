@@ -210,7 +210,7 @@ func LevantarFS(config *Config) {
 
 		// reconstruir mi map de files
 
-		rebuildFilesMap(config)
+		RebuildFilesMap(config)
 
 	}
 
@@ -278,7 +278,7 @@ func openBitmapDat(config *Config) {
 	Logger.Log(fmt.Sprintf("Archivo %s abierto con éxito (tamaño de %d bits): %+v", filename, size, Bitmap), log.DEBUG)
 }
 
-func GetCurrentBlocks(file string, w http.ResponseWriter) int {
+func GetCurrentBlocks(file string) int {
 
 	filestruct := FilesMap[file]
 	Logger.Log(fmt.Sprintf("Filestruct %s: %+v", file, filestruct), log.DEBUG)
@@ -294,7 +294,7 @@ func GetCurrentBlocks(file string, w http.ResponseWriter) int {
 
 func GetFreeContiguousBlocks(file string, w http.ResponseWriter) int {
 
-	currentBlocks := GetCurrentBlocks(file, w)
+	currentBlocks := GetCurrentBlocks(file)
 
 	freeContiguousBlocks := 0
 
@@ -417,7 +417,7 @@ func PrintBitmap(w http.ResponseWriter) {
 
 }
 
-func UpdateSize(file string, newSize int, w http.ResponseWriter) { // modificar el size en el metadata
+func UpdateSize(file string, newSize int, w http.ResponseWriter, neededBlocks int) { // modificar el size en el metadata
 
 	filepath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/" + file
 
@@ -447,8 +447,7 @@ func UpdateSize(file string, newSize int, w http.ResponseWriter) { // modificar 
 		return
 	}
 
-	filestruct.Size = newSize
-	FilesMap[file] = filestruct
+	FilesMap[Estructura_truncate.FileName] = File{CurrentBlocks: neededBlocks, Size: Estructura_truncate.Tamanio}
 }
 
 func UpdateInitialBlock(file string, newInitialBlock int, w http.ResponseWriter) { // modificar el initial block en el metadata
@@ -483,8 +482,7 @@ func UpdateInitialBlock(file string, newInitialBlock int, w http.ResponseWriter)
 		return
 	}
 
-	filestruct.Initial_block = newInitialBlock
-	FilesMap[file] = filestruct
+	FilesMap[file] = File{Initial_block: newInitialBlock}
 }
 
 func UpdateBitmap(writeValue int, initialBit int, bitAmount int, w http.ResponseWriter) {
@@ -557,7 +555,7 @@ func UpdateBlocksFile(newInfo []byte, file string, punteroArchivo int, w http.Re
 
 }
 
-func rebuildFilesMap(config *Config) {
+func RebuildFilesMap(config *Config) {
 
 	// recorrer el directorio en busca de metadatas existentes
 
@@ -600,6 +598,8 @@ func addToFilesMapDecoding(file string) {
 		Logger.Log(fmt.Sprintf("Error al decodear el archivo %s: %s ", metadatapath, err.Error()), log.ERROR)
 		return
 	}
+
+	filestruct.CurrentBlocks = GetCurrentBlocks(file)
 
 	FilesMap[file] = filestruct
 

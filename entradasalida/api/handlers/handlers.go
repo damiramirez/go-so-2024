@@ -162,9 +162,6 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 
 	defer file.Close()
 
-	global.UpdateSize(estructura.FileName, 0, w)
-	global.UpdateInitialBlock(estructura.FileName, firstFreeBlock, w)
-
 	// 3) actualizo el bitmap, tanto el slice bytes como el archivo (podría hacerlo en el paso 1))
 
 	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s antes de crear el nuevo archivo: %+v", global.Dispositivo.Name, global.Bitmap), log.DEBUG)
@@ -185,9 +182,10 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 
 	dispositivo.InUse = false
 	w.WriteHeader(http.StatusNoContent)
+	global.Logger.Log(fmt.Sprintf("FilesMap al crear %+v", global.FilesMap), log.DEBUG)
 }
 
-func Fs_delete(w http.ResponseWriter, r *http.Request) { // actualizar bitmap, eliminar archivo del directorio y eliminar elemento del map
+func Fs_delete(w http.ResponseWriter, r *http.Request) {
 	dispositivo := global.Dispositivo
 	dispositivo.InUse = true
 
@@ -222,8 +220,15 @@ func Fs_delete(w http.ResponseWriter, r *http.Request) { // actualizar bitmap, e
 		global.Logger.Log(fmt.Sprintf("Error al eliminar el archivo: "+err.Error()), log.ERROR)
 		http.Error(w, "Error al eliminar el archivo", http.StatusInternalServerError)
 	}
+
+	// Eliminar el elemento del map
+
+	delete(global.FilesMap, estructura.FileName)
+
 	dispositivo.InUse = false
 	w.WriteHeader(http.StatusNoContent)
+	global.Logger.Log(fmt.Sprintf("FilesMap al eliminar %+v", global.FilesMap), log.DEBUG)
+
 }
 
 func Fs_truncate(w http.ResponseWriter, r *http.Request) {
@@ -260,44 +265,36 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log(fmt.Sprintf("Filestruct recién decodeado: %+v", filestruct), log.DEBUG)
 
-	currentBlocks := global.GetCurrentBlocks(global.Estructura_truncate.FileName, w)
+	currentBlocks := global.GetCurrentBlocks(global.Estructura_truncate.FileName)
 	freeContiguousBlocks := global.GetFreeContiguousBlocks(global.Estructura_truncate.FileName, w)
 	neededBlocks := global.GetNeededBlocks(w, global.Estructura_truncate)
 	totalFreeBlocks := global.GetTotalFreeBlocks(w)
 
 	if currentBlocks == neededBlocks {
-		global.UpdateSize(global.Estructura_truncate.FileName, global.Estructura_truncate.Tamanio, w)
+		global.UpdateSize(global.Estructura_truncate.FileName, global.Estructura_truncate.Tamanio, w, neededBlocks)
 		global.Logger.Log(fmt.Sprintf("No es necesario truncar pero actualicé el size: %+v", global.Estructura_truncate), log.DEBUG)
-		w.WriteHeader(http.StatusNoContent)
-		dispositivo.InUse = false
-		return
+
 	} else if !(totalFreeBlocks >= neededBlocks-currentBlocks) {
 		global.Logger.Log(fmt.Sprintf("No es posible agrandar el archivo: %+v", global.Estructura_truncate), log.ERROR)
-		w.WriteHeader(http.StatusNoContent)
-		dispositivo.InUse = false
-		return
+
 	} else if currentBlocks > neededBlocks {
 		global.Logger.Log(fmt.Sprintf("Trunco a menos %+v", global.Estructura_truncate), log.DEBUG)
 		//global.TruncateLess(global.Estructura_truncate.FileName, w)
 		//global.AddToTruncatedFiles(global.Estructura_truncate.FileName)
-		global.UpdateSize(global.Estructura_truncate.FileName, global.Estructura_truncate.Tamanio, w)
+		global.UpdateSize(global.Estructura_truncate.FileName, global.Estructura_truncate.Tamanio, w, neededBlocks)
 		global.PrintBitmap(w)
 		global.UpdateBitmap(0, filestruct.Initial_block+neededBlocks, currentBlocks-neededBlocks, w)
 		global.PrintBitmap(w)
-		w.WriteHeader(http.StatusNoContent)
-		dispositivo.InUse = false
-		return
+
 	} else if neededBlocks-currentBlocks <= freeContiguousBlocks {
 		global.Logger.Log(fmt.Sprintf("Trunco a más %+v", global.Estructura_truncate), log.DEBUG)
 		//global.TruncateMore(global.Estructura_truncate.FileName, w)
 		//global.AddToTruncatedFiles(global.Estructura_truncate.FileName)
-		global.UpdateSize(global.Estructura_truncate.FileName, global.Estructura_truncate.Tamanio, w)
+		global.UpdateSize(global.Estructura_truncate.FileName, global.Estructura_truncate.Tamanio, w, neededBlocks)
 		global.PrintBitmap(w)
 		global.UpdateBitmap(1, filestruct.Initial_block+currentBlocks, neededBlocks-currentBlocks, w)
 		global.PrintBitmap(w)
-		w.WriteHeader(http.StatusNoContent)
-		dispositivo.InUse = false
-		return
+
 	} else {
 		global.Logger.Log(fmt.Sprintf("Es necesario compactar: %+v", global.Estructura_truncate), log.DEBUG)
 
@@ -305,11 +302,14 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 
 		compactar(global.Estructura_truncate.FileName, totalFreeBlocks, w)
 
-		w.WriteHeader(http.StatusNoContent)
-		dispositivo.InUse = false
-		return
 	}
 
+	//global.FilesMap[global.Estructura_truncate.FileName] = global.File{CurrentBlocks: neededBlocks, Size: global.Estructura_truncate.Tamanio}
+
+	global.Logger.Log(fmt.Sprintf("FilesMap al truncar %+v", global.FilesMap), log.DEBUG)
+
+	w.WriteHeader(http.StatusNoContent)
+	dispositivo.InUse = false
 }
 
 func Fs_write(w http.ResponseWriter, r *http.Request) {
@@ -517,7 +517,6 @@ func compactar(file string, totalfreeblocks int, w http.ResponseWriter) {
 	//sacar el truncado
 
 	filestruct := global.FilesMap[file]
-
 	global.UpdateBitmap(0, filestruct.Initial_block, filestruct.CurrentBlocks, w)
 
 	//actualizar bitmap (mover todos los 1 a la izquierda)
@@ -525,20 +524,20 @@ func compactar(file string, totalfreeblocks int, w http.ResponseWriter) {
 	global.UpdateBitmap(1, 0, totalUsedBlocks, w)
 	global.UpdateBitmap(0, totalUsedBlocks, totalfreeblocks, w)
 
-	// set initial block del truncado
-	global.UpdateInitialBlock(global.Estructura_truncate.FileName, getFirstFreeBlock(), w)
-
 	//actualizar los initial block de los archivos de metadata
-	updateMetadataFiles(w)
+	updateMetadataFiles(w, file)
+	global.UpdateSize(global.Estructura_truncate.FileName, global.Estructura_truncate.Tamanio, w, 333)
+	global.RebuildFilesMap(global.IOConfig)
 
-	// actualizar el size del archivo truncado
-	global.UpdateSize(global.Estructura_truncate.FileName, global.Estructura_truncate.Tamanio, w)
+	filestruct = global.FilesMap[file]
+
+	global.UpdateBitmap(1, filestruct.Initial_block, filestruct.CurrentBlocks, w)
 
 	global.PrintBitmap(w)
 
 }
 
-func updateMetadataFiles(w http.ResponseWriter) {
+func updateMetadataFiles(w http.ResponseWriter, filename string) {
 
 	var fileNames []string
 
@@ -556,15 +555,19 @@ func updateMetadataFiles(w http.ResponseWriter) {
 		}
 	}
 
+	// función para mover el file a la última posición de fileNames
+
+	fileNames = moveToLastPosition(fileNames, filename)
+
 	// Imprimir los nombres de los archivos
-	global.Logger.Log(fmt.Sprintf("Nombre de los archivos: %+v", fileNames), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Nombre de los archivos (el truncado último): %+v", fileNames), log.DEBUG)
 
 	currentInitialBlock := 0
 
 	for i := 0; i < len(fileNames); i++ {
 		global.Logger.Log(fmt.Sprintf("Archivo a actualizar: %s - %d", fileNames[i], currentInitialBlock), log.DEBUG)
 		global.UpdateInitialBlock(fileNames[i], currentInitialBlock, w)
-		currentInitialBlock = currentInitialBlock + global.GetCurrentBlocks(fileNames[i], w)
+		currentInitialBlock = currentInitialBlock + global.GetCurrentBlocks(fileNames[i])
 	}
 
 }
@@ -586,4 +589,23 @@ func getFirstFreeBlock() int {
 		global.Logger.Log("No hay bloques libres", log.DEBUG)
 	}
 	return firstFreeBlock
+}
+
+func moveToLastPosition(list []string, target string) []string {
+	var result []string
+	var found bool
+
+	for _, item := range list {
+		if item == target {
+			found = true
+		} else {
+			result = append(result, item)
+		}
+	}
+
+	if found {
+		result = append(result, target)
+	}
+
+	return result
 }
