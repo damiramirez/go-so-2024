@@ -171,7 +171,7 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 	global.UpdateBitmap(1, firstFreeBlock, 1, w)
 	global.Logger.Log(fmt.Sprintf("Bitmap del FS %s luego de crear el nuevo archivo: %+v", global.Dispositivo.Name, global.Bitmap), log.DEBUG)
 
-	filestruct := global.FilesMap[estructura.FileName]
+	var filestruct global.File
 
 	filestruct.CurrentBlocks = 0
 	filestruct.Initial_block = -1
@@ -181,14 +181,13 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 	filestruct.Initial_block = firstFreeBlock
 	filestruct.Size = 0
 	global.Logger.Log(fmt.Sprintf("Datos del archivo luego de ser creado (%s): %+v ", filename, filestruct), log.DEBUG)
-
-	//global.AddToActiveFiles(estructura.FileName)
+	global.FilesMap[estructura.FileName] = filestruct
 
 	dispositivo.InUse = false
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func Fs_delete(w http.ResponseWriter, r *http.Request) {
+func Fs_delete(w http.ResponseWriter, r *http.Request) { // actualizar bitmap, eliminar archivo del directorio y eliminar elemento del map
 	dispositivo := global.Dispositivo
 	dispositivo.InUse = true
 
@@ -209,7 +208,10 @@ func Fs_delete(w http.ResponseWriter, r *http.Request) {
 	filestruct := global.FilesMap[estructura.FileName]
 
 	// actualizar el bitmap!
+
+	global.Logger.Log(fmt.Sprintf("Bitmap antes de eliminar archivo: %+v", global.Bitmap), log.DEBUG)
 	global.UpdateBitmap(0, filestruct.Initial_block, filestruct.CurrentBlocks, w)
+	global.Logger.Log(fmt.Sprintf("Bitmap luego de eliminar archivo: %+v", global.Bitmap), log.DEBUG)
 
 	//actualizar la cerpeta de archivos
 	metadatapath := global.IOConfig.DialFSPath + "/" + global.Dispositivo.Name + "/" + estructura.FileName
@@ -255,14 +257,6 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer metadatafile.Close()
-
-	decoder := json.NewDecoder(metadatafile)
-	err = decoder.Decode(&filestruct)
-	if err != nil {
-		global.Logger.Log(fmt.Sprintf("Error al decodear el archivo %s: %s ", metadatapath, err.Error()), log.ERROR)
-		http.Error(w, "Error al decodear el archivo", http.StatusBadRequest)
-		return
-	}
 
 	global.Logger.Log(fmt.Sprintf("Filestruct recién decodeado: %+v", filestruct), log.DEBUG)
 

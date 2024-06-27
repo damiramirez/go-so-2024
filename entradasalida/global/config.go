@@ -131,6 +131,8 @@ func InitGlobal() {
 
 	AvisoKernelIOExistente()
 
+	FilesMap = map[string]File{}
+
 	LevantarFS(IOConfig)
 
 }
@@ -348,7 +350,7 @@ func GetNeededBlocks(w http.ResponseWriter, estructura KernelIOFS_Truncate) int 
 	return neededBlocks
 }
 
-func GetTotalFreeBlocks(w http.ResponseWriter) int {
+func GetTotalFreeBlocks(w http.ResponseWriter) int { // no usar archivo, usar el slice de bytes
 
 	bitmappath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/bitmap.dat"
 
@@ -431,7 +433,6 @@ func UpdateSize(file string, newSize int, w http.ResponseWriter) { // modificar 
 	defer metadatafile.Close()
 
 	filestruct := FilesMap[file]
-	filestruct.Size = newSize
 
 	newSizemap := map[string]interface{}{
 		"initial_block": filestruct.Initial_block,
@@ -445,6 +446,9 @@ func UpdateSize(file string, newSize int, w http.ResponseWriter) { // modificar 
 		http.Error(w, "Error al encodear el nuevo size en el archivo", http.StatusBadRequest)
 		return
 	}
+
+	filestruct.Size = newSize
+	FilesMap[file] = filestruct
 }
 
 func UpdateInitialBlock(file string, newInitialBlock int, w http.ResponseWriter) { // modificar el initial block en el metadata
@@ -465,7 +469,6 @@ func UpdateInitialBlock(file string, newInitialBlock int, w http.ResponseWriter)
 	defer metadatafile.Close()
 
 	filestruct := FilesMap[file]
-	filestruct.Initial_block = newInitialBlock
 
 	newInitialBlockmap := map[string]interface{}{
 		"initial_block": newInitialBlock,
@@ -479,6 +482,9 @@ func UpdateInitialBlock(file string, newInitialBlock int, w http.ResponseWriter)
 		http.Error(w, "Error al encodear el nuevo initial block en el archivo", http.StatusBadRequest)
 		return
 	}
+
+	filestruct.Initial_block = newInitialBlock
+	FilesMap[file] = filestruct
 }
 
 func UpdateBitmap(writeValue int, initialBit int, bitAmount int, w http.ResponseWriter) {
@@ -565,16 +571,16 @@ func rebuildFilesMap(config *Config) {
 	// Iterar sobre los archivos y agregarlos al map
 	for _, entry := range entries {
 		if !entry.IsDir() && strings.Contains(entry.Name(), "txt") {
-			addToFilesMap(entry.Name())
+			addToFilesMapDecoding(entry.Name())
 		}
 	}
 
 	Logger.Log(fmt.Sprintf("FilesMap %+v", FilesMap), log.DEBUG)
 }
 
-func addToFilesMap(file string) {
+func addToFilesMapDecoding(file string) {
 
-	filestruct := FilesMap[file]
+	var filestruct File
 
 	// obtengo los datos del archivo metadata
 
@@ -589,11 +595,15 @@ func addToFilesMap(file string) {
 	defer metadatafile.Close()
 
 	decoder := json.NewDecoder(metadatafile)
-	err = decoder.Decode(&filestruct) // este decode no está funcionando! revisar
+	err = decoder.Decode(&filestruct)
 	if err != nil {
 		Logger.Log(fmt.Sprintf("Error al decodear el archivo %s: %s ", metadatapath, err.Error()), log.ERROR)
 		return
 	}
+
+	FilesMap[file] = filestruct
+
+	// actualizar el valor de CurrentBlocks de filestruct (usar GetCurrentBlocks?)
 
 	Logger.Log(fmt.Sprintf("Filestruct recién decodeado: %+v", filestruct), log.DEBUG)
 
