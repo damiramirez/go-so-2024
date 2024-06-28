@@ -281,7 +281,6 @@ func openBitmapDat(config *Config) {
 func GetCurrentBlocks(file string) int {
 
 	filestruct := FilesMap[file]
-	Logger.Log(fmt.Sprintf("Filestruct %s: %+v", file, filestruct), log.DEBUG)
 	if filestruct.Size > 0 {
 		filestruct.CurrentBlocks = int(math.Ceil(float64(filestruct.Size) / float64(IOConfig.DialFSBlockSize)))
 	} else if filestruct.Size == 0 {
@@ -433,6 +432,9 @@ func UpdateSize(file string, newSize int, w http.ResponseWriter, neededBlocks in
 	defer metadatafile.Close()
 
 	filestruct := FilesMap[file]
+	filestruct.CurrentBlocks = neededBlocks
+	filestruct.Size = Estructura_truncate.Tamanio
+	FilesMap[file] = filestruct
 
 	newSizemap := map[string]interface{}{
 		"initial_block": filestruct.Initial_block,
@@ -447,14 +449,9 @@ func UpdateSize(file string, newSize int, w http.ResponseWriter, neededBlocks in
 		return
 	}
 
-	FilesMap[Estructura_truncate.FileName] = File{CurrentBlocks: neededBlocks, Size: Estructura_truncate.Tamanio}
 }
 
 func UpdateInitialBlock(file string, newInitialBlock int, w http.ResponseWriter) { // modificar el initial block en el metadata
-
-	// declarar variable filestruct
-	// accedo a map con la key file
-	// actualizar map con la key file
 
 	filepath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/" + file
 
@@ -468,6 +465,7 @@ func UpdateInitialBlock(file string, newInitialBlock int, w http.ResponseWriter)
 	defer metadatafile.Close()
 
 	filestruct := FilesMap[file]
+	filestruct.Initial_block = newInitialBlock
 
 	newInitialBlockmap := map[string]interface{}{
 		"initial_block": newInitialBlock,
@@ -482,7 +480,9 @@ func UpdateInitialBlock(file string, newInitialBlock int, w http.ResponseWriter)
 		return
 	}
 
-	FilesMap[file] = File{Initial_block: newInitialBlock}
+	// actualizo el map
+	FilesMap[file] = filestruct
+
 }
 
 func UpdateBitmap(writeValue int, initialBit int, bitAmount int, w http.ResponseWriter) {
@@ -599,7 +599,12 @@ func addToFilesMapDecoding(file string) {
 		return
 	}
 
-	filestruct.CurrentBlocks = GetCurrentBlocks(file)
+	if filestruct.Size > 0 {
+		filestruct.CurrentBlocks = int(math.Ceil(float64(filestruct.Size) / float64(IOConfig.DialFSBlockSize)))
+	} else if filestruct.Size == 0 {
+		filestruct.CurrentBlocks = 1
+	}
+	Logger.Log(fmt.Sprintf("Current blocks: %d", filestruct.CurrentBlocks), log.DEBUG)
 
 	FilesMap[file] = filestruct
 
