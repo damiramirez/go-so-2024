@@ -490,10 +490,22 @@ func updateMetadataFiles(filename string) {
 
 	currentInitialBlock := 0
 
+	oldBloques := make([]byte, len(global.Bloques))
+	copy(oldBloques, global.Bloques)
+
 	for i := 0; i < len(fileNames); i++ {
-		global.Logger.Log(fmt.Sprintf("Archivo a actualizar: %s - Nuevo initial block: %d", fileNames[i], currentInitialBlock), log.DEBUG)
+
+		filestruct := global.FilesMap[fileNames[i]]
+
+		oldPosition := filestruct.Initial_block * global.IOConfig.DialFSBlockSize
+		oldCantidadDeBytes := filestruct.CurrentBlocks * global.IOConfig.DialFSBlockSize
+
+		slicePortion := oldBloques[oldPosition:oldCantidadDeBytes]
+
 		global.UpdateInitialBlock(fileNames[i], currentInitialBlock)
-		global.Logger.Log(fmt.Sprintf("Archivo actualizado: %s - Nuevo initial block: %d", fileNames[i], currentInitialBlock), log.DEBUG)
+
+		global.UpdateBlocksFile(slicePortion, fileNames[i], 0)
+
 		currentInitialBlock = currentInitialBlock + global.GetCurrentBlocks(fileNames[i])
 	}
 
@@ -517,6 +529,7 @@ func getFirstFreeBlock() int {
 	if !found {
 		global.Logger.Log("No hay bloques libres", log.DEBUG)
 	}
+	global.PrintBitmap()
 	return firstFreeBlock
 }
 

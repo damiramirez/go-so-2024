@@ -421,7 +421,7 @@ func PrintBloques() {
 
 	defer bloquesfile.Close()
 
-	_, err = bloquesfile.Read(Bitmap)
+	_, err = bloquesfile.Read(Bloques)
 	if err != nil {
 		Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
 		return
