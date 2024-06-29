@@ -401,15 +401,6 @@ func Fs_read(w http.ResponseWriter, r *http.Request) {
 		data[i] = global.Bloques[ubicacionDeseada+i]
 	}
 
-	// la lógica de leer ya está implementada pero por ahora lo hardcodeo
-	// porque no tengo forma de escribir en bloques (salvo con hex editor) y está todo en 0
-
-	data[0] = 72
-	data[1] = 79
-	data[2] = 76
-	data[3] = 65
-	data[4] = 33
-
 	global.Logger.Log(fmt.Sprintf("Del slice Bloques leí: %+v ", data), log.DEBUG)
 
 	// armo la estructura para mandar a memoria
