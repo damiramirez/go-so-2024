@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
-	"net/http"
 	"os"
 	"strings"
 
@@ -291,7 +290,7 @@ func GetCurrentBlocks(file string) int {
 
 }
 
-func GetFreeContiguousBlocks(file string, w http.ResponseWriter) int {
+func GetFreeContiguousBlocks(file string) int {
 
 	currentBlocks := GetCurrentBlocks(file)
 
@@ -302,7 +301,6 @@ func GetFreeContiguousBlocks(file string, w http.ResponseWriter) int {
 	bitmapfile, err := os.OpenFile(bitmappath, os.O_RDWR, 0644)
 	if err != nil {
 		Logger.Log(fmt.Sprintf("Error al abrir el archivo: %s ", err.Error()), log.ERROR)
-		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
 		return -1
 	}
 
@@ -313,7 +311,6 @@ func GetFreeContiguousBlocks(file string, w http.ResponseWriter) int {
 	_, err = bitmapfile.Seek(int64(filestruct.Initial_block+currentBlocks), 0)
 	if err != nil {
 		Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
-		http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
 		return -1
 	}
 	value := make([]byte, 1)
@@ -326,7 +323,6 @@ func GetFreeContiguousBlocks(file string, w http.ResponseWriter) int {
 		_, err = bitmapfile.Seek(int64(filestruct.Initial_block+currentBlocks+freeContiguousBlocks), 0)
 		if err != nil {
 			Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
-			http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
 			return -1
 		}
 
@@ -336,7 +332,7 @@ func GetFreeContiguousBlocks(file string, w http.ResponseWriter) int {
 	return freeContiguousBlocks
 }
 
-func GetNeededBlocks(w http.ResponseWriter, estructura KernelIOFS_Truncate) int {
+func GetNeededBlocks(estructura KernelIOFS_Truncate) int {
 
 	var neededBlocks int
 
@@ -349,14 +345,13 @@ func GetNeededBlocks(w http.ResponseWriter, estructura KernelIOFS_Truncate) int 
 	return neededBlocks
 }
 
-func GetTotalFreeBlocks(w http.ResponseWriter) int { // no usar archivo, usar el slice de bytes
+func GetTotalFreeBlocks() int { // no usar archivo, usar el slice de bytes
 
 	bitmappath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/bitmap.dat"
 
 	bitmapfile, err := os.OpenFile(bitmappath, os.O_RDWR, 0644)
 	if err != nil {
 		Logger.Log(fmt.Sprintf("Error al abrir el archivo: %s ", err.Error()), log.ERROR)
-		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
 		return -1
 	}
 
@@ -365,7 +360,6 @@ func GetTotalFreeBlocks(w http.ResponseWriter) int { // no usar archivo, usar el
 	_, err = bitmapfile.Seek(0, 0)
 	if err != nil {
 		Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
-		http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
 		return -1
 	}
 
@@ -381,7 +375,6 @@ func GetTotalFreeBlocks(w http.ResponseWriter) int { // no usar archivo, usar el
 		_, err = bitmapfile.Seek(int64(i+1), 0)
 		if err != nil {
 			Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
-			http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
 			return -1
 		}
 
@@ -391,7 +384,7 @@ func GetTotalFreeBlocks(w http.ResponseWriter) int { // no usar archivo, usar el
 	return totalFreeBlocks
 }
 
-func PrintBitmap(w http.ResponseWriter) {
+func PrintBitmap() {
 
 	// leo el archivo y logeo su contenido
 
@@ -400,7 +393,6 @@ func PrintBitmap(w http.ResponseWriter) {
 	bitmapfile, err := os.OpenFile(bitmappath, os.O_RDWR, 0644)
 	if err != nil {
 		Logger.Log(fmt.Sprintf("Error al abrir el archivo: %s ", err.Error()), log.ERROR)
-		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
 		return
 	}
 
@@ -409,21 +401,42 @@ func PrintBitmap(w http.ResponseWriter) {
 	_, err = bitmapfile.Read(Bitmap)
 	if err != nil {
 		Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
-		http.Error(w, "Error al leer el archivo", http.StatusBadRequest)
 		return
 	}
 	Logger.Log(fmt.Sprintf("Bitmap del FS: %+v", Bitmap), log.DEBUG)
 
 }
 
-func UpdateSize(file string, newSize int, w http.ResponseWriter, neededBlocks int) { // modificar el size en el metadata
+func PrintBloques() {
+
+	// leo el archivo y logeo su contenido
+
+	bloquespath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/bloques.dat"
+
+	bloquesfile, err := os.OpenFile(bloquespath, os.O_RDWR, 0644)
+	if err != nil {
+		Logger.Log(fmt.Sprintf("Error al abrir el archivo: %s ", err.Error()), log.ERROR)
+		return
+	}
+
+	defer bloquesfile.Close()
+
+	_, err = bloquesfile.Read(Bitmap)
+	if err != nil {
+		Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
+		return
+	}
+	Logger.Log(fmt.Sprintf("Bloques del FS: %+v", Bloques), log.DEBUG)
+
+}
+
+func UpdateSize(file string, newSize int, neededBlocks int) { // modificar el size en el metadata
 
 	filepath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/" + file
 
 	metadatafile, err := os.OpenFile(filepath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0644)
 	if err != nil {
 		Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", filepath, err.Error()), log.ERROR)
-		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
 		return
 	}
 
@@ -445,20 +458,18 @@ func UpdateSize(file string, newSize int, w http.ResponseWriter, neededBlocks in
 	err = encoder.Encode(newSizemap)
 	if err != nil {
 		Logger.Log(fmt.Sprintf("Error al encodear el nuevo size en el archivo %s: %s ", filepath, err.Error()), log.ERROR)
-		http.Error(w, "Error al encodear el nuevo size en el archivo", http.StatusBadRequest)
 		return
 	}
 
 }
 
-func UpdateInitialBlock(file string, newInitialBlock int, w http.ResponseWriter) { // modificar el initial block en el metadata
+func UpdateInitialBlock(file string, newInitialBlock int) { // modificar el initial block en el metadata
 
 	filepath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/" + file
 
 	metadatafile, err := os.OpenFile(filepath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0644)
 	if err != nil {
 		Logger.Log(fmt.Sprintf("Error al abrir el archivo %s: %s ", filepath, err.Error()), log.ERROR)
-		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
 		return
 	}
 
@@ -476,7 +487,6 @@ func UpdateInitialBlock(file string, newInitialBlock int, w http.ResponseWriter)
 	err = encoder.Encode(newInitialBlockmap)
 	if err != nil {
 		Logger.Log(fmt.Sprintf("Error al encodear el nuevo initial block en el archivo %s: %s ", filepath, err.Error()), log.ERROR)
-		http.Error(w, "Error al encodear el nuevo initial block en el archivo", http.StatusBadRequest)
 		return
 	}
 
@@ -485,7 +495,7 @@ func UpdateInitialBlock(file string, newInitialBlock int, w http.ResponseWriter)
 
 }
 
-func UpdateBitmap(writeValue int, initialBit int, bitAmount int, w http.ResponseWriter) {
+func UpdateBitmap(writeValue int, initialBit int, bitAmount int) {
 
 	// actualizo el slice de bytes
 
@@ -500,7 +510,6 @@ func UpdateBitmap(writeValue int, initialBit int, bitAmount int, w http.Response
 	bitmapfile, err := os.OpenFile(bitmappath, os.O_RDWR, 0644)
 	if err != nil {
 		Logger.Log(fmt.Sprintf("Error al abrir el archivo: %s ", err.Error()), log.ERROR)
-		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
 		return
 	}
 
@@ -509,22 +518,12 @@ func UpdateBitmap(writeValue int, initialBit int, bitAmount int, w http.Response
 	_, err = bitmapfile.Write(Bitmap)
 	if err != nil {
 		Logger.Log(fmt.Sprintf("Error al actualizar el bitmap: %s ", err.Error()), log.ERROR)
-		http.Error(w, "Error al actualizar el bitmap", http.StatusBadRequest)
 		return
 	}
 
 }
 
-func UpdateBlocksFile(newInfo []byte, file string, punteroArchivo int, w http.ResponseWriter) {
-
-	// convierto el archivo bloques.dat en un slice de bytes
-	/*
-		data, err := os.ReadFile(filepath)
-		if err != nil {
-			Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
-			return
-		}
-	*/
+func UpdateBlocksFile(newInfo []byte, file string, punteroArchivo int) {
 
 	filestruct := FilesMap[file]
 
@@ -608,265 +607,6 @@ func addToFilesMapDecoding(file string) {
 
 	FilesMap[file] = filestruct
 
-	// actualizar el valor de CurrentBlocks de filestruct (usar GetCurrentBlocks?)
-
 	Logger.Log(fmt.Sprintf("Filestruct recién decodeado: %+v", filestruct), log.DEBUG)
 
 }
-
-/*
-func TruncateLess(file string, w http.ResponseWriter) {
-
-		filepath := IOConfig.DialFSPath + "/" + Dispositivo.Name  "/" + file
-
-		bitmappath := IOConfig.DialFSPath + "/" + Dispositivo.Name  "/bitmap.dat"
-
-		bitmapfile, err := os.OpenFile(bitmappath, os.O_RDWR, 0644)
-		if err != nil {
-			Logger.Log(fmt.Sprintf("Error al abrir el archivo: %s ", err.Error()), log.ERROR)
-			http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
-			return
-		}
-
-		defer bitmapfile.Close() // esta línea de código garantiza que el archivo en el que estoy trabajando se cierre cuando la función actual termina de ejecutarse
-
-		// leo el archivo y logeo su contenido
-
-		data := make([]byte, IOConfig.DialFSBlockCount) // crea un slice de bytes de tamaño global.IOConfig.DialFSBlockCount, en el cual asigno los bytes que leo del archivo bitmapfile
-		_, err = bitmapfile.Read(data)
-		if err != nil {
-			Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
-			http.Error(w, "Error al leer el archivo", http.StatusBadRequest)
-			return
-		}
-		Logger.Log(fmt.Sprintf("Bitmap del FS %s antes de truncar: %+v", Dispositivo.Name, data), log.DEBUG)
-
-		Logger.Log(fmt.Sprintf("Datos del archivo %s antes de truncar: %+v ", filepath, Filestruct), log.DEBUG)
-
-		neededBlocks := GetNeededBlocks(w, Estructura_truncate)
-
-		currentBlocks := GetCurrentBlocks(file, w)
-
-		Logger.Log(fmt.Sprintf("Current Blocks: %d", currentBlocks), log.DEBUG)
-
-		Logger.Log(fmt.Sprintf("Needed Blocks: %d", neededBlocks), log.DEBUG)
-
-		for i := 0; i < currentBlocks-neededBlocks; i++ {
-
-			_, err = bitmapfile.Seek(int64(Filestruct.Initial_block+neededBlocks+i), 0)
-			if err != nil {
-				Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
-				http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
-				return
-			}
-
-			// cambio el bit de 1 a 0
-			_, err = bitmapfile.Write([]byte{0})
-			if err != nil {
-				Logger.Log(fmt.Sprintf("Error al escribir el byte: %s ", err.Error()), log.ERROR)
-				http.Error(w, "Error al escribir el byte", http.StatusBadRequest)
-				return
-			}
-		}
-
-		Filestruct.Size = Estructura_truncate.Tamanio
-		Filestruct.CurrentBlocks = neededBlocks
-
-		Logger.Log(fmt.Sprintf("Datos del archivo %s luego de truncar: %+v ", filepath, Filestruct), log.DEBUG)
-
-		// muevo el cursor nuevamente al principio del archivo bitmap
-		_, err = bitmapfile.Seek(0, 0)
-		if err != nil {
-			Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
-			return
-		}
-
-		// leo el archivo (desde la posición inicial) y logeo su contenido actualizado
-
-		_, err = bitmapfile.Read(data) // asigno los bytes que leo del archivo bitmapfile (actualizado) a mi slice de bytes data, creado anteriormente
-		if err != nil {
-			Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
-			http.Error(w, "Error al leer el archivo", http.StatusBadRequest)
-			return
-		}
-
-		Logger.Log(fmt.Sprintf("Bitmap del FS %s luego de truncar: %+v", Dispositivo.Name, data), log.DEBUG)
-	}
-*/
-
-/*
-func TruncateMore(file string, w http.ResponseWriter) {
-
-	filepath := IOConfig.DialFSPath + "/" + Dispositivo.Name  "/" + file
-
-	bitmappath := IOConfig.DialFSPath + "/" + Dispositivo.Name  "/bitmap.dat"
-
-	bitmapfile, err := os.OpenFile(bitmappath, os.O_RDWR, 0644)
-	if err != nil {
-		Logger.Log(fmt.Sprintf("Error al abrir el archivo: %s ", err.Error()), log.ERROR)
-		http.Error(w, "Error al abrir el archivo", http.StatusBadRequest)
-		return
-	}
-
-	defer bitmapfile.Close() // esta línea de código garantiza que el archivo en el que estoy trabajando se cierre cuando la función actual termina de ejecutarse
-
-	// leo el archivo y logeo su contenido
-	_, err = bitmapfile.Read(Bitmap)
-	if err != nil {
-		Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
-		http.Error(w, "Error al leer el archivo", http.StatusBadRequest)
-		return
-	}
-	Logger.Log(fmt.Sprintf("Bitmap del FS %s antes de truncar: %+v", Dispositivo.Name, Bitmap), log.DEBUG)
-
-	Logger.Log(fmt.Sprintf("Datos del archivo %s antes de truncar: %+v ", filepath, Filestruct), log.DEBUG)
-
-	neededBlocks := GetNeededBlocks(w, Estructura_truncate)
-
-	currentBlocks := GetCurrentBlocks(file, w)
-
-	Logger.Log(fmt.Sprintf("Current Blocks: %d", currentBlocks), log.DEBUG)
-
-	Logger.Log(fmt.Sprintf("Needed Blocks: %d", neededBlocks), log.DEBUG)
-
-	for i := 0; i < neededBlocks; i++ {
-
-		_, err = bitmapfile.Seek(int64(Filestruct.Initial_block+i), 0)
-		if err != nil {
-			Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
-			http.Error(w, "Error al mover el cursor", http.StatusBadRequest)
-			return
-		}
-
-		// cambio el bit de 0 a 1 (ver qué pasa si esa posición ya está ocupada, fragmentación externa, compactación)
-		_, err = bitmapfile.Write([]byte{1})
-		if err != nil {
-			Logger.Log(fmt.Sprintf("Error al escribir el byte: %s ", err.Error()), log.ERROR)
-			http.Error(w, "Error al escribir el byte", http.StatusBadRequest)
-			return
-		}
-	}
-
-	Filestruct.Size = Estructura_truncate.Tamanio
-	Filestruct.CurrentBlocks = neededBlocks
-
-	Logger.Log(fmt.Sprintf("Datos del archivo %s luego de truncar: %+v ", filepath, Filestruct), log.DEBUG)
-
-	// muevo el cursor nuevamente al principio del archivo bitmap
-	_, err = bitmapfile.Seek(0, 0)
-	if err != nil {
-		Logger.Log(fmt.Sprintf("Error al mover el cursor: %s ", err.Error()), log.ERROR)
-		return
-	}
-
-	// leo el archivo (desde la posición inicial) y logeo su contenido actualizado
-
-	_, err = bitmapfile.Read(Bitmap) // asigno los bytes que leo del archivo bitmapfile (actualizado) a mi slice de bytes data, creado anteriormente
-	if err != nil {
-		Logger.Log(fmt.Sprintf("Error al leer el archivo: %s ", err.Error()), log.ERROR)
-		http.Error(w, "Error al leer el archivo", http.StatusBadRequest)
-		return
-	}
-
-	Logger.Log(fmt.Sprintf("Bitmap del FS %s luego de truncar: %+v", Dispositivo.Name, Bitmap), log.DEBUG)
-
-}
-*/
-
-/*
-func openTruncatedFilesDirectory(config *Config) {
-
-	// crear carpeta para los archivos del FS que fueron truncados
-	dir := config.DialFSPath + "/" + Dispositivo.Name + "/" + "truncated-files"
-
-	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-		Logger.Log(fmt.Sprintf("Error al crear el directorio: %s", err.Error()), log.ERROR)
-		return
-	}
-
-	Logger.Log(fmt.Sprintf("Archivo %s abierto con éxito", dir), log.DEBUG)
-}
-
-func AddToTruncatedFiles(file string) {
-
-	// crear carpeta para los archivos del FS que fueron truncados
-	dir := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/" + "truncated-files"
-
-	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-		Logger.Log(fmt.Sprintf("Error al crear el directorio: %s", err.Error()), log.ERROR)
-		return
-	}
-
-	truncatedpath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/truncated-files/truncated-" + file
-
-	truncatedfile, err := os.OpenFile(truncatedpath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
-	if err != nil {
-		Logger.Log(fmt.Sprintf("Error al crear el archivo: %s", err.Error()), log.ERROR)
-	}
-
-	defer truncatedfile.Close()
-}
-
-/*
-func hasBeenTruncated(file string) int { // 1 si fue truncado, 0 si no lo fue
-
-	dirPath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/" + "truncated-files"
-
-	dir, err := os.Open(dirPath)
-	if err != nil {
-		fmt.Printf("Error al abrir el directorio %s: %s\n", dirPath, err.Error())
-		return 0
-	}
-	defer dir.Close()
-
-	fileNames, err := dir.Readdirnames(0)
-	if err != nil {
-		fmt.Printf("Error al leer los nombres de los archivos en el directorio %s: %s", dirPath, err.Error())
-		return 0
-	}
-
-	// Comprobar si el archivo específico existe
-	for _, fName := range fileNames {
-		if fName == "truncated-"+file {
-			Logger.Log(fmt.Sprintf("El archivo %s ha sido truncado anteriormente", file), log.DEBUG)
-			return 1
-		}
-	}
-
-	Logger.Log(fmt.Sprintf("El archivo %s no ha sido truncado anteriormente", file), log.DEBUG)
-	return 0
-
-func AddToActiveFiles(file string) {
-
-	// crear carpeta para los archivos del FS que están activos
-	dir := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/" + "active-files"
-
-	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-		Logger.Log(fmt.Sprintf("Error al crear el directorio: %s", err.Error()), log.ERROR)
-		return
-	}
-
-	activepath := IOConfig.DialFSPath + "/" + Dispositivo.Name + "/active-files/" + "active-" + file
-
-	activefile, err := os.OpenFile(activepath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
-	if err != nil {
-		Logger.Log(fmt.Sprintf("Error al crear el archivo: %s", err.Error()), log.ERROR)
-	}
-
-	defer activefile.Close()
-}
-
-
-func openActiveFilesDirectory(config *Config) {
-
-	// crear carpeta para los archivos del FS que están activos
-	dir := config.DialFSPath + "/" + Dispositivo.Name + "/" + "active-files"
-
-	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-		Logger.Log(fmt.Sprintf("Error al crear el directorio: %s", err.Error()), log.ERROR)
-		return
-	}
-
-	Logger.Log(fmt.Sprintf("Archivo %s abierto con éxito", dir), log.DEBUG)
-}
-*/
