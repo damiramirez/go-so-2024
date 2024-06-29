@@ -74,7 +74,10 @@ func Execute(pcb *model.PCB, instruction *model.Instruction) int {
 	case "IO_STDIN_READ", "IO_STDOUT_WRITE":
 		ioStd(pcb, instruction)
 		result = RETURN_CONTEXT
-	case "IO_FS_CREATE", "IO_FS_DELETE", "IO_FS_TRUNCATE":
+	case "IO_FS_CREATE", "IO_FS_DELETE":
+		result = RETURN_CONTEXT
+	case "IO_FS_TRUNCATE":
+		ioFsTrunc(pcb, instruction)
 		result = RETURN_CONTEXT
 	case "IO_FS_WRITE", "IO_FS_READ":
 		ioFs(pcb, instruction)
@@ -307,4 +310,9 @@ func ioFs(pcb *model.PCB, instruction *model.Instruction) {
 	instruction.Offset = physicalAddress.Offset
 	instruction.Size = size
 	instruction.FSPointer = filePointer
+}
+
+func ioFsTrunc(pcb *model.PCB, instruction *model.Instruction) {
+	size := getRegister(instruction.Parameters[2], pcb)
+	instruction.Size = size
 }

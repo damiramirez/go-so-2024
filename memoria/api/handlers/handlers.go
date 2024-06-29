@@ -42,9 +42,9 @@ func Stdout_write(w http.ResponseWriter, r *http.Request) {
 			accu++
 		}
 	}
+	global.Logger.Log(fmt.Sprintf("Content:  %+v", Content), log.DEBUG)
 	global.Logger.Log(fmt.Sprintf("page table %d %+v", MemoryAccessIO.Pid, global.DictProcess[MemoryAccessIO.Pid].PageTable), log.DEBUG)
 	global.Logger.Log(fmt.Sprintf("Bit Map  %+v", global.BitMap), log.DEBUG)
-	//global.Logger.Log(fmt.Sprintf("Memoria  %+v", global.Memory), log.DEBUG)
 
 	str := string(Content)
 	serialization.EncodeHTTPResponse(w, str, 200)

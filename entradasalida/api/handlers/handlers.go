@@ -344,6 +344,7 @@ func Fs_write(w http.ResponseWriter, r *http.Request) {
 	estructura_actualizada.Pid = estructura.Pid
 	estructura_actualizada.NumFrames = estructura.NumFrames
 	estructura_actualizada.Offset = estructura.Offset
+	estructura_actualizada.Length = estructura.Tamanio
 
 	// hago una request a memoria para obtener un valor
 
