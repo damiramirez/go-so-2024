@@ -18,6 +18,8 @@ type Response struct {
 
 // recibe el codigo q manda kernel y lo guarda en slice de strings
 func CodeReciever(w http.ResponseWriter, r *http.Request) {
+	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)
+	time.Sleep(DelayResponse * time.Millisecond)
 	//recibo pid y path del archivo con instrucciones
 	var pPath internal.ProcessPath
 	err := serialization.DecodeHTTPBody(r, &pPath)
@@ -73,7 +75,8 @@ func SendInstruction(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteProcess(w http.ResponseWriter, r *http.Request) {
-
+	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)
+	time.Sleep(DelayResponse * time.Millisecond)
 	pid, _ := strconv.Atoi(r.PathValue("pid"))
 	for i := 0; i < len(global.DictProcess[pid].PageTable.Pages); i++ {
 		global.BitMap[global.DictProcess[pid].PageTable.Pages[len(global.DictProcess[pid].PageTable.Pages)-1-i]] = 0

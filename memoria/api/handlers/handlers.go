@@ -3,7 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-
+"time"
 	"github.com/sisoputnfrba/tp-golang/memoria/global"
 	internal "github.com/sisoputnfrba/tp-golang/memoria/internal"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
@@ -12,6 +12,8 @@ import (
 
 // LEE DE MEMORIA
 func Stdout_write(w http.ResponseWriter, r *http.Request) {
+	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)
+	time.Sleep(DelayResponse * time.Millisecond)
 	var MemoryAccessIO internal.MemStdIO
 	err := serialization.DecodeHTTPBody(r, &MemoryAccessIO)
 	if err != nil {
@@ -53,6 +55,8 @@ func Stdout_write(w http.ResponseWriter, r *http.Request) {
 
 // ESCRIBE EN MEMORIA
 func Stdin_read(w http.ResponseWriter, r *http.Request) {
+	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)
+	time.Sleep(DelayResponse * time.Millisecond)
 	//var estructura estructura_write
 	var MemoryAccessIO internal.MemStdIO
 	err := serialization.DecodeHTTPBody(r, &MemoryAccessIO)

@@ -3,7 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-
+"time"
 	global "github.com/sisoputnfrba/tp-golang/memoria/global"
 	internal "github.com/sisoputnfrba/tp-golang/memoria/internal"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
@@ -12,7 +12,8 @@ import (
 
 // recibo tamaño en frames
 func Resize(w http.ResponseWriter, r *http.Request) {
-
+	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)
+	time.Sleep(DelayResponse * time.Millisecond)
 	var Process internal.Resize
 
 	err := serialization.DecodeHTTPBody(r, &Process)
@@ -79,6 +80,8 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 
 // dice q en marco esta asociado la pagina
 func PageTableAccess(w http.ResponseWriter, r *http.Request) {
+	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)
+	time.Sleep(DelayResponse * time.Millisecond)
 	var PageNumber internal.Page
 	err := serialization.DecodeHTTPBody(r, &PageNumber)
 
@@ -102,7 +105,8 @@ func PageTableAccess(w http.ResponseWriter, r *http.Request) {
 }
 
 func MemoryAccessIn(w http.ResponseWriter, r *http.Request) {
-
+	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)
+	time.Sleep(DelayResponse * time.Millisecond)
 	var MemoryAccess internal.MemStruct
 	err := serialization.DecodeHTTPBody(r, &MemoryAccess)
 	if err != nil {
@@ -118,7 +122,8 @@ func MemoryAccessIn(w http.ResponseWriter, r *http.Request) {
 }
 
 func MemoryAccessOut(w http.ResponseWriter, r *http.Request) {
-
+	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)
+	time.Sleep(DelayResponse * time.Millisecond)
 	global.Logger.Log("Entrando a memoryAcess", log.DEBUG)
 	var MemoryAccess internal.MemStruct
 	err := serialization.DecodeHTTPBody(r, &MemoryAccess)
@@ -147,6 +152,8 @@ func MemoryAccessOut(w http.ResponseWriter, r *http.Request) {
 }
 
 func Copy_string(w http.ResponseWriter, r *http.Request) {
+	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)
+	time.Sleep(DelayResponse * time.Millisecond)
 	var MemoryCopy internal.MemCopyString
 	err := serialization.DecodeHTTPBody(r, &MemoryCopy)
 	if err != nil {
