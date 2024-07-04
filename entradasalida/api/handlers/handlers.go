@@ -123,7 +123,7 @@ func Stdout_write(w http.ResponseWriter, r *http.Request) {
 		return
 		// TODO: memoria falta que entienda el mensaje (hacer el endpoint) y me devuelva el valor del registro
 	}
-	global.Logger.Log(fmt.Sprintf("Memoria devolvió este valor: %s", *resp), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Memoria devolvió este valor: %s", *resp), log.INFO)
 
 	dispositivo.InUse = false
 
@@ -355,7 +355,7 @@ func Fs_write(w http.ResponseWriter, r *http.Request) {
 		return
 		// TODO: memoria falta que entienda el mensaje (hacer el endpoint) y me devuelva el valor del registro
 	}
-	global.Logger.Log(fmt.Sprintf("Memoria devolvió este valor: %s", *resp), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Memoria devolvió este valor: %s", *resp), log.INFO)
 
 	// convierto la response en un slice de bytes
 
@@ -492,7 +492,7 @@ func updateMetadataFiles(filename string) {
 		oldPosition := filestruct.Initial_block * global.IOConfig.DialFSBlockSize
 		oldCantidadDeBytes := filestruct.CurrentBlocks * global.IOConfig.DialFSBlockSize
 
-		slicePortion := oldBloques[oldPosition:oldCantidadDeBytes]
+		slicePortion := oldBloques[oldPosition:oldPosition+oldCantidadDeBytes]
 
 		global.UpdateInitialBlock(fileNames[i], currentInitialBlock)
 
