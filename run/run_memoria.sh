@@ -3,7 +3,7 @@
 echo "MEMORIA TEST"
 
 if [ -z "$1" ]; then
-    echo "Uso: $0 <dev|prod>"
+    echo "Uso: $0 PROCESS_NAME"
     exit 1
 fi
 
@@ -19,7 +19,7 @@ KERNEL_URL="http://localhost:8001"
 
 # Lista de archivos de procesos, relativos al script
 procesos=(
-    "$PROCESOS_DIR/MEMORIA_$PROCESS.txt"
+    "$PROCESOS_DIR/$PROCESS"
 )
 
 # Crear cada proceso usando la API

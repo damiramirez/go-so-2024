@@ -58,7 +58,8 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 
 		global.Logger.Log(fmt.Sprintf("page table %d %+v", Process.Pid, global.DictProcess[Process.Pid].PageTable), log.DEBUG)
 		global.Logger.Log(fmt.Sprintf("Bit Map  %+v", global.BitMap), log.DEBUG)
-
+		w.WriteHeader(http.StatusNoContent)
+		return
 		//Limpio bitmap y tabla de paginas
 	} else if Process.Frames == 0 {
 
@@ -71,7 +72,8 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 		global.Logger.Log(fmt.Sprintf("Bit Map  %+v", global.BitMap), log.DEBUG)
 
 		global.Logger.Log(fmt.Sprintf("page table %d %+v", Process.Pid, global.DictProcess[Process.Pid].PageTable), log.DEBUG)
-
+		w.WriteHeader(http.StatusNoContent)
+		return
 	}
 }
 
