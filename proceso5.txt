@@ -1,3 +1,0 @@
-WAIT RA
-WAIT RB
-EXIT

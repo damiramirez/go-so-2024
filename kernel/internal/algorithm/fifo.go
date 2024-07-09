@@ -25,6 +25,7 @@ func Fifo() {
 
 		if !global.WorkingPlani {
 			global.Logger.Log("TERMINO CON FIFO", log.DEBUG)
+			<-global.SemExecute
 			break
 		}
 
