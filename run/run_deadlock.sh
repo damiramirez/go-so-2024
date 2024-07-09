@@ -1,13 +1,25 @@
 #!/bin/bash
+echo "Prueba Deadlock"
 
-echo "DEADLOCK TEST"
+
+# Definir la URL del kernel
+if [ -z "$KERNEL_PORT" ]; then
+    echo "The KERNEL_PORT is not set"
+    echo "Using default port 8001"
+    KERNEL_PORT=8001
+fi
+
+if [ -z "$KERNEL_HOST" ]; then
+    echo "The KERNEL_HOST is not set"
+    echo "Using default host localhost"
+    KERNEL_HOST=localhost
+fi
 
 # Obtener la ruta del directorio donde se encuentra el script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 PROCESOS_DIR="$SCRIPT_DIR/../procesos"
 
-# Definir la URL del kernel
-KERNEL_URL="http://localhost:8001"
+KERNEL_URL="http://$KERNEL_HOST:$KERNEL_PORT"
 
 # Lista de archivos de procesos, relativos al script
 procesos=(

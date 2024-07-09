@@ -3,7 +3,8 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-"time"
+	"time"
+
 	global "github.com/sisoputnfrba/tp-golang/memoria/global"
 	internal "github.com/sisoputnfrba/tp-golang/memoria/internal"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
@@ -84,6 +85,10 @@ func PageTableAccess(w http.ResponseWriter, r *http.Request) {
 	time.Sleep(DelayResponse * time.Millisecond)
 	var PageNumber internal.Page
 	err := serialization.DecodeHTTPBody(r, &PageNumber)
+
+	global.Logger.Log(fmt.Sprintf("Recibi %+v", PageNumber), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Page table: %+v", 	global.DictProcess[PageNumber.Pid].PageTable.Pages	), log.DEBUG)
+
 
 	if err != nil {
 		global.Logger.Log("Error al decodear el body: "+err.Error(), log.ERROR)

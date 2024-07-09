@@ -242,10 +242,9 @@ func resize(pcb *model.PCB, instruction *model.Instruction) int {
 	_, err := requests.PutHTTPwithBody[Estructura_resize, interface{}](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "resize", estructura_resize)
 	// global.Logger.Log(fmt.Sprintf("STATUS CODE DSP RESIZE: %d", resp.StatusCode), log.DEBUG)
 	if err != nil {
-		global.Logger.Log("OUT OF MEMORY", log.INFO)
+		global.Logger.Log("OUT OF MEMORY", log.DEBUG)
 
 		return RETURN_CONTEXT
-		// TODO: falta que memoria vea si puede escribir o no (?)
 	}
 
 	return CONTINUE

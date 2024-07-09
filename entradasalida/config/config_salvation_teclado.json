@@ -1,6 +1,6 @@
 {
-  "port": 8005,
-  "type": "GEN",
+  "port": 8009,
+  "type": "STDIN",
   "unit_work_time": 50,
   "ip_kernel": "127.0.0.1",
   "port_kernel": 8001,

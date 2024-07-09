@@ -90,7 +90,7 @@ func InitGlobal() {
 	SemReadyList = make(chan struct{}, KernelConfig.Multiprogramming)
 
 	// Revisar el size
-	SemNewList = make(chan struct{}, 20)
+	SemNewList = make(chan struct{}, KernelConfig.Multiprogramming)
 	ResourceMap = CreateResourceMap()
 	IoMap = map[string]model.IoDevice{}
 	PIDResourceMap = map[int][]string{}

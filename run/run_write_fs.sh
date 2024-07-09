@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Definir la URL del kernel
 if [ -z "$KERNEL_PORT" ]; then
     echo "The KERNEL_PORT is not set"
     echo "Using default port 8001"
@@ -13,19 +12,19 @@ if [ -z "$KERNEL_HOST" ]; then
     KERNEL_HOST=localhost
 fi
 
-echo "IO TEST"
+echo "WRITE FS TEST"
 
 # Obtener la ruta del directorio donde se encuentra el script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 PROCESOS_DIR="$SCRIPT_DIR/../procesos"
 
+# Definir la URL del kernel
 KERNEL_URL="http://$KERNEL_HOST:$KERNEL_PORT"
 
 # Lista de archivos de procesos, relativos al script
 procesos=(
-    "$PROCESOS_DIR/IO_A.txt"
-    "$PROCESOS_DIR/IO_B.txt"
-    "$PROCESOS_DIR/IO_C.txt"
+    "$PROCESOS_DIR/FS_1.txt"
+    "$PROCESOS_DIR/FS_2.txt"
 )
 
 # Crear cada proceso usando la API

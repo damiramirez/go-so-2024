@@ -59,7 +59,7 @@ func CreateAdress(size int, logicalAddress int, pid int, Content any) MemStruct 
 		pageNumber++
 		frame, hit = global.Tlb.Search(pid, pageNumber)
 		if hit {
-			global.Logger.Log(fmt.Sprintf("TLB Hit: PID %d, Página %d -> Marco %d", pid, pageNumber, frame), log.INFO)
+			global.Logger.Log(fmt.Sprintf("TLB HIT: PID %d, Página %d -> Marco %d", pid, pageNumber, frame), log.INFO)
 		} else {
 			global.Logger.Log(fmt.Sprintf("TLB Miss: PID %d, Página %d", pid, pageNumber), log.INFO)
 			frame = consultMemory(pid, pageNumber)
@@ -75,7 +75,11 @@ func CreateAdress(size int, logicalAddress int, pid int, Content any) MemStruct 
 
 func consultMemory(pid, pageNumber int) int {
 	Page := Frame{Pid: pid, PageNumber: pageNumber}
-	frame, _ := requests.PutHTTPwithBody[Frame, int](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "framenumber", Page)
+	frame, err := requests.PutHTTPwithBody[Frame, int](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "framenumber", Page)
+	if err != nil {
+		global.Logger.Log(fmt.Sprintf("Error: %s", err.Error()), log.DEBUG)
+		panic(1)
+	}
 	global.Logger.Log(fmt.Sprintf("PID: %d - OBTENER MARCO - Página: %d - Marco: %d", pid, pageNumber, *frame), log.INFO)
 	return *frame
 }
