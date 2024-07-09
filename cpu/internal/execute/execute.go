@@ -239,13 +239,15 @@ func resize(pcb *model.PCB, instruction *model.Instruction) int {
 
 	global.Logger.Log(fmt.Sprintf("Struct a resize: %+v", estructura_resize), log.DEBUG)
 
-	_, err := requests.PutHTTPwithBody[Estructura_resize, interface{}](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "resize", estructura_resize)
+	res, err := requests.PutHTTPwithBody[Estructura_resize, interface{}](global.CPUConfig.IPMemory, global.CPUConfig.PortMemory, "resize", estructura_resize)
 	// global.Logger.Log(fmt.Sprintf("STATUS CODE DSP RESIZE: %d", resp.StatusCode), log.DEBUG)
 	if err != nil {
-		global.Logger.Log("OUT OF MEMORY", log.DEBUG)
-
+		global.Logger.Log("Out of memory: "+ err.Error(), log.DEBUG)
+		pcb.DisplaceReason = "FAILED RESIZE"
 		return RETURN_CONTEXT
 	}
+
+	global.Logger.Log(fmt.Sprintf("Memoria respondio al resize: %+v", res), log.DEBUG)
 
 	return CONTINUE
 }

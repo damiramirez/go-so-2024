@@ -28,11 +28,11 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 	tablaPag := global.DictProcess[Process.Pid].PageTable.Pages
 	//Aumento tamaño
 	if len(tablaPag) < Process.Frames {
-		global.Logger.Log(fmt.Sprintf("frames a aumentar %d", Process.Frames-len(tablaPag)), log.DEBUG)
+		global.Logger.Log(fmt.Sprintf("%d: frames a aumentar %d", Process.Pid, Process.Frames-len(tablaPag)), log.DEBUG)
 		for i := 0; i < Process.Frames-len(tablaPag); i++ {
 
 			if internal.AddPage(Process.Pid) == -1 {
-				global.Logger.Log("Error memoria llena", log.DEBUG)
+				global.Logger.Log("Error bitmap lleno", log.DEBUG)
 				http.Error(w, "Out of memory", http.StatusForbidden)
 				//w.WriteHeader(http.StatusForbidden)
 				return
