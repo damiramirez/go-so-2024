@@ -34,7 +34,7 @@ procesos=(
 for proceso in "${procesos[@]}"; do
     echo "Creando proceso desde el archivo $proceso"
     curl -X PUT "$KERNEL_URL/process" -H "Content-Type: application/json" -d "{\"path\":\"$proceso\"}"
-    sleep 1
+    
 done
 
 # Hacer una petición PUT a /plani después de iniciar todos los procesos
