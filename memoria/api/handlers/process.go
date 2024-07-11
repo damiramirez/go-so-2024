@@ -84,12 +84,13 @@ func DeleteProcess(w http.ResponseWriter, r *http.Request) {
 	global.DictProcess[pid].PageTable.Pages = global.DictProcess[pid].PageTable.Pages[:0]
 
 	global.Logger.Log(fmt.Sprintf("se elimino el proceso con el PID : %d ", pid), log.DEBUG)
-	global.Logger.Log(fmt.Sprintf("Pid: %d -Tamaño:%d\n", pid, len(global.DictProcess[pid].PageTable.Pages)), log.INFO)
+	global.Logger.Log(fmt.Sprintf("Pid: %d -Tamaño:%d", pid, len(global.DictProcess[pid].PageTable.Pages)), log.INFO)
 	delete(global.DictProcess, pid)
 
 	//global.DictProcess[pid]=global.ListInstructions{}
+	global.Logger.Log(fmt.Sprintf("Pid: %d -Tamaño:%d", pid, len(global.DictProcess[pid].PageTable.Pages)), log.INFO)
 
 	global.Logger.Log(fmt.Sprintf("page table %d %+v", pid, global.DictProcess[pid].PageTable), log.DEBUG)
 	global.Logger.Log(fmt.Sprintf("Bit Map  %+v", global.BitMap), log.DEBUG)
-
+	
 }
