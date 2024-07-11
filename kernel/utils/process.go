@@ -143,6 +143,7 @@ func PCBtoExit(pcb *model.PCB) {
 		global.Logger.Log(fmt.Sprintf("Error al eliminar proceso en memoria: %+v", err), log.ERROR)
 		return
 	}
+	global.Logger.Log(fmt.Sprintf("Multi: %d despues del exit %d", len(global.SemMulti), pcb.PID), log.DEBUG)
 	global.Logger.Log(fmt.Sprintf("Proceso %d eliminado en memoria", pcb.PID), log.DEBUG)
 }
 

@@ -1,37 +1,39 @@
 package handlers
 
 import (
-	"context"
 	"net/http"
 	"sync"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
 	"github.com/sisoputnfrba/tp-golang/kernel/internal/longterm"
 	"github.com/sisoputnfrba/tp-golang/kernel/internal/shortterm"
+	log "github.com/sisoputnfrba/tp-golang/utils/logger"
 )
 
 // Este mensaje se encargará de retomar (en caso que se encuentre pausada)
 // la planificación de corto y largo plazo. En caso que la planificación no
 // se encuentre pausada, se debe ignorar el mensaje.
 
-var (
-	ctx       context.Context
-	ctxCancel context.CancelFunc
-)
 
 func InitPlanningHandler(w http.ResponseWriter, r *http.Request) {
 	var wg sync.WaitGroup
 
-	
-
 	if global.ReadyState.Len() > 0 || global.ExecuteState.Len() > 0 {
+		global.Logger.Log("REAUNDO PLANI", log.DEBUG)
 		<- global.SemStopPlani
-		<- global.SemLongStopPlani
+		global.Logger.Log("Libero SemStopPlani", log.DEBUG)
+		if global.NewState.Len() > 0 {
+			<- global.SemLongStopPlani
+			global.Logger.Log("Libero SemLongStopPlani", log.DEBUG)
+		}
 		if global.BlockedState.Len() > 0 {
 			<- global.SemBlockStopPlani
+			global.Logger.Log("Libero SemBlockStopPlani", log.DEBUG)
+
 		}
 	} else {
-		ctx, ctxCancel = context.WithCancel(context.Background())
+		global.Logger.Log("INICIO PLANI", log.DEBUG)
+
 
 		global.MutexPlani.Lock()
 		global.WorkingPlani = true
@@ -39,7 +41,7 @@ func InitPlanningHandler(w http.ResponseWriter, r *http.Request) {
 
 		wg.Add(1)
 		go func() {
-			longterm.InitLongTermPlani(ctx)
+			longterm.InitLongTermPlani()
 			wg.Done()
 		}()
 
@@ -62,7 +64,6 @@ func InitPlanningHandler(w http.ResponseWriter, r *http.Request) {
 func StopPlanningHandler(w http.ResponseWriter, r *http.Request) {
 
 	global.MutexPlani.Lock()
-	ctxCancel()
 	global.WorkingPlani = false
 	global.MutexPlani.Unlock()
 

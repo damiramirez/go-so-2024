@@ -42,11 +42,6 @@ func Fifo() {
 			updatePCB = <-updateChan
 			global.Logger.Log(fmt.Sprintf("Recibi de CPU: %+v", updatePCB), log.DEBUG)
 
-			global.MutexExecuteState.Lock()
-			global.ExecuteState.Remove(global.ExecuteState.Front())
-			global.ExecuteState.PushFront(updatePCB)
-			global.MutexExecuteState.Unlock()
-
 			if !global.WorkingPlani {
 				global.Logger.Log("Bloqueo plani", log.DEBUG)
 				global.SemStopPlani <- 0

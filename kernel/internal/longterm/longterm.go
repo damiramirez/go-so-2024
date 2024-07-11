@@ -2,7 +2,6 @@ package longterm
 
 import (
 	"container/list"
-	"context"
 	"fmt"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
@@ -10,7 +9,7 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/model"
 )
 
-func InitLongTermPlani(ctx context.Context) {
+func InitLongTermPlani() {
 	for global.WorkingPlani {
 		// select {
 		// case <-global.SemNewList:
@@ -19,6 +18,7 @@ func InitLongTermPlani(ctx context.Context) {
 		if !global.WorkingPlani {
 			// BLOQUEO HASTA QUE LEO
 			global.SemLongStopPlani <- 0
+			global.Logger.Log("DESBLOQUEO LONG TERM", log.DEBUG)
 			global.WorkingPlani = true
 		}
 
@@ -31,12 +31,6 @@ func InitLongTermPlani(ctx context.Context) {
 			global.Logger.Log(fmt.Sprintf("Cola Ready : %v", array), log.INFO)
 		}
 	}
-
-		// case <-ctx.Done():
-		// 	global.Logger.Log("Planificación detenida", log.INFO)
-		// 	return
-		// }
-	// }
 }
 
 // funcion que cree para agarrar una lista de tipo list list a slice de interface
