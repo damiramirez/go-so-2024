@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"sync"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
 	"github.com/sisoputnfrba/tp-golang/kernel/internal/longterm"
@@ -16,7 +15,6 @@ import (
 
 
 func InitPlanningHandler(w http.ResponseWriter, r *http.Request) {
-	var wg sync.WaitGroup
 
 	if global.ReadyState.Len() > 0 || global.ExecuteState.Len() > 0 {
 		global.Logger.Log("REAUNDO PLANI", log.DEBUG)
@@ -34,25 +32,13 @@ func InitPlanningHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		global.Logger.Log("INICIO PLANI", log.DEBUG)
 
-
 		global.MutexPlani.Lock()
 		global.WorkingPlani = true
 		global.MutexPlani.Unlock()
 
-		wg.Add(1)
-		go func() {
-			longterm.InitLongTermPlani()
-			wg.Done()
-		}()
-
-		wg.Add(1)
-		go func() {
-			shortterm.InitShortTermPlani()
-			wg.Done()
-			}()
+		go longterm.InitLongTermPlani()
+		go shortterm.InitShortTermPlani()
 	}
-		
-	wg.Wait()
 
 	w.WriteHeader(http.StatusNoContent)
 }
