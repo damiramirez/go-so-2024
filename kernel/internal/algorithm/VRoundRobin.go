@@ -47,7 +47,7 @@ func VirtualRoundRobin() {
 
 			interruptTimer := make(chan int, 1)
 
-			go VRRDisplaceFunction(interruptTimer, pcb)
+			go VRRDisplaceFunction(interruptTimer, pcb.RemainingQuantum)
 
 			go func() {
 				global.SemInterrupt <- 0
@@ -63,7 +63,18 @@ func VirtualRoundRobin() {
 
 			if !global.WorkingPlani {
 				global.Logger.Log("Bloqueo plani", log.DEBUG)
+				if updatePCB.DisplaceReason != "QUANTUM" {
+					interruptTimer <- 0
+					DisplaceChan <- updatePCB
+				}
 				global.SemStopPlani <- 0
+				global.Logger.Log(fmt.Sprintf("Desbloqueo PCB interruptTimer/DisplaceChan: %+v", updatePCB), log.DEBUG)
+
+				if updatePCB.DisplaceReason != "QUANTUM" {
+					go VRRDisplaceFunction(interruptTimer, updatePCB.RemainingQuantum)
+					global.SemInterrupt <- 0
+				}
+
 				global.WorkingPlani = true
 				global.Logger.Log("Desbloqueo plani", log.DEBUG)
 			}
@@ -122,18 +133,17 @@ func VirtualRoundRobin() {
 
 				resource.Signal(updatePCB)
 			}
-
 		}
 
 		<-global.SemExecute
 	}
 }
 
-func VRRDisplaceFunction(interruptTimer chan int, OldPcb *model.PCB) {
+func VRRDisplaceFunction(interruptTimer chan int, remainingQuantum int) {
 
 	<-global.SemInterrupt
 
-	quantumTime := time.Duration(OldPcb.RemainingQuantum) * time.Millisecond
+	quantumTime := time.Duration(remainingQuantum) * time.Millisecond
 	timer := time.NewTimer(quantumTime)
 
 	defer timer.Stop()
@@ -142,7 +152,7 @@ func VRRDisplaceFunction(interruptTimer chan int, OldPcb *model.PCB) {
 
 	select {
 	case <-timer.C:
-		global.Logger.Log(fmt.Sprintf("PID: %d Displace - Termino timer.C", OldPcb.PID), log.DEBUG)
+		global.Logger.Log("Displace - Termino timer.C", log.DEBUG)
 		utils.InterruptCPU("QUANTUM")
 	case <-interruptTimer:
 
