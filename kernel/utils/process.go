@@ -56,6 +56,7 @@ func GetAllProcess() []ProcessState {
 		global.ExecuteState,
 		global.BlockedState,
 		global.ExitState,
+		global.ReadyPlus,
 	}
 
 	for _, resource := range global.ResourceMap {
