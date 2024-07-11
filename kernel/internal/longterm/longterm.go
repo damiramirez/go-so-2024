@@ -2,7 +2,6 @@ package longterm
 
 import (
 	"container/list"
-	"context"
 	"fmt"
 
 	"github.com/sisoputnfrba/tp-golang/kernel/global"
@@ -10,22 +9,26 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/model"
 )
 
-func InitLongTermPlani(ctx context.Context) {
+func InitLongTermPlani() {
 	for global.WorkingPlani {
-		select {
-		case <-global.SemNewList:
-			if global.NewState.Len() != 0 {
-				global.Logger.Log(fmt.Sprintf("NEW LEN: %d", global.NewState.Len()), log.DEBUG)
-				global.SemMulti <- 0
-				sendPCBToReady()
-				array := ConvertListToArray(global.ReadyState)
-				global.Logger.Log(fmt.Sprintf("PCB to READY - Semaforo %d - Multi: %d", len(global.SemMulti), global.KernelConfig.Multiprogramming), log.DEBUG)
-				global.Logger.Log(fmt.Sprintf("Cola Ready : %v", array), log.INFO)
-			}
+		// select {
+		// case <-global.SemNewList:
+		<-global.SemNewList
 
-		case <-ctx.Done():
-			global.Logger.Log("Planificación detenida", log.INFO)
-			return
+		if !global.WorkingPlani {
+			// BLOQUEO HASTA QUE LEO
+			global.SemLongStopPlani <- 0
+			global.Logger.Log("DESBLOQUEO LONG TERM", log.DEBUG)
+			global.WorkingPlani = true
+		}
+
+		if global.NewState.Len() != 0 {
+			global.Logger.Log(fmt.Sprintf("NEW LEN: %d", global.NewState.Len()), log.DEBUG)
+			global.SemMulti <- 0
+			sendPCBToReady()
+			array := ConvertListToArray(global.ReadyState)
+			global.Logger.Log(fmt.Sprintf("PCB to READY - Semaforo %d - Multi: %d", len(global.SemMulti), global.KernelConfig.Multiprogramming), log.DEBUG)
+			global.Logger.Log(fmt.Sprintf("Cola Ready : %v", array), log.INFO)
 		}
 	}
 }

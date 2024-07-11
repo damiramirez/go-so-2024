@@ -48,6 +48,13 @@ func RoundRobbin() {
 			//LOG CAMBIO DE ESTADO
 			global.Logger.Log(fmt.Sprintf("Recibi de CPU: %+v", updatePCB), log.DEBUG)
 
+			if !global.WorkingPlani {
+				global.Logger.Log("Bloqueo plani", log.DEBUG)
+				global.SemStopPlani <- 0
+				global.WorkingPlani = true
+				global.Logger.Log("Desbloqueo plani", log.DEBUG)
+			}
+
 			// Sacar de execute
 			global.MutexExecuteState.Lock()
 			global.ExecuteState.Remove(global.ExecuteState.Front())
