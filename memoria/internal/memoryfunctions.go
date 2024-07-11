@@ -12,23 +12,23 @@ import (
 
 var NumPages int
 
-// Se inicializa cada página de la memoria con datos vacíos
+
 
 func InstructionStorage(data []string, pid int) {
-	//creo tabla de paginas (struct con array de paginas) y las inicio en -1
+	
 	pagetable := global.NewPageTable()
 	//le asigno al map la lista de instrucciones y la tabla de paginas del proceso q pase por id
 	global.DictProcess[pid] = global.ListInstructions{Instructions: data, PageTable: pagetable}
 
-	global.Logger.Log(fmt.Sprintf("contenido pagetable %+v", pagetable), log.DEBUG)
+	global.Logger.Log(fmt.Sprintf("Contenido pagetable %+v", pagetable), log.DEBUG)
 }
 
-//
+
 
 func ReadTxt(Path string) ([]string, error) {
 	Data, err := os.ReadFile(Path)
 	if err != nil {
-		global.Logger.Log("error al leer el archivo "+err.Error(), log.ERROR)
+		global.Logger.Log("Error al leer el archivo "+err.Error(), log.ERROR)
 		return nil, err
 	}
 	ListInstructions := strings.Split(string(Data), "\n")
@@ -42,22 +42,24 @@ func MemOut(NumFrames []int, Offset int, content int, Pid int, Largo int) bool {
 	accu := 0
 	global.Logger.Log(fmt.Sprintf("largo %d", Largo), log.DEBUG)
 
-	//MemFrame := NumFrames[0]*global.MemoryConfig.PageSize + Offset
 	if Offset >= global.MemoryConfig.PageSize {
-		global.Logger.Log("memoria inaccesible", log.ERROR)
+		global.Logger.Log("Memoria inaccesible", log.ERROR)
 		return false
 	}
-	global.Logger.Log("El offset esta bien", log.DEBUG)
+
 	if Largo == 4 {
 		Slicebytes = EncodeContent(uint32(content))
+		global.Logger.Log(fmt.Sprintf("PID: %d - Accion: ESCRIBIR - Direccion fisica: %+v + %d - Tamaño: %d Bytes A ESCRIBIR", Pid, NumFrames,Offset, Largo,), log.INFO)
+
 		global.Logger.Log(fmt.Sprintf("largo %+v", Slicebytes), log.DEBUG)
+		
 		for i := 0; i < Largo; i++ {
 			if i+Offset < global.MemoryConfig.PageSize {
 				MemFrame := NumFrames[0]*global.MemoryConfig.PageSize + Offset + i
 				global.Memory.Spaces[MemFrame] = Slicebytes[i]
 
 			} else {
-				//newFrame := AddPage(Pid)
+				
 				MemFrame := NumFrames[1]*global.MemoryConfig.PageSize + accu
 				global.Memory.Spaces[MemFrame] = Slicebytes[i]
 				accu++
@@ -65,8 +67,10 @@ func MemOut(NumFrames []int, Offset int, content int, Pid int, Largo int) bool {
 		}
 	} else if Largo == 1 {
 		global.Memory.Spaces[NumFrames[0]*global.MemoryConfig.PageSize+Offset] = byte(content)
+		global.Logger.Log(fmt.Sprintf("PID: %d - Accion: ESCRIBIR - Direccion fisica: %+v + %d - Tamaño: %d Bytes A ESCRIBIR", Pid, NumFrames,Offset, Largo,), log.INFO)
+
 	}
-	//accu :=0
+
 
 	return true
 
@@ -95,13 +99,15 @@ func MemIn(NumFrame []int, Offset int, Pid int, Largo int) int {
 				ContentByte = global.Memory.Spaces[MemFrame]
 				Content = append(Content, ContentByte)
 			} else {
-				//newFrame := global.DictProcess[Pid].PageTable.Pages[NumPage+1]
+				
 				MemFrame := NumFrame[1]*global.MemoryConfig.PageSize + accu
 				ContentByte = global.Memory.Spaces[MemFrame]
 				Content = append(Content, ContentByte)
 				accu++
 			}
 		}
+		global.Logger.Log(fmt.Sprintf("PID: %d - Accion: LEER - Direccion fisica: %+v + %d - Tamaño: %d Bytes A LEER", Pid, NumFrame,Offset, Largo,), log.INFO)
+
 		return int(DecodeContent(Content))
 	} else {
 		MemFrame := NumFrame[0]*global.MemoryConfig.PageSize + Offset
@@ -115,7 +121,7 @@ func PageCheck(PageNumber int, Pid int, Offset int) bool {
 
 	global.Logger.Log("La pagina esta bien", log.DEBUG)
 	global.Logger.Log(fmt.Sprintf(" %+v", global.DictProcess[Pid]), log.DEBUG)
-	//si el largo de la pagina es 0
+	
 
 	if checkCompletedPage(PageNumber-1, Pid) {
 		global.Logger.Log("estoy dentro de la addpage del else", log.DEBUG)
@@ -126,7 +132,6 @@ func PageCheck(PageNumber int, Pid int, Offset int) bool {
 }
 
 func checkCompletedPage(PageNumber int, Pid int) bool {
-
 	for i := 0; i < 16; i++ {
 		if global.Memory.Spaces[global.DictProcess[Pid].PageTable.Pages[PageNumber]+i] == 0 {
 			return false
@@ -137,11 +142,10 @@ func checkCompletedPage(PageNumber int, Pid int) bool {
 
 func GetFrame(PageNumber int, Pid int) int {
 
-	//si es valida esta en la tabla de paginas, devuelvo el frame de la pagina pedida
 	if CheckIfValid(PageNumber, Pid) {
 		return global.DictProcess[Pid].PageTable.Pages[PageNumber]
 	}
-	//si es invalida
+	
 	return -1
 }
 
@@ -158,41 +162,68 @@ func CheckIfValid(PageNumber int, Pid int) bool {
 	return false
 }
 
-// devuelve fram asociado a la pagina q se le mando y devuelve el frame
 func AddPage(Pid int) int {
 	for i := 0; i < len(global.BitMap); i++ {
-
-		//compruebo que el frame este vacio, si lo esta agrego una pagina
 		if global.BitMap[i] == 0 {
-			//asigno a la a la tabla de paginas el valor de i y pongo el bit map ocupado en la pos i
-			//tamTable:=len(global.DictProcess[Pid].PageTable.Pages)
 			global.DictProcess[Pid].PageTable.Pages = append(global.DictProcess[Pid].PageTable.Pages, i)
 			global.BitMap[i] = 1
-
 			return i
 		}
-
 	}
 	return -1
 }
 
-/*
-func IsWritten(Pid int, Offset int) bool {
-	if len(global.DictProcess[Pid].PageTable.Pages) == 0 || Offset > global.MemoryConfig.PageSize {
-		return false
-	} else {
-		return true
-	}
-}*/
+func WriteInMemory (byteArray []byte,Length int,NumFrames []int,Offset int){
+	
+	accu:=0
+	
+	j:=1
+		for i := 0; i < Length; i++ {
+			
+			if i+Offset < global.MemoryConfig.PageSize {
+				MemFrame := NumFrames[0]*global.MemoryConfig.PageSize + Offset + i
+				global.Memory.Spaces[MemFrame] = byteArray[i]
+				
+			} else {
+				if accu>=global.MemoryConfig.PageSize {
+					accu=0
+					j++
+				}
+				
+				MemFrame := NumFrames[j]*global.MemoryConfig.PageSize + accu
+				global.Memory.Spaces[MemFrame] = byteArray[i]
+				accu++
+			}
+		}
+}
 
-/*func stringsToBytes(strings []string) []byte {
-    var bytesSlice []byte
-    for _, str := range strings {
-        // Convertir cada string a un slice de bytes y concatenarlo al slice resultante
-        bytesSlice = append(bytesSlice, []byte(str)...)
-    }
-    return bytesSlice
-}*/
+func ReadInMemory (Length int,NumFrames []int,Offset int) []byte{
+	var Content []byte
+	var ContentByte byte
+
+		j:=1
+		accu := 0
+		for i := 0; i < Length; i++ {
+			if Offset+i < global.MemoryConfig.PageSize {
+				MemFrame := NumFrames[0]*global.MemoryConfig.PageSize + Offset + i
+				ContentByte = global.Memory.Spaces[MemFrame]
+				Content = append(Content, ContentByte)
+			} else {
+				if accu>=global.MemoryConfig.PageSize {
+					accu=0
+					j++
+				}
+				
+				MemFrame := NumFrames[j]*global.MemoryConfig.PageSize + accu
+				ContentByte = global.Memory.Spaces[MemFrame]
+				Content = append(Content, ContentByte)
+				accu++
+			}
+		}
+		
+		return Content
+}
+
 
 func PrintMemoryTable(memory []byte, cols int) {
 	// Imprimir encabezados de columna

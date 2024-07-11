@@ -19,11 +19,7 @@ type Config struct {
 	InstructionsPath string `json:"instructions_path"`
 	DelayResponse    int    `json:"delay_response"`
 }
-type ValoraMandar struct {
-	Texto string `json:"texto"`
-}
 
-var ValoraM ValoraMandar
 
 var MemoryConfig *Config
 var Logger *log.LoggerStruct
@@ -64,10 +60,7 @@ func NewMemory() *MemoryST {
 var PTable *PageTable
 
 func NewPageTable() *PageTable {
-	//inicializo las 16 paginas en -1
 	Slice := make([]int, 0)
-
-	//le asigno al "struct" pagetable el array con las paginas
 	pagetable := PageTable{Pages: Slice}
 
 	return &pagetable
@@ -84,15 +77,14 @@ var BitMap []int
 
 func InitGlobal() {
 	args := os.Args[1:]
-	if len(args) != 2 {
-		fmt.Println("ARGS: ENV=dev|prod CONFIG=config_path")
+	if len(args) != 1 {
+		fmt.Println("Uso: programa <go run `modulo`.go dev|prod>")
 		os.Exit(1)
 	}
 	env := args[0]
-	configFile := args[1]
 
 	Logger = log.ConfigureLogger(MEMORYLOG, env)
-	MemoryConfig = config.LoadConfiguration[Config](configFile)
+	MemoryConfig = config.LoadConfiguration[Config]("./config/config.json")
 	DictProcess = map[int]ListInstructions{}
 	Memory = NewMemory()
 	BitMap = NewBitMap()

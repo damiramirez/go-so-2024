@@ -20,15 +20,6 @@ type Resize struct {
 	Frames int `json:"frames"`
 }
 
-/*type MemAccess struct {
-	NumFrame int    `json:"numframe"`
-	NumPage  int    `json:"numpage"`
-	Offset   int    `json:"offset"`
-	Content  uint32 `json:"content"`
-	Pid      int    `json:"pid"`
-	Largo    int    `json:"largo"`
-}*/
-
 type MemStruct struct {
 	Pid       int   `json:"pid"`
 	Content   int   `json:"content"`
@@ -36,7 +27,6 @@ type MemStruct struct {
 	NumFrames []int `json:"numframe"`
 	Offset    int   `json:"offset"`
 }
-
 type MemCopyString struct {
 	Pid           int   `json:"pid"`
 	Length        int   `json:"length"`
