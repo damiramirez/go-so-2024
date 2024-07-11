@@ -20,27 +20,36 @@ var (
 )
 
 func InitPlanningHandler(w http.ResponseWriter, r *http.Request) {
-
-	ctx, ctxCancel = context.WithCancel(context.Background())
-
-	global.MutexPlani.Lock()
-	global.WorkingPlani = true
-	global.MutexPlani.Unlock()
-
 	var wg sync.WaitGroup
 
-	wg.Add(1)
-	go func() {
-		longterm.InitLongTermPlani(ctx)
-		wg.Done()
-	}()
+	
 
-	wg.Add(1)
-	go func() {
-		shortterm.InitShortTermPlani()
-		wg.Done()
-	}()
+	if global.ReadyState.Len() > 0 || global.ExecuteState.Len() > 0 {
+		<- global.SemStopPlani
+		<- global.SemLongStopPlani
+		if global.BlockedState.Len() > 0 {
+			<- global.SemBlockStopPlani
+		}
+	} else {
+		ctx, ctxCancel = context.WithCancel(context.Background())
 
+		global.MutexPlani.Lock()
+		global.WorkingPlani = true
+		global.MutexPlani.Unlock()
+
+		wg.Add(1)
+		go func() {
+			longterm.InitLongTermPlani(ctx)
+			wg.Done()
+		}()
+
+		wg.Add(1)
+		go func() {
+			shortterm.InitShortTermPlani()
+			wg.Done()
+			}()
+	}
+		
 	wg.Wait()
 
 	w.WriteHeader(http.StatusNoContent)

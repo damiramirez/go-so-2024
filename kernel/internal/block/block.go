@@ -33,6 +33,12 @@ func ProcessToIO(pcb *model.PCB) {
 	}
 
 	global.IoMap[io.GetName()].Sem <- 0
+
+	if !global.WorkingPlani {
+		global.SemBlockStopPlani <- 0
+		global.Logger.Log("Libere semaforo de block stop plani", log.DEBUG)
+	}
+
 	_, err := requests.PutHTTPwithBody[IO, interface{}](global.KernelConfig.IPIo, global.IoMap[io.GetName()].Port, io.GetInstruction(), io)
 	if err != nil {
 		global.Logger.Log("Se desconecto IO:"+err.Error(), log.DEBUG)

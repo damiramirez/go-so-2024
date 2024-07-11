@@ -56,7 +56,9 @@ var SemExecute chan int
 var SemInterrupt chan int
 var SemReadyList chan struct{}
 var SemNewList chan struct{}
-var SemStopPlani chan struct{}
+var SemStopPlani chan int
+var SemLongStopPlani chan int
+var SemBlockStopPlani chan int
 var SemReadyPlus chan struct{}
 
 // MAPs
@@ -83,7 +85,9 @@ func InitGlobal() {
 	ExitState = list.New()
 	ReadyPlus = list.New()
 
-	SemStopPlani = make(chan struct{})
+	SemStopPlani = make(chan int)
+	SemLongStopPlani = make(chan int)
+	SemBlockStopPlani = make(chan int)
 	SemMulti = make(chan int, KernelConfig.Multiprogramming)
 	SemExecute = make(chan int, 1)
 	SemInterrupt = make(chan int)
