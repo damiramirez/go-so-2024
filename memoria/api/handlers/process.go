@@ -37,7 +37,7 @@ func CodeReciever(w http.ResponseWriter, r *http.Request) {
 	}
 	//escribo en el map el pid y su lista de instrucciones y crea tabla de paginas
 	internal.InstructionStorage(ListInstructions, pPath.Pid)
-	global.Logger.Log(fmt.Sprintf("%+v\n", global.DictProcess), log.INFO)
+	global.Logger.Log(fmt.Sprintf("%+v\n", global.DictProcess), log.DEBUG)
 	global.Logger.Log(fmt.Sprintf("Pid: %d -Tamaño:%d\n", pPath.Pid, len(global.DictProcess[pPath.Pid].PageTable.Pages)), log.INFO)
 	w.WriteHeader(http.StatusOK)
 }
