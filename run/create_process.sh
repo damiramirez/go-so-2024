@@ -20,4 +20,4 @@ fi
 
 KERNEL_URL="http://$KERNEL_HOST:$KERNEL_PORT"
 
-curl -X PUT -H "Content-Type: application/json" -d "{\"path\": \"/home/utnso/tp-2024-1c-sudoers/procesos/$1\"}" ${KERNEL_URL}/process
+curl -X PUT -H "Content-Type: application/json" -d "{\"path\": \"/home/utnso/Documents/SO/TPSO/tp-2024-1c-sudoers/procesos/$1\"}" ${KERNEL_URL}/process
