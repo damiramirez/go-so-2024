@@ -77,14 +77,15 @@ var BitMap []int
 
 func InitGlobal() {
 	args := os.Args[1:]
-	if len(args) != 1 {
+	if len(args) != 2 {
 		fmt.Println("Uso: programa <go run `modulo`.go dev|prod>")
 		os.Exit(1)
 	}
 	env := args[0]
+	path := args[1]
 
 	Logger = log.ConfigureLogger(MEMORYLOG, env)
-	MemoryConfig = config.LoadConfiguration[Config]("./config/config.json")
+	MemoryConfig = config.LoadConfiguration[Config](path)
 	DictProcess = map[int]ListInstructions{}
 	Memory = NewMemory()
 	BitMap = NewBitMap()

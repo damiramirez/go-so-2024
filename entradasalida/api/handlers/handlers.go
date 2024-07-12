@@ -263,6 +263,9 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", global.Estructura_truncate.Pid, global.Estructura_truncate.Instruction+">"), log.INFO)
+	
+	global.Logger.Log(fmt.Sprintf("PID: %d - Truncar Archivo: %s - Tamaño: %d", global.Estructura_truncate.Pid, global.Estructura_truncate.FileName, global.Estructura_truncate.Tamanio), log.INFO)
+
 	global.Logger.Log(fmt.Sprintf("Dispositivo: %+v", dispositivo), log.DEBUG)
 	global.Logger.Log(fmt.Sprintf("Instrucción: %+v", global.Estructura_truncate), log.DEBUG)
 
@@ -368,7 +371,7 @@ func Fs_write(w http.ResponseWriter, r *http.Request) {
 	//revisar este log
 	global.Logger.Log(fmt.Sprintf("PID: <%d> - Escribir Archivo: <%s> - Tamaño a Leer: <%d> - Puntero Archivo: <%d>", estructura.Pid, estructura.FileName, len(valor), estructura.PunteroArchivo), log.INFO)
 
-	global.Logger.Log(fmt.Sprintf("Conversión de la respuesta de memoria en un slice de bytes: %v", valor), log.INFO)
+	global.Logger.Log(fmt.Sprintf("Conversión de la respuesta de memoria en un slice de bytes: %v", valor), log.DEBUG)
 
 	// TODO: chequear que donde escribo pertenece al archivo
 
@@ -439,6 +442,8 @@ func Fs_read(w http.ResponseWriter, r *http.Request) {
 func compactar(file string, totalfreeblocks int) {
 
 	//sacar el truncado
+	global.Logger.Log("Compactando...", log.INFO)
+	time.Sleep(time.Duration(global.IOConfig.CompactionDelay) * time.Millisecond)
 
 	filestruct := global.FilesMap[file]
 	global.UpdateBitmap(0, filestruct.Initial_block, filestruct.CurrentBlocks)

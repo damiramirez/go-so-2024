@@ -13,7 +13,6 @@ import (
 	"github.com/sisoputnfrba/tp-golang/utils/requests"
 )
 
-const IOLOG = "./entradasalida.log"
 
 type Config struct {
 	Port             int    `json:"port"`
@@ -26,6 +25,7 @@ type Config struct {
 	DialFSPath       string `json:"dialfs_path"`
 	DialFSBlockSize  int    `json:"dialfs_block_size"`
 	DialFSBlockCount int    `json:"dialfs_block_count"`
+	CompactionDelay  int    `json:"compaction_delay"`
 }
 
 type IODevice struct {
@@ -123,7 +123,9 @@ func InitGlobal() {
 	name := args[1]
 	configuracion := args[2]
 
-	Logger = log.ConfigureLogger(IOLOG, env)
+	iolog := fmt.Sprintf("./entradasalida-%s.log", name)
+
+	Logger = log.ConfigureLogger(iolog, env)
 	IOConfig = config.LoadConfiguration[Config](configuracion)
 
 	Dispositivo = InitIODevice(name)
@@ -550,7 +552,7 @@ func UpdateBlocksFile(newInfo []byte, file string, punteroArchivo int) {
 		return
 	}
 
-	Logger.Log(fmt.Sprintf("El archivo se actualizó con éxito: %+v", Bloques), log.INFO)
+	Logger.Log(fmt.Sprintf("El archivo se actualizó con éxito: %+v", Bloques), log.DEBUG)
 
 }
 
