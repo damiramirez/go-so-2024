@@ -143,6 +143,9 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", estructura.Pid, estructura.Instruction+">"), log.INFO)
+
+	global.Logger.Log(fmt.Sprintf("PID: <%d> - Crear Archivo: <%s>", estructura.Pid, estructura.FileName), log.INFO)
+
 	global.Logger.Log(fmt.Sprintf("Estructura: %+v", estructura), log.DEBUG)
 	global.Logger.Log(fmt.Sprintf("Dispositivo: %+v", dispositivo), log.DEBUG)
 
@@ -211,6 +214,8 @@ func Fs_delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", estructura.Pid, estructura.Instruction+">"), log.INFO)
+
+	global.Logger.Log(fmt.Sprintf("PID: <%d> - Eliminar Archivo: <%s>", estructura.Pid, estructura.FileName), log.INFO)
 
 	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.DEBUG)
 
@@ -360,6 +365,8 @@ func Fs_write(w http.ResponseWriter, r *http.Request) {
 	// convierto la response en un slice de bytes
 
 	valor := []byte(*resp)
+	//revisar este log
+	global.Logger.Log(fmt.Sprintf("PID: <%d> - Escribir Archivo: <%s> - Tamaño a Leer: <%d> - Puntero Archivo: <%d>", estructura.Pid, estructura.FileName, len(valor), estructura.PunteroArchivo), log.INFO)
 
 	global.Logger.Log(fmt.Sprintf("Conversión de la respuesta de memoria en un slice de bytes: %v", valor), log.INFO)
 
@@ -387,6 +394,7 @@ func Fs_read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", estructura.Pid, estructura.Instruction+">"), log.INFO)
+	global.Logger.Log(fmt.Sprintf("PID: <%d> - Leer Archivo: <%s> - Tamaño a Leer: <%d> - Puntero Archivo: <%d>", estructura.Pid, estructura.FileName, estructura.Tamanio, estructura.PunteroArchivo), log.INFO)
 
 	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.DEBUG)
 
@@ -492,7 +500,7 @@ func updateMetadataFiles(filename string) {
 		oldPosition := filestruct.Initial_block * global.IOConfig.DialFSBlockSize
 		oldCantidadDeBytes := filestruct.CurrentBlocks * global.IOConfig.DialFSBlockSize
 
-		slicePortion := oldBloques[oldPosition:oldPosition+oldCantidadDeBytes]
+		slicePortion := oldBloques[oldPosition : oldPosition+oldCantidadDeBytes]
 
 		global.UpdateInitialBlock(fileNames[i], currentInitialBlock)
 
