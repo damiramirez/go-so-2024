@@ -1,9 +1,12 @@
 # Deploy
 
+1. Chequear que Go este instalado -> `go version` sino `sudo snap install go --classic`
+1. Clonar repo con `github token`
+1. `cd tp-2024-1c-sudoers`
 1. Agregar variables de ambiente en Kernel con su `host` e `ip` para los `.sh`
-2. Modificar la config del modulo con las `ips`, `puertos` y `path` necesarios
-3. Builder el modulo con make
-4. Usar el run especifico de la prueba
+1. Modificar la config del modulo con las `ips`, `puertos` y `path` necesarios
+1. Builder el modulo con make
+1. Usar el run especifico de la prueba
 
 ## Prueba Planificación
 
