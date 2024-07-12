@@ -137,7 +137,7 @@ func PCBtoExit(pcb *model.PCB) {
 	<-global.SemMulti
 
 	// Request a memoria para eliminar pagina de tablas
-	endpoint := fmt.Sprintf("delete/%d", pcb.PID)
+	endpoint := fmt.Sprintf("process/%d", pcb.PID)
 	_, err := requests.DeleteHTTP[interface{}](global.KernelConfig.IPMemory, global.KernelConfig.PortMemory, endpoint, nil)
 	if err != nil {
 		global.Logger.Log(fmt.Sprintf("Error al eliminar proceso en memoria: %+v", err), log.ERROR)

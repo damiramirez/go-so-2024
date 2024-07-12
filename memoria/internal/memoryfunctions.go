@@ -46,10 +46,10 @@ func MemOut(NumFrames []int, Offset int, content int, Pid int, Largo int) bool {
 		global.Logger.Log("Memoria inaccesible", log.ERROR)
 		return false
 	}
+	global.Logger.Log(fmt.Sprintf("PID: %d - Accion: ESCRIBIR - Direccion fisica: %+v + %d - Tamaño: %d Bytes A ESCRIBIR", Pid, NumFrames,Offset, Largo,), log.INFO)
 
 	if Largo == 4 {
 		Slicebytes = EncodeContent(uint32(content))
-		global.Logger.Log(fmt.Sprintf("PID: %d - Accion: ESCRIBIR - Direccion fisica: %+v + %d - Tamaño: %d Bytes A ESCRIBIR", Pid, NumFrames,Offset, Largo,), log.INFO)
 
 		global.Logger.Log(fmt.Sprintf("largo %+v", Slicebytes), log.DEBUG)
 		
@@ -67,7 +67,7 @@ func MemOut(NumFrames []int, Offset int, content int, Pid int, Largo int) bool {
 		}
 	} else if Largo == 1 {
 		global.Memory.Spaces[NumFrames[0]*global.MemoryConfig.PageSize+Offset] = byte(content)
-		global.Logger.Log(fmt.Sprintf("PID: %d - Accion: ESCRIBIR - Direccion fisica: %+v + %d - Tamaño: %d Bytes A ESCRIBIR", Pid, NumFrames,Offset, Largo,), log.INFO)
+		//global.Logger.Log(fmt.Sprintf("PID: %d - Accion: ESCRIBIR - Direccion fisica: %+v + %d - Tamaño: %d Bytes A ESCRIBIR", Pid, NumFrames,Offset, Largo,), log.INFO)
 
 	}
 
@@ -90,6 +90,7 @@ func DecodeContent(slice []byte) uint32 {
 func MemIn(NumFrame []int, Offset int, Pid int, Largo int) int {
 	var Content []byte
 	var ContentByte byte
+	global.Logger.Log(fmt.Sprintf("PID: %d - Accion: LEER - Direccion fisica: %+v + %d - Tamaño: %d Bytes A LEER", Pid, NumFrame,Offset, Largo,), log.INFO)
 
 	if Largo == 4 {
 		accu := 0
@@ -106,7 +107,6 @@ func MemIn(NumFrame []int, Offset int, Pid int, Largo int) int {
 				accu++
 			}
 		}
-		global.Logger.Log(fmt.Sprintf("PID: %d - Accion: LEER - Direccion fisica: %+v + %d - Tamaño: %d Bytes A LEER", Pid, NumFrame,Offset, Largo,), log.INFO)
 
 		return int(DecodeContent(Content))
 	} else {

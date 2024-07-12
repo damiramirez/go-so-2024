@@ -109,7 +109,7 @@ func MemoryAccessIn(w http.ResponseWriter, r *http.Request) {
 
 	MemoryAccess.Content = internal.MemIn(MemoryAccess.NumFrames, MemoryAccess.Offset, MemoryAccess.Pid, MemoryAccess.Length)
 	serialization.EncodeHTTPResponse(w, MemoryAccess.Content, http.StatusOK)
-	global.Logger.Log(fmt.Sprintf("PID: %d - Accion: LEER - Direccion fisica: %+v + %d - Tamaño: %d Bytes  A LEER", MemoryAccess.Pid, MemoryAccess.NumFrames,MemoryAccess.Offset, MemoryAccess.Length,), log.INFO)
+	//global.Logger.Log(fmt.Sprintf("PID: %d - Accion: LEER - Direccion fisica: %+v + %d - Tamaño: %d Bytes  A LEER", MemoryAccess.Pid, MemoryAccess.NumFrames,MemoryAccess.Offset, MemoryAccess.Length,), log.INFO)
 
 }
 
@@ -131,7 +131,7 @@ func MemoryAccessOut(w http.ResponseWriter, r *http.Request) {
 
 		global.Logger.Log(fmt.Sprintf("Page table %d %+v", MemoryAccess.Pid, global.DictProcess[MemoryAccess.Pid].PageTable), log.DEBUG)
 		global.Logger.Log(fmt.Sprintf("Bit Map  %+v", global.BitMap), log.DEBUG)
-		global.Logger.Log(fmt.Sprintf("PID: %d - Accion: ESCRIBIR - Direccion fisica: %+v + %d - Tamaño: %d Bytes  A ESCRIBIR", MemoryAccess.Pid, MemoryAccess.NumFrames,MemoryAccess.Offset, MemoryAccess.Length,), log.INFO)
+		//global.Logger.Log(fmt.Sprintf("PID: %d - Accion: ESCRIBIR - Direccion fisica: %+v + %d - Tamaño: %d Bytes  A ESCRIBIR", MemoryAccess.Pid, MemoryAccess.NumFrames,MemoryAccess.Offset, MemoryAccess.Length,), log.INFO)
 
 		//internal.PrintMemoryTable(global.Memory.Spaces, global.MemoryConfig.PageSize)
 
