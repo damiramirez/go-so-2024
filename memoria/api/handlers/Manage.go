@@ -3,7 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-
+	"time"
 	global "github.com/sisoputnfrba/tp-golang/memoria/global"
 	internal "github.com/sisoputnfrba/tp-golang/memoria/internal"
 	log "github.com/sisoputnfrba/tp-golang/utils/logger"
@@ -12,7 +12,8 @@ import (
 
 // recibo tamaño en frames
 func Resize(w http.ResponseWriter, r *http.Request) {
-
+	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)
+	time.Sleep(DelayResponse * time.Millisecond)
 	var Process internal.Resize
 
 	err := serialization.DecodeHTTPBody(r, &Process)
@@ -70,6 +71,8 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 }
 
 func PageTableAccess(w http.ResponseWriter, r *http.Request) {
+	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)
+	time.Sleep(DelayResponse * time.Millisecond)
 	var PageNumber internal.Page
 	err := serialization.DecodeHTTPBody(r, &PageNumber)
 	global.Logger.Log(fmt.Sprintf("Me enviaron %+v", PageNumber), log.DEBUG)
@@ -93,7 +96,8 @@ func PageTableAccess(w http.ResponseWriter, r *http.Request) {
 
 // LEER EN MEMORIA
 func MemoryAccessIn(w http.ResponseWriter, r *http.Request) {
-
+	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)
+	time.Sleep(DelayResponse * time.Millisecond)
 	var MemoryAccess internal.MemStruct
 	err := serialization.DecodeHTTPBody(r, &MemoryAccess)
 	if err != nil {
@@ -105,12 +109,14 @@ func MemoryAccessIn(w http.ResponseWriter, r *http.Request) {
 
 	MemoryAccess.Content = internal.MemIn(MemoryAccess.NumFrames, MemoryAccess.Offset, MemoryAccess.Pid, MemoryAccess.Length)
 	serialization.EncodeHTTPResponse(w, MemoryAccess.Content, http.StatusOK)
+	global.Logger.Log(fmt.Sprintf("PID: %d - Accion: LEER - Direccion fisica: %+v + %d - Tamaño: %d Bytes  A LEER", MemoryAccess.Pid, MemoryAccess.NumFrames,MemoryAccess.Offset, MemoryAccess.Length,), log.INFO)
 
 }
 
 // ESCRIBE EN MEMORIA
 func MemoryAccessOut(w http.ResponseWriter, r *http.Request) {
-
+	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)
+	time.Sleep(DelayResponse * time.Millisecond)
 	var MemoryAccess internal.MemStruct
 	err := serialization.DecodeHTTPBody(r, &MemoryAccess)
 
@@ -125,8 +131,9 @@ func MemoryAccessOut(w http.ResponseWriter, r *http.Request) {
 
 		global.Logger.Log(fmt.Sprintf("Page table %d %+v", MemoryAccess.Pid, global.DictProcess[MemoryAccess.Pid].PageTable), log.DEBUG)
 		global.Logger.Log(fmt.Sprintf("Bit Map  %+v", global.BitMap), log.DEBUG)
+		global.Logger.Log(fmt.Sprintf("PID: %d - Accion: ESCRIBIR - Direccion fisica: %+v + %d - Tamaño: %d Bytes  A ESCRIBIR", MemoryAccess.Pid, MemoryAccess.NumFrames,MemoryAccess.Offset, MemoryAccess.Length,), log.INFO)
 
-		internal.PrintMemoryTable(global.Memory.Spaces, global.MemoryConfig.PageSize)
+		//internal.PrintMemoryTable(global.Memory.Spaces, global.MemoryConfig.PageSize)
 
 		w.WriteHeader(http.StatusNoContent)
 	} else {
@@ -137,6 +144,8 @@ func MemoryAccessOut(w http.ResponseWriter, r *http.Request) {
 }
 
 func Copy_string(w http.ResponseWriter, r *http.Request) {
+	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)
+	time.Sleep(DelayResponse * time.Millisecond)
 	var MemoryCopy internal.MemCopyString
 	err := serialization.DecodeHTTPBody(r, &MemoryCopy)
 	if err != nil {
@@ -158,7 +167,7 @@ func Copy_string(w http.ResponseWriter, r *http.Request) {
 	//COPIA
 	global.Logger.Log(fmt.Sprintf("Largo de lo que se va a copiar %d", len(Content)), log.DEBUG)
 	internal.WriteInMemory(Content,MemoryCopy.Length,MemoryCopy.NumFramesCopy,MemoryCopy.OffsetCopy)
-	internal.PrintMemoryTable(global.Memory.Spaces, global.MemoryConfig.PageSize)
+	//internal.PrintMemoryTable(global.Memory.Spaces, global.MemoryConfig.PageSize)
 	global.Logger.Log(fmt.Sprintf("PID: %d - Accion: ESCRIBIR - Direccion fisica: %+v + %d - Tamaño: %d Bytes  A ESCRIBIR", MemoryCopy.Pid, MemoryCopy.NumFramesCopy,MemoryCopy.OffsetCopy, MemoryCopy.Length,), log.INFO)
 
 	resp := "Fue copiado correctamente"

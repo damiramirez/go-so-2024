@@ -18,7 +18,8 @@ type Response struct {
 
 
 func CodeReciever(w http.ResponseWriter, r *http.Request) {
-	
+	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)
+	time.Sleep(DelayResponse * time.Millisecond)
 	var pPath internal.ProcessPath
 	err := serialization.DecodeHTTPBody(r, &pPath)
 	if err != nil {
@@ -37,7 +38,7 @@ func CodeReciever(w http.ResponseWriter, r *http.Request) {
 	}
 	//escribo en el map el pid y su lista de instrucciones y crea tabla de paginas
 	internal.InstructionStorage(ListInstructions, pPath.Pid)
-	global.Logger.Log(fmt.Sprintf("%+v\n", global.DictProcess), log.INFO)
+	global.Logger.Log(fmt.Sprintf("%+v\n", global.DictProcess), log.DEBUG)
 	global.Logger.Log(fmt.Sprintf("Pid: %d -Tamaño:%d\n", pPath.Pid, len(global.DictProcess[pPath.Pid].PageTable.Pages)), log.INFO)
 	w.WriteHeader(http.StatusOK)
 }
@@ -76,7 +77,8 @@ func SendInstruction(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteProcess(w http.ResponseWriter, r *http.Request) {
-
+	DelayResponse := time.Duration(global.MemoryConfig.DelayResponse)
+	time.Sleep(DelayResponse * time.Millisecond)
 	pid, _ := strconv.Atoi(r.PathValue("pid"))
 	for i := 0; i < len(global.DictProcess[pid].PageTable.Pages); i++ {
 		global.BitMap[global.DictProcess[pid].PageTable.Pages[len(global.DictProcess[pid].PageTable.Pages)-1-i]] = 0
