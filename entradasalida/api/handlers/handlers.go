@@ -264,7 +264,7 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 	}
 	global.Logger.Log(fmt.Sprintf("PID: <%d> - Operacion: <%s", global.Estructura_truncate.Pid, global.Estructura_truncate.Instruction+">"), log.INFO)
 	
-	global.Logger.Log(fmt.Sprintf("PID: %d - Truncar Archivo: %s - Tamaño: %d", global.Estructura_truncate.Pid, global.Estructura_truncate.FileName, global.Estructura_truncate.Tamanio), log.INFO)
+	global.Logger.Log(fmt.Sprintf("PID: <%d> - Truncar Archivo: <%s> - Tamaño: <%d>", global.Estructura_truncate.Pid, global.Estructura_truncate.FileName, global.Estructura_truncate.Tamanio), log.INFO)
 
 	global.Logger.Log(fmt.Sprintf("Dispositivo: %+v", dispositivo), log.DEBUG)
 	global.Logger.Log(fmt.Sprintf("Instrucción: %+v", global.Estructura_truncate), log.DEBUG)
