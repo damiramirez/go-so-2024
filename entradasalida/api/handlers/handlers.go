@@ -149,6 +149,8 @@ func Fs_create(w http.ResponseWriter, r *http.Request) {
 	global.Logger.Log(fmt.Sprintf("Estructura: %+v", estructura), log.DEBUG)
 	global.Logger.Log(fmt.Sprintf("Dispositivo: %+v", dispositivo), log.DEBUG)
 
+	time.Sleep(time.Duration(global.IOConfig.UnitWorkTime) * time.Millisecond)
+
 	// implementación
 
 	// 1) busco en mi bitmap el primer bloque libre, uso ese dato para asignarlo como initial_block del archivo metadata estructura.Filename
@@ -219,6 +221,8 @@ func Fs_delete(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.DEBUG)
 
+	time.Sleep(time.Duration(global.IOConfig.UnitWorkTime) * time.Millisecond)
+
 	// implementación
 
 	filestruct := global.FilesMap[estructura.FileName]
@@ -268,6 +272,8 @@ func Fs_truncate(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log(fmt.Sprintf("Dispositivo: %+v", dispositivo), log.DEBUG)
 	global.Logger.Log(fmt.Sprintf("Instrucción: %+v", global.Estructura_truncate), log.DEBUG)
+
+	time.Sleep(time.Duration(global.IOConfig.UnitWorkTime) * time.Millisecond)
 
 	// obtengo los datos del archivo metadata
 
@@ -347,6 +353,8 @@ func Fs_write(w http.ResponseWriter, r *http.Request) {
 
 	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.DEBUG)
 
+	time.Sleep(time.Duration(global.IOConfig.UnitWorkTime) * time.Millisecond)
+
 	// implementación
 
 	estructura_actualizada.Pid = estructura.Pid
@@ -400,6 +408,8 @@ func Fs_read(w http.ResponseWriter, r *http.Request) {
 	global.Logger.Log(fmt.Sprintf("PID: <%d> - Leer Archivo: <%s> - Tamaño a Leer: <%d> - Puntero Archivo: <%d>", estructura.Pid, estructura.FileName, estructura.Tamanio, estructura.PunteroArchivo), log.INFO)
 
 	global.Logger.Log(fmt.Sprintf("%+v", dispositivo), log.DEBUG)
+
+	time.Sleep(time.Duration(global.IOConfig.UnitWorkTime) * time.Millisecond)
 
 	// implementación
 
